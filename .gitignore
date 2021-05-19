@@ -7,4 +7,5 @@ output/
 outputs/
 *.root
 *.pdf
-kkmc_*.txt
+kkmc_*.txt*
+*.log

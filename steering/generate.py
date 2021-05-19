@@ -10,11 +10,17 @@
 ##############################################
 
 import argparse
+import os
+import sys
 import glob
 import basf2 as b2
 import generators as ge
 import simulation as simu
 from basf2 import conditions as b2c
+
+# Can't use __file__, the interpreter doesn't set it
+SCRIPT_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
+DECAY_FILE = os.path.join(SCRIPT_DIR, "dec3modes.dec")
 
 BKG_FILES = '/group/belle2/BGFile/OfficialBKG/early_phase3/5a1f0a9f2ad84a/overlay/phase31/BGx1/set0/*root'
 
@@ -22,7 +28,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--exp", type=int, default=1003, help="Experiment, default 1003")
 parser.add_argument("--run", type=int, default=5, help="Run, default 5")
 parser.add_argument("--bkg", action="store_true", help="Enable background")
-parser.add_argument("--pxddr", action="store_true", help="Enable PXD data reduction")
+parser.add_argument("--nopxddr", dest="pxddr", action="store_false", help="Disable PXD data reduction")
 parser.add_argument("--t0jit", action="store_true", help="Enable T0 jitter simulation")
 parser.add_argument("-o", "--output", default="mc.root", help="Output file, default mc.root")
 args = parser.parse_args()
@@ -44,8 +50,7 @@ main.add_module('EventInfoSetter', expList=[args.exp], runList=[args.run])
 main.add_module('ProgressBar')
 
 # generate signal
-ge.add_inclusive_continuum_generator(
-    main, "ccbar", 'D*+', userdecfile='dec3modes.dec')
+ge.add_inclusive_continuum_generator(main, "ccbar", 'D*+', userdecfile=DECAY_FILE)
 
 # simulate
 simu.add_simulation(main, bkgfiles=bkg_files, usePXDDataReduction=args.pxddr,

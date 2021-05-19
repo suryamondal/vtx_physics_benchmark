@@ -1,80 +1,64 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""Generate MC signal samples for D0 lifetime analysis."""
 
-############################################
+##############################################
 # Author: The Belle II Colaboration
-# Contributor: Giulia Casarosa (Jun 2020)
-# Software Version: release-04-02-02
-#
-# this script: 
-# - generates & simulates signal samples
-#   for the D0 lifetime analysis
-# - can be launched with scripts/submit_generation.py
-############################################
+# Contributors: Giulia Casarosa (Jun 2020)
+#               Ludovico Massaccesi (May 2021)
+# Software Version: release-05-02-04
+##############################################
 
-from basf2 import *
+import argparse
+import glob
+import basf2 as b2
 import generators as ge
 import simulation as simu
-import modularAnalysis as ma
 from basf2 import conditions as b2c
 
-import sys
-import os
-import glob
+BKG_FILES = '/group/belle2/BGFile/OfficialBKG/early_phase3/5a1f0a9f2ad84a/overlay/phase31/BGx1/set0/*root'
 
-if len(sys.argv) != 7:
-    sys.exit('Must provide enough arguments: [exp number] [run number] [bkg] [PXD data reduction] [T0 jitter] output file name]'
-             )
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--exp", type=int, default=1003, help="Experiment, default 1003")
+parser.add_argument("--run", type=int, default=5, help="Run, default 5")
+parser.add_argument("--bkg", action="store_true", help="Enable background")
+parser.add_argument("--pxddr", action="store_true", help="Enable PXD data reduction")
+parser.add_argument("--t0jit", action="store_true", help="Enable T0 jitter simulation")
+parser.add_argument("-o", "--output", default="mc.root", help="Output file, default mc.root")
+args = parser.parse_args()
+b2.B2INFO(f"Steering file arguments = {args}")
 
-
-expNumber =int(sys.argv[1])
-runNumber =int(sys.argv[2])
-bkg = str(sys.argv[3])
-pxdDR = str(sys.argv[4])
-jitter = str(sys.argv[5])
-outputName = sys.argv[6]
-
-bkgFiles = None
-
-if (bkg == 'bkg'):
-    bkgFiles = glob.glob('/group/belle2/BGFile/OfficialBKG/early_phase3/5a1f0a9f2ad84a/overlay/phase31/BGx1/set0/*root')
-
-pxd = False
-if (pxdDR == 'pxdDR'):
-    pxd = True
-
-jit = False
-if(jitter == 'jitter'):
-    jit = True
+bkg_files = None
+if args.bkg:
+    bkg_files = glob.glob(BKG_FILES)
 
 b2c.prepend_globaltag("mc_production_MC13a_proc11")
 
-# create path 
-main = create_path()
+# create path
+main = b2.create_path()
 
 # setup event
-evtInfo = register_module('EventInfoSetter')
-evtInfo.param('expList', [expNumber])
-evtInfo.param('runList', [runNumber])
-main.add_module(evtInfo)
+main.add_module('EventInfoSetter', expList=[args.exp], runList=[args.run])
 
 # progress
-main.add_module('Progress')
+main.add_module('ProgressBar')
 
 # generate signal
-ge.add_inclusive_continuum_generator(main, "ccbar", 'D*+',userdecfile='dec3modes.dec')
+ge.add_inclusive_continuum_generator(
+    main, "ccbar", 'D*+', userdecfile='dec3modes.dec')
 
 # simulate
-simu.add_simulation(main, bkgfiles = bkgFiles, usePXDDataReduction=pxd, simulateT0jitter=jit)
+simu.add_simulation(main, bkgfiles=bkg_files, usePXDDataReduction=args.pxddr,
+                    simulateT0jitter=args.t0jit)
 
 # write output file
-main.add_module("RootOutput",outputFileName=outputName)
+main.add_module("RootOutput", outputFileName=args.output)
 
 # print path
-print_path(main)
+b2.print_path(main)
 
 # process the path
-process(main)
+b2.process(main)
 
 # print out the summary
-print(statistics)
+print(b2.statistics)

@@ -1,9 +1,10 @@
- #!/usr/bin/env python
+ #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""Reconstructs D*+ -> [D0 -> K- pi+ (pi+ pi-)] pi+ from mDST."""
 
 ###########################################################
 #
-# This functions perform the reconstruction of the 
+# This functions perform the reconstruction of the
 # following decay chains (and c.c. decay chain):
 #
 # D*+ -> D0 pi+
@@ -13,90 +14,71 @@
 #
 # USAGE:
 # > basf2 mdst2ntuple -- --input INPUT --output OUTPUT \
-#			 [--isMC --gt MC_GLOBALTAG] \
-#                        [--looseSelection --addTopoAna]
+#                        [--isMC] [--gt MC_GLOBALTAG] \
+#                        [--looseSelection] [--addTopoAna]
 #
 # input = input mdst file
 # output = output ROOT file
-# isMC = add when reconstructing simulated events 
+# isMC = add when reconstructing simulated events
 # gt = add to specify the global tag for MC
 # looseSelection = add to remove selection on tracks
 # addTopoAna = add to include TopoAna/MCGen variables
 #
 # Contributors: G. Casarosa, A. Di Canto (Dec 2019)
+#               L. Massaccesi (May 2021)
 #
 ###########################################################
 
-import sys
-import re
+import argparse
 import basf2 as b2
 import modularAnalysis as ma
-from stdPi0s import stdPi0s
-from stdPhotons import stdPhotons
 import vertex as vx
 import variables.collections as vc
 import variables.utils as vu
 from variables import variables as vm
 from variables.MCGenTopo import mc_gen_topo
 from basf2 import conditions as b2conditions
-import argparse
 
-print('***')
-print('*** this is the reconstruction script used:')
-with open(sys.argv[0], 'r') as fin:
-    print(fin.read(), end="")
-print('*** end of reconstruction script')
-print('***')
-
-parser = argparse.ArgumentParser(description="mdst2ntuple script")
-parser.add_argument('--addTopoAna', dest='addTopoAna', action='store_const', const=True, default=False, help='add TopoAna/MCGen variables for MC')
-parser.add_argument('--looseSelection', dest='looseSelection', action='store_const', const=True, default=False, help='add to remove selection on tracks')
-parser.add_argument('--isMC', dest='isMC', action='store_const', const=True, default=False, help='add if you are reconstructing MC')
-parser.add_argument('--input', metavar='input', dest='input', type=str, nargs='+', help='mDST input file')
-parser.add_argument('--output', metavar='output', dest='output', type=str, default='test.root', help='ROOT output file')
-parser.add_argument('--gt', metavar='gt', dest='gt', type=str, default='BeamSpotForMC13b', help='Global tag for MC: BeamSpotForMC13b for mc13b_proc11/prompt, charm_newBeamSpot for mc13a_proc11, BeamSpotForMC13a for mc13a')
-
-print('')
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--addTopoAna', action="store_true", help='add TopoAna/MCGen variables for MC')
+parser.add_argument('--looseSelection', action="store_true", help='add to remove selection on tracks')
+parser.add_argument('--isMC', action="store_true", help='add if you are reconstructing MC')
+parser.add_argument("-i", '--input', nargs='+', help='mDST input file(s)')
+parser.add_argument("-o", '--output', default='test.root', help='ROOT output file, default test.root')
+parser.add_argument('--gt', default='BeamSpotForMC13b', help='Global tag for MC: BeamSpotForMC13b for mc13b_proc11/prompt (default), charm_newBeamSpot for mc13a_proc11, BeamSpotForMC13a for mc13a')
 args = parser.parse_args()
+b2.B2INFO(f"Steering file args = {args}")
 
 inputfiles = args.input
 outputfile = args.output
 
 # new beam-spot payloads
 if args.isMC :
-	if args.gt != 'default' :
-		b2conditions.prepend_globaltag(args.gt)
+    if args.gt != 'default' :
+        b2conditions.prepend_globaltag(args.gt)
 else :
-	b2conditions.prepend_globaltag("beamSpot_timeDep")
+    b2conditions.prepend_globaltag("beamSpot_timeDep")
 
-# create path 
+# create path
 main = b2.create_path()
 
 # load the samples
 ma.inputMdstList(filelist=inputfiles, environmentType='default', path=main)
 
-print('')
-print('*** I/O DETAILS:')
-print('* input mdst files = '+ str(inputfiles))
-print('* output root file = '+ str(outputfile))
-print('* global tags = '+ str(b2conditions.globaltags))
-print('***')
-print('')
-
 # load pions and kaons from IP and in tracking acceptance
 myTrk = '[abs(dr)<1.0] and [abs(dz)<2.0]'
 if not args.looseSelection :
-	myTrk += ' and [nCDCHits>0]'
+    myTrk += ' and [nCDCHits>0]'
 ma.fillParticleList('pi+:soft', myTrk, path=main)
 
 if not args.looseSelection :
-	myTrk += ' and [nPXDHits>0] and [nSVDHits>0] and [nCDCHits>20]'
+    myTrk += ' and [nPXDHits>0] and [nSVDHits>0] and [nCDCHits>20]'
 ma.fillParticleList('pi+:myTrk', myTrk, path=main)
 ma.fillParticleList('K+:myTrk', myTrk, path=main)
 
-#To evaluate the corresponding systematic uncertainty, vary the scale factor within [1.00014, 1.00107]. 
+#To evaluate the corresponding systematic uncertainty, vary the scale factor within [1.00014, 1.00107].
 if not args.isMC :
-	ma.trackingMomentum(inputListNames=['pi+:soft','pi+:myTrk','K+:myTrk'], scale=1.00056, path=main)
+    ma.trackingMomentum(inputListNames=['pi+:soft','pi+:myTrk','K+:myTrk'], scale=1.00056, path=main)
 
 # D0 reconstruction
 myD0 = '1.6 < M < 2.1'
@@ -115,14 +97,14 @@ ma.variablesToExtraInfo("D*+:good", variables={'M': 'M_preFit'}, path=main)
 
 conf_level_cut = 0.001
 if args.looseSelection :
-	conf_level_cut = -1.;
+    conf_level_cut = -1.
 vx.treeFit(list_name='D*+:good',conf_level=conf_level_cut, ipConstraint=True, updateAllDaughters=True, path=main)
 
 ma.applyCuts('D*+:good','[massDifference(0) < 0.16] and [1.7 < daughter(0,M) < 2.05] and [useCMSFrame(p) > 1.8]',path=main)
 
 if args.isMC :
-	# perform MC matching (MC truth association)
-	ma.matchMCTruth(list_name='D*+:good',path=main)
+    # perform MC matching (MC truth association)
+    ma.matchMCTruth(list_name='D*+:good',path=main)
 
 # List of variables to save
 vm.addAlias('IPCovXX','IPCov(0,0)')
@@ -133,26 +115,26 @@ vm.addAlias('IPCovXZ','IPCov(0,2)')
 vm.addAlias('IPCovYZ','IPCov(1,2)')
 eventWiseVariables = ['nTracks','IPX','IPY','IPZ','IPCovXX','IPCovYY','IPCovZZ','IPCovXY','IPCovXZ','IPCovYZ','beamE','beamPx','beamPy','beamPz']
 if args.isMC:
-	eventWiseVariables += ['genIPX','genIPY','genIPZ']
-	# TopoAna variables
-	if args.addTopoAna :
-		eventWiseVariables += mc_gen_topo(200)
+    # eventWiseVariables += ['genIPX','genIPY','genIPZ']  # Variables don't exist?
+    # TopoAna variables
+    if args.addTopoAna :
+        eventWiseVariables += mc_gen_topo(200)
 
-commonVariables = vc.kinematics 
+commonVariables = vc.kinematics
 commonVariables += ['pErr','ptErr','pxErr','pyErr','pzErr']
 if args.isMC:
-	commonVariables += vc.mc_variables + ['isSignal','isSignalAcceptMissingGamma','isPrimarySignal']
+    commonVariables += vc.mc_variables + ['isSignal','isSignalAcceptMissingGamma','isPrimarySignal']
 
 tracksVariables = vc.track + vc.track_hits + ['pionID','kaonID','protonID','muonID','electronID','firstPXDLayer','firstSVDLayer']
 tracksVariables += ['charge','omegaErr','phi0Err','tanlambdaErr','z0Err','d0Err']
 
 compositeVariables = vc.vertex + ['M','ErrM']
 if args.isMC:
-	compositeVariables += ['mcProductionVertexX', 'mcProductionVertexY', 'mcProductionVertexZ']
+    compositeVariables += ['mcProductionVertexX', 'mcProductionVertexY', 'mcProductionVertexZ']
 
 flightVariables = vc.flight_info
 if args.isMC:
-	flightVariables += vc.mc_flight_info
+    flightVariables += vc.mc_flight_info
 
 varsKpi = vu.create_aliases_for_selected(list_of_variables=commonVariables,
                                          decay_string='^D*+ -> [^D0 -> ^pi+ ^K-] ^pi+',
@@ -165,7 +147,7 @@ varsKpi = vu.create_aliases_for_selected(list_of_variables=commonVariables,
                                          prefix=['Dst','Dz']) + \
           vu.create_aliases_for_selected(list_of_variables=flightVariables,
                                          decay_string='^D*+ -> [^D0 -> pi+ K-] pi+',
-                                         prefix=['Dst','Dz']) 
+                                         prefix=['Dst','Dz'])
 
 varsK3pi = vu.create_aliases_for_selected(list_of_variables=commonVariables,
                                           decay_string='^D*+ -> [^D0 -> ^pi+ ^K- ^pi+ ^pi-] ^pi+',
@@ -203,7 +185,7 @@ ma.variablesToNtuple(decayString='D*+:K3pi',variables=varsK3pi,filename=outputfi
 # Process the events
 b2.set_log_level(b2.LogLevel.ERROR)
 
-main.add_module('Progress')
+main.add_module('ProgressBar')
 b2.process(main)
 
 print(b2.statistics)

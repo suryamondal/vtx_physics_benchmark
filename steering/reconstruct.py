@@ -1,46 +1,36 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""Reconstructs the signal samples for the D0 lifetime analysis."""
 
-############################################
+##############################################
 # Author: The Belle II Colaboration
-# Contributor: Giulia Casarosa (Jun 2020)
-# Software Version: release-04-02-02
-#
-# this script: 
-# - reconstruct signal samples
-#   for the D0 lifetime analysis
-# - can be launched with scripts/submit_reconstruction.py
-############################################
+# Contributors: Giulia Casarosa (Jun 2020),
+#               Ludovico Massaccesi (May 2021)
+# Software Version: release-05-02-04
+##############################################
 
-from basf2 import *
+import argparse
+import basf2 as b2
 import reconstruction as reco
 import modularAnalysis as ma
 from basf2 import conditions as b2c
 
-import sys
-import os
-import glob
-
-print('***')
-print('*** this is the reconstruction script used:')
-with open(sys.argv[0], 'r') as fin:
-    print(fin.read(), end="")
-print('*** end of reconstruction script')
-print('***')
-
-outputName = sys.argv[1]
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("-o", "--output", default="mdst.root", help="Output file name")
+parser.add_argument("--misalign-gt", default=None, help="Misalignment GT, optional")
+parser.add_argument("--misalign-beamspot-gt", default=None,
+                    help="Beam spot misalignment GT, optional")
+args = parser.parse_args()
+b2.B2INFO(f"Steering files args = {args}")
 
 # turn on MISALIGNEMENT
-if len(sys.argv) > 2:
-    misalignmentGT = sys.argv[2]
-    b2c.prepend_globaltag(misalignmentGT)
-if len(sys.argv) > 3:
-    beamSpotMisalignmentGT = sys.argv[3]
-    b2c.prepend_globaltag(beamSpotMisalignmentGT)
+if args.misalign_gt is not None:
+    b2c.prepend_globaltag(args.misalign_gt)
+if args.misalign_beamspot_gt is not None:
+    b2c.prepend_globaltag(args.misalign_beamspot_gt)
 
-
-# create path 
-main = create_path()
+# create path
+main = b2.create_path()
 
 # read input file
 main.add_module("RootInput")
@@ -56,13 +46,13 @@ main.add_module("Geometry")
 reco.add_reconstruction(main)
 
 # write MDSTs
-ma.outputMdst(outputName, main)
+ma.outputMdst(args.output, main)
 
-# print path 
-print_path(main)
+# print path
+b2.print_path(main)
 
 # process the path
-process(main)
+b2.process(main)
 
 # print out the summary
-print(statistics)
+print(b2.statistics)

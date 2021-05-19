@@ -1,0 +1,10 @@
+# IDE
+.vscode/
+*~
+
+# Outputs
+output/
+outputs/
+*.root
+*.pdf
+kkmc_*.txt

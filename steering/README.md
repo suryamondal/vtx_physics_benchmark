@@ -8,14 +8,13 @@ The steering file `generate.py` produces only `ccbar -> D*+` (+cc) events and
 simulates the detector response.
 
 The only `D*` decay channel simulated is `D*+ -> D0 pi+` (+cc), while for the
-`D0` three channels (+cc) are considered
+`D0` two channels (+cc) are considered
 ```
-D0 -> K- pi+          14.68%
-D0 -> K- pi+ pi+ pi-  30.96%
-D0 -> K- pi+ pi0      54.18%
+D0 -> K- pi+          32.43%
+D0 -> K- pi+ pi+ pi-  67.57%
 ```
-The branching fractions are normalized, but these three actually make up only
-26.58% of the total decay width.
+The branching fractions are normalized, but these two actually make up only
+12.18% of the total decay width (source: PDG, of course).
 
 Simulation of the detector and standard reconstruction is then performed. The
 output is in mDST format.

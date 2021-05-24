@@ -5,6 +5,7 @@ import re
 import argparse
 
 RE_SUCCESS = re.compile(r"\nStarted at([\s\S]+?)\nResource usage summary:\n")
+RE_LONG = re.compile(r"\n\[INFO\] =+Error Summary=+\n([\s\S]+?)\n\[INFO\] =+\n")
 
 
 def lsr(path):
@@ -29,6 +30,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("-d", "--directory", default=".",
                         help="The directory to check, default the cwd.")
+    parser.add_argument("-l", "--long", action="store_true",
+                        help="Output additional information about EACH log.")
     args = parser.parse_args()
 
     successes, failures, unknowns = {}, {}, {}
@@ -39,10 +42,21 @@ if __name__ == "__main__":
         m = RE_SUCCESS.search(content)
         if not m:
             increment(unknowns, fd)
+            if args.long: print("UNKNOWN", fp)
         elif "Success" in m[1]:
             increment(successes, fd)
+            if args.long: print("SUCCESS", fp)
         else:
             increment(failures, fd)
+            if args.long: print("FAILURE", fp)
+        if args.long:
+            m = RE_LONG.search(content)
+            if not m:
+                print("No error summary for this file.")
+            else:
+                print("Error summary")
+                print(m[1])
+            print()
 
     dirs = set(successes.keys()) | set(failures.keys()) | set(unknowns.keys())
     for d in dirs:

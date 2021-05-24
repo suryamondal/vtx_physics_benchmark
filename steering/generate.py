@@ -22,7 +22,7 @@ import generators as ge
 import simulation as simu
 import L1trigger as l1t
 import reconstruction as reco
-import modularAnalysis as ma
+import mdst
 try:
     import vtx
     HAS_VTX = True
@@ -37,7 +37,7 @@ BKG_FILES = '/group/belle2/BGFile/OfficialBKG/TODO'
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--exp", type=int, default=0, help="Experiment, default 0 (nominal geometry/luminosity)")
-parser.add_argument("--run", type=int, default=1, help="Run, default 1")
+parser.add_argument("--run", type=int, default=0, help="Run, default 0")
 parser.add_argument("--bkg", action="store_true", help="Enable background")
 parser.add_argument("--vtx", action="store_true", help="Use new VTX instead of PXD+SVD")
 parser.add_argument("-o", "--output", default="mc.root", help="Output file, default mc.root")
@@ -74,10 +74,6 @@ main = b2.create_path()
 main.add_module('EventInfoSetter', expList=[args.exp], runList=[args.run])
 main.add_module('ProgressBar')
 
-# geometry
-main.add_module("Gearbox")
-main.add_module("Geometry")
-
 # generate signal
 ge.add_inclusive_continuum_generator(main, "ccbar", 'D*+', userdecfile=DECAY_FILE)
 
@@ -90,7 +86,7 @@ l1t.add_tsim(main) # TRG simulation
 reco.add_reconstruction(main, **vtx_kwa)
 
 # write MDSTs
-ma.outputMdst(args.output, main)
+mdst.add_mdst_output(main, mc=True, filename=args.output)
 
 # print path + process + statistics
 b2.print_path(main)

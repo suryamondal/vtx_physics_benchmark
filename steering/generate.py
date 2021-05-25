@@ -41,6 +41,7 @@ parser.add_argument("--run", type=int, default=0, help="Run, default 0")
 parser.add_argument("--bkg", action="store_true", help="Enable background")
 parser.add_argument("--vtx", action="store_true", help="Use new VTX instead of PXD+SVD")
 parser.add_argument("-o", "--output", default="mc.root", help="Output file, default mc.root")
+parser.add_argument("--debug-gen", action="store_true", help="Debug the generator modules.")
 args = parser.parse_args()
 b2.B2INFO(f"Steering file arguments = {args}")
 
@@ -66,6 +67,12 @@ if args.bkg:
         b2.B2FATAL("Using --bkg but no background file was found.")
 else:
     bkg_files = None
+
+if args.debug_gen:
+    b2.logging.package('generators').log_level = b2.LogLevel.DEBUG
+    b2.logging.package('generators').debug_level = 199
+    b2.logging.package('simulation').log_level = b2.LogLevel.DEBUG
+    b2.logging.package('simulation').debug_level = 199
 
 # create path
 main = b2.create_path()

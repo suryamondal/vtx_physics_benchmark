@@ -29,3 +29,12 @@ Explanation
  - `test_mix_ana.sh` attempts to analyse both `mc_vxd.root` and `mc_vtx.root`
    at the same time (like they were part of the same batch), hence it should
    fail with any version of basf2 because the files are incompatible.
+
+## Other tests
+The script `test_vxd_gen_error.sh` is designed specifically to reproduce the
+following error
+```
+[ERROR] In G4Decay::DecayIt , DECAY101: For D0 decay probability exist but decay table is not defined - the particle will be killed;
+    isExtDecayer: 0; isPreAssigned: 0  { module: FullSim }
+```
+this is done by setting an appropriate RNG seed.

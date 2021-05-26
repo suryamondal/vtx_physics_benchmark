@@ -13,3 +13,9 @@ Analysis (no bsub jobs used, should not be necessary for now):
 ```
 basf2 ../mdst2ntuple.py -- -o nt.root -i outputs/SUBDIR/SUBDIR/*.root
 ```
+or, to save some time typing
+```
+./launch_ana.sh outputs/mc_ETC
+# Input files: outputs/mc_ETC/*/*.root
+# Output file: outputs/mc_ETC.root
+```

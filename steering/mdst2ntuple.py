@@ -25,7 +25,7 @@
 #
 # Software Version: release-05-02-06 / upgrade
 #
-# Must use release-05-02-06 without --vtx
+# Must use release-05-02-06 or master without --vtx
 # Must use upgrade branch with --vtx
 # The script will terminate if used with the wrong version.
 ##############################################################
@@ -39,6 +39,7 @@ import variables.collections as vc
 import variables.utils as vu
 from variables import variables as vm
 from variables.MCGenTopo import mc_gen_topo
+
 try:  # Dummy import to check basf2 version
     import vtx
     HAS_VTX = True
@@ -102,6 +103,9 @@ if not args.looseSelection:
 ma.fillParticleList('pi+:myTrk', myTrk, path=main)
 ma.fillParticleList('K+:myTrk', myTrk, path=main)
 
+# MC-only particle list for debugging purposes
+ma.fillParticleListFromMC('D*+:MC', "", path=main)
+
 # D0 reconstruction
 myD0 = '1.6 < M < 2.1'
 ma.reconstructDecay('D0:Kpi -> pi+:myTrk K-:myTrk',
@@ -138,7 +142,8 @@ eventWiseVariables = [
     'nTracks', 'IPX', 'IPY', 'IPZ',
     'IPCovXX', 'IPCovYY', 'IPCovZZ', 'IPCovXY', 'IPCovXZ', 'IPCovYZ',
     'beamE', 'beamPx', 'beamPy', 'beamPz']
-if HAS_VTX:  # These variables don't exist in release-05
+# These variables don't exist in release-05
+if 'genIPX' in (v.name for v in vm.getVariables()):
     eventWiseVariables += ['genIPX', 'genIPY', 'genIPZ']
 if args.addTopoAna:  # TopoAna variables
     eventWiseVariables += mc_gen_topo(200)
@@ -151,9 +156,14 @@ commonVariables += ['isSignal', 'isSignalAcceptMissingGamma', 'isPrimarySignal']
 tracksVariables = vc.track + vc.track_hits
 tracksVariables += ['pionID', 'kaonID', 'protonID', 'muonID', 'electronID']
 if HAS_VTX:
-    tracksVariables += ['firstVTXLayer', 'tanLambdaErr']
+    tracksVariables += ['firstVTXLayer']
 else:
-    tracksVariables += ['firstPXDLayer', 'firstSVDLayer', 'tanlambdaErr']
+    tracksVariables += ['firstPXDLayer', 'firstSVDLayer']
+# This variable changed name after release-05
+if 'tanlambdaErr' in (v.name for v in vm.getVariables()):
+    tracksVariables += ['tanlambdaErr']
+else:
+    tracksVariables += ['tanLambdaErr']
 tracksVariables += ['charge', 'omegaErr', 'phi0Err', 'z0Err', 'd0Err']
 
 compositeVariables = vc.vertex + ['M', 'ErrM']
@@ -211,6 +221,10 @@ ma.variablesToNtuple(
 ma.variablesToNtuple(
     decayString='D*+:K3pi', variables=varsK3pi, filename=args.output,
     treename='DstD0PiK3PiRS', path=main)
+# MC-only tree for debugging
+ma.variablesToNtuple(
+    decayString='D*+:MC', variables=vc.inv_mass + vc.flight_info + vc.mc_flight_info,
+    filename=args.output, treename='DstMC', path=main)
 
 # Process the events
 b2.set_log_level(b2.LogLevel.ERROR)

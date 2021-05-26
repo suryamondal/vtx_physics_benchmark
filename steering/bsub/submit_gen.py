@@ -43,7 +43,7 @@ if __name__ == "__main__":
     parser.add_argument("--bkg", action="store_true", help="Enable background")
     parser.add_argument("--vtx", action="store_true", help="Use new VTX instead of PXD+SVD")
     parser.add_argument("--first-event", type=int, default=1, help="Number of the first event, default 1")
-    parser.add_argument("--batch-size", type=int, default=1000, help="Number of events per process, default 1000")
+    parser.add_argument("-b", "--batch-size", type=int, default=1000, help="Number of events per process, default 1000")
     parser.add_argument("--dry-run", action="store_true", help="Don't run anything, show what would be run")
     parser.add_argument("-o", "--output", default=DEFAULT_OUT_DIR, help="Output directory, default outputs")
     args = parser.parse_args()

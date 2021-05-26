@@ -41,7 +41,8 @@ parser.add_argument("--run", type=int, default=0, help="Run, default 0")
 parser.add_argument("--bkg", action="store_true", help="Enable background")
 parser.add_argument("--vtx", action="store_true", help="Use new VTX instead of PXD+SVD")
 parser.add_argument("-o", "--output", default="mc.root", help="Output file, default mc.root")
-parser.add_argument("--debug-gen", action="store_true", help="Debug the generator modules.")
+parser.add_argument("--debug-gen", action="store_true", help="Debug the generator modules")
+parser.add_argument("--print-mc-particles", action="store_true", help="Prints the MC particles for debugging")
 args = parser.parse_args()
 b2.B2INFO(f"Steering file arguments = {args}")
 
@@ -83,11 +84,15 @@ main.add_module('ProgressBar')
 
 # generate signal
 ge.add_inclusive_continuum_generator(main, "ccbar", 'D*+', userdecfile=DECAY_FILE)
+if args.print_mc_particles:
+    main.add_module("PrintMCParticles").set_name("PrintMCParticles_afterGeneration")
 
 # simulate
 vtx_kwa = {'useVTX': True} if args.vtx else {}
 simu.add_simulation(main, bkgfiles=bkg_files, **vtx_kwa)
 l1t.add_tsim(main) # TRG simulation
+if args.print_mc_particles:
+    main.add_module("PrintMCParticles").set_name("PrintMCParticles_afterSimulation")
 
 # reconstruct
 reco.add_reconstruction(main, **vtx_kwa)

@@ -38,3 +38,7 @@ following error
     isExtDecayer: 0; isPreAssigned: 0  { module: FullSim }
 ```
 this is done by setting an appropriate RNG seed.
+
+The script `text_vxd_gen_error_print_mc_particles.sh` does exactly the same
+thing, but instead of enabling debug messages it prints MC particles in the
+logfile.

@@ -7,17 +7,17 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # basf2 setup (works on KEKCC)
 B2SETUP_PATH = "/cvmfs/belle.cern.ch/sl6/tools/b2setup"
-BASF2_RELEASE = "release-05-02-06"
-BASF2_LOCAL_DIR = "/home/belle2/lmassa/b2vtx"  # No central path for upgrade
+BASF2_MASTER_DIR = "/home/belle2/lmassa/b2devel"  # No central path for master
+BASF2_UPGRADE_DIR = "/home/belle2/lmassa/b2vtx"  # No central path for upgrade
 SHELL_PATH = "/bin/bash"
 
 # Commands to setup basf2
-CMD_SETUP_RELEASE = f'source "{B2SETUP_PATH}" {BASF2_RELEASE}'
-CMD_SETUP_UPGRADE = f'cd "{BASF2_LOCAL_DIR}"; source "{B2SETUP_PATH}"; cd -'
+CMD_SETUP_MASTER = f'cd "{BASF2_MASTER_DIR}"; source "{B2SETUP_PATH}"; cd -'
+CMD_SETUP_UPGRADE = f'cd "{BASF2_UPGRADE_DIR}"; source "{B2SETUP_PATH}"; cd -'
 
 
 def run_test(cmd, log_filename, env, use_upgrade, expected_failure=False):
-    setup_cmd = CMD_SETUP_UPGRADE if use_upgrade else CMD_SETUP_RELEASE
+    setup_cmd = CMD_SETUP_UPGRADE if use_upgrade else CMD_SETUP_MASTER
     cmd_line = f'{setup_cmd}; {cmd}'
     cmd_args = [SHELL_PATH, "-c", cmd_line]
     print("Command:", cmd_line)
@@ -55,13 +55,13 @@ if __name__ == "__main__":
                        use_upgrade=True, expected_failure=True)
         log("[PASSED]" if res else "[NOT PASSED]")
 
-        log("\n[TEST] Generate VXD with release")
-        res = run_test("./test_vxd_gen.sh", "gen_vxd_release.log", env,
+        log("\n[TEST] Generate VXD with master")
+        res = run_test("./test_vxd_gen.sh", "gen_vxd_master.log", env,
                        use_upgrade=False, expected_failure=False)
         log("[PASSED]" if res else "[NOT PASSED]")
 
-        log("\n[TEST] Generate VTX with release (expected failure)")
-        res = run_test("./test_vtx_gen.sh", "gen_vtx_release.log", env,
+        log("\n[TEST] Generate VTX with master (expected failure)")
+        res = run_test("./test_vtx_gen.sh", "gen_vtx_master.log", env,
                        use_upgrade=False, expected_failure=True)
         log("[PASSED]" if res else "[NOT PASSED]")
 
@@ -76,13 +76,13 @@ if __name__ == "__main__":
                        use_upgrade=True, expected_failure=True)
         log("[PASSED]" if res else "[NOT PASSED]")
 
-        log("\n[TEST] Analyse VXD with release")
-        res = run_test("./test_vxd_ana.sh", "ana_vxd_release.log", env,
+        log("\n[TEST] Analyse VXD with master")
+        res = run_test("./test_vxd_ana.sh", "ana_vxd_master.log", env,
                        use_upgrade=False, expected_failure=False)
         log("[PASSED]" if res else "[NOT PASSED]")
 
-        log("\n[TEST] Analyse VTX with release (expected failure)")
-        res = run_test("./test_vtx_ana.sh", "ana_vtx_release.log", env,
+        log("\n[TEST] Analyse VTX with master (expected failure)")
+        res = run_test("./test_vtx_ana.sh", "ana_vtx_master.log", env,
                        use_upgrade=False, expected_failure=True)
         log("[PASSED]" if res else "[NOT PASSED]")
 
@@ -92,8 +92,8 @@ if __name__ == "__main__":
         log("[PASSED]" if res else "[NOT PASSED]")
 
 
-        log("\n[TEST] Analyse both with release (expected failure)")
-        res = run_test("./test_mix_ana.sh", "ana_mix_release.log", env,
+        log("\n[TEST] Analyse both with master (expected failure)")
+        res = run_test("./test_mix_ana.sh", "ana_mix_master.log", env,
                        use_upgrade=False, expected_failure=True)
         log("[PASSED]" if res else "[NOT PASSED]")
 

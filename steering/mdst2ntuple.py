@@ -23,7 +23,7 @@
 # Contributors: G. Casarosa, A. Di Canto (Dec 2019)
 #               L. Massaccesi (May 2021)
 #
-# Software Version: release-05-02-06 / upgrade
+# Software Version: release-05-02-06 / upgrade / master
 #
 # Must use release-05-02-06 or master without --vtx
 # Must use upgrade branch with --vtx

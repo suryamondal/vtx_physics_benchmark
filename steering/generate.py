@@ -6,9 +6,9 @@
 # Author: The Belle II Colaboration
 # Contributors: Giulia Casarosa (Jun 2020)
 #               Ludovico Massaccesi (May 2021)
-# Software Version: release-05-02-06 / upgrade
+# Software Version: release-05-02-06 / upgrade / master
 #
-# Must use release-05-02-06 without --vtx
+# Must use release-05-02-06 or master without --vtx
 # Must use upgrade branch with --vtx
 # The script will terminate if used with the wrong version.
 ############################################################

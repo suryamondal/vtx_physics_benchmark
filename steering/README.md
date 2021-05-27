@@ -44,7 +44,8 @@ layout must be simulated with a release (or `master`), while VTX must be
 simulated with the `upgrade` branch. Also the analysis must be run with the
 same version of basf2.
 
-For the current detector layout (VXD=PXD+SVD), use `release-05-02-06`.
+For the current detector layout (VXD=PXD+SVD), use `release-05-02-06` or
+`master` (will be `release-06` soon).
 ```
 b2setup release-05-02-06
 basf2 generate.py -- -o mc_vxd.root [...]

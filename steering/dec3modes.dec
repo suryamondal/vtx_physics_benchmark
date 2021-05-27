@@ -51,9 +51,8 @@ Decay D*-
 Enddecay
 
 Decay MyD
-0.1486 K-  pi+  PHSP;
-0.3096 K-  pi+  pi+  pi-    PHSP;
-0.5418 K- pi+ pi0 D_DALITZ;
+0.3243 K-  pi+  PHSP;
+0.6757 K-  pi+  pi+  pi-    PHSP;
 Enddecay
 CDecay MyAntiD
 

@@ -5,6 +5,7 @@
 # Outputs
 output/
 outputs/
+outputs.*/
 *.root
 *.pdf
 kkmc_*.txt*

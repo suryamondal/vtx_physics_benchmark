@@ -1,0 +1,11 @@
+Decay Upsilon(4S)
+1.00000 B+ B-           VSS;
+Enddecay
+
+Decay D0
+0.3243  K- pi+          PHSP;
+0.6757  K- pi+ pi+ pi-  PHSP;
+Enddecay
+CDecay anti-D0
+
+End

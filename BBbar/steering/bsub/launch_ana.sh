@@ -28,7 +28,7 @@ if [ ! -d "$outdir" ]; then
   exit 1
 fi
 
-outfile="$outdir.root"
+outfile="${outdir}_ntuple.root"
 inglob="$outdir/*/*.root"
 echo "Input files: $inglob"
 echo "Output file: $outfile"

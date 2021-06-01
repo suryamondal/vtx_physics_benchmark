@@ -17,5 +17,5 @@ or, to save some time typing
 ```
 ./launch_ana.sh outputs/mc_ETC
 # Input files: outputs/mc_ETC/*/*.root
-# Output file: outputs/mc_ETC.root
+# Output file: outputs/mc_ETC_ntuple.root
 ```

@@ -1,18 +1,12 @@
 # VTX Physics Benchmark
 Repository for studies of the proposed upgraded VTX. Includes efficiency and
-resolution studies of using the following events
-```
-D*+ --> D0 pi+
-        |
-        +--> K- pi+
-        +--> K- pi+ pi+ pi-
-```
+resolution studies using events with `D0`s that decay either in `K pi` or in
+`K 3pi`.
 
-The steering files in `steering/` have been copied from the repo
-[charm_lifetimes](https://stash.desy.de/projects/B2CHARM/repos/charm_lifetimes/browse)
-(many thanks to G. Casarosa and A. di Canto for writing them!). They take care
-of event generation, simulation, reconstruction, decay reconstruction and
-fitting. Their final outputs are NTuples.
+In `ccbar/` there are macros, scripts, etc. for generating and analysing
+`D*+ -> D0 pi+` events generated from the continuum.
 
-In `offline/` I put macros and scripts for analysing the NTuples with ROOT or
-pandas (offline analysis without basf2).
+In `BBbar/` there are macros, scripts, etc. for generating and analysing
+`Upsilon(4S) -> B+ B-` events. Since charged B mesons decay in channels with at
+least one `D0` about 90% of the time, there is no need to change their decay
+table.

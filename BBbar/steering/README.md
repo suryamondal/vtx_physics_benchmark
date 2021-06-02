@@ -2,6 +2,7 @@
 Steering files for the analysis
  - `generate.py` event generation, simulation and reconstruction, outputs mDST
  - `mdst2ntuple.py` decay reconstruction and fitting from mDST, outputs NTuple
+ - `mdst2ntuple_D0only.py` same as above, but doesn't reconstruct the `D*`
 
 # Version of basf2 to use
 Since `VxdID` representation was changed in the `upgrade` branch, the current

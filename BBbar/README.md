@@ -1,9 +1,14 @@
 # BBar
 This directory includes efficiency and resolution studies of using
-`Upsilon(4S) -> B+ B-` events. Charged B mesons decay in at least one `D0` or
-`anti-D0` about 90% of the times, so their decay table is not changed.
+`Upsilon(4S) -> B0 anti-B0` events. Each event contains one _generic B_, which
+uses the default decay table, and one _signal B_, which only decays with
+`B0 -> D*- mu+ nu_mu` (order 5% of the decay width in the real world). The
+_signal B_ is the `B0` 50% of the times, the `anti-B0` the other 50%.
 
-The decay table of the `D0`s, instead, is set to
+The `D*`s are set to only decay with `D*+ -> D0 pi+` (67% of the decay width in
+the real world).
+
+The `D0`s are set to decay with this table
 ```
 D0 -> K- pi+          32.43%
 D0 -> K- pi+ pi+ pi-  67.57%

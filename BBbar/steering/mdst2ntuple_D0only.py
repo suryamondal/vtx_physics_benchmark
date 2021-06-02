@@ -1,15 +1,11 @@
  #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Reconstructs D*+ -> [D0 -> K- pi+ (pi+ pi-)] pi+ from mDST."""
+"""Reconstructs D0 -> K- pi+ (pi+ pi-) from mDST."""
 
-##############################################################
-# This functions perform the reconstruction of the
-# following decay chains (and c.c. decay chain):
-#
-# D*+ -> D0 pi+
-#        |
-#        +-> K- pi+
-#        +-> K- pi+ pi+ pi-
+#######################################################################
+# This steering files reconstructs D0s in the following decay channels
+#   D0 -> K- pi+
+#   D0 -> K- pi+ pi+
 #
 # USAGE:
 # > basf2 mdst2ntuple.py -- --input INPUT --output OUTPUT \
@@ -20,15 +16,14 @@
 # looseSelection = add to remove selection on tracks
 # addTopoAna = add to include TopoAna/MCGen variables
 #
-# Contributors: G. Casarosa, A. Di Canto (Dec 2019)
-#               L. Massaccesi (June 2021)
+# Contributors: L. Massaccesi (June 2021)
 #
 # Software Version: release-05-02-06 / upgrade / master
 #
-# Must use release-05-02-06 or master without --vtx
-# Must use upgrade branch with --vtx
+# Must use release-05-02-06 or master when the input uses PXD+SVD.
+# Must use upgrade branch when the input uses VTX.
 # The script will terminate if used with the wrong version.
-##############################################################
+#######################################################################
 
 import argparse
 import os
@@ -52,7 +47,7 @@ def check_globaltags(base_tags, user_tags, metadata):
     if not base_tags:
         b2.B2FATAL("No baseline GT available. Input files probably have incompatible GTs.")
     if not metadata:
-        b2.B2FATAL("No GT in input files' metadata, can't check if upgrade was used.")
+        b2.B2FATAL("No GT in input files metadata, can't check if upgrade was used.")
     md_tags = metadata[0].getDatabaseGlobalTag()
     for md in metadata:
         if md.getDatabaseGlobalTag() != md_tags:
@@ -75,11 +70,10 @@ def check_globaltags(base_tags, user_tags, metadata):
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--addTopoAna', action="store_true",
-                    help='add TopoAna/MCGen variables for MC')
+                    help='Add TopoAna/MCGen variables for MC')
 parser.add_argument('--looseSelection', action="store_true",
-                    help='add to remove selection on tracks')
-parser.add_argument("-i", '--input', nargs='+',
-                    help='mDST input file(s)')
+                    help='Removes selection on tracks')
+parser.add_argument("-i", '--input', nargs='+', help='mDST input file(s)')
 parser.add_argument("-o", '--output', default='test.root',
                     help='ROOT output file, default test.root')
 args = parser.parse_args()
@@ -94,21 +88,17 @@ main = b2.create_path()
 # load the samples
 ma.inputMdstList(filelist=args.input, environmentType='default', path=main)
 
-# load pions and kaons from IP and in tracking acceptance
-myTrk = '[abs(dr)<1.0] and [abs(dz)<2.0]'  # TODO Probably need to change this
-myTrkSoft = myTrk + ('' if args.looseSelection else ' and [nCDCHits>0]')
-ma.fillParticleList('pi+:soft', myTrkSoft, path=main)
-
+# load pions and kaons in tracking acceptance
+# myTrk = '[abs(dr)<1.0] and [abs(dz)<2.0]'  # TODO keep this?
 if not args.looseSelection:
     if HAS_VTX:
-        myTrk += ' and [nVTXHits>0] and [nCDCHits>20]'
+        myTrk = '[nVTXHits>0] and [nCDCHits>20]'
     else:
-        myTrk += ' and [nPXDHits>0] and [nSVDHits>0] and [nCDCHits>20]'
+        myTrk = '[nPXDHits>0] and [nSVDHits>0] and [nCDCHits>20]'
+else:
+    myTrk = ""
 ma.fillParticleList('pi+:myTrk', myTrk, path=main)
 ma.fillParticleList('K+:myTrk', myTrk, path=main)
-
-# MC-only particle list for debugging purposes
-ma.fillParticleListFromMC('D*+:MC', "", path=main)
 
 # D0 reconstruction
 myD0 = '1.6 < M < 2.1'
@@ -121,21 +111,13 @@ ma.copyLists('D0:merged', ['D0:Kpi', 'D0:K3pi'], True, path=main)
 
 ma.variablesToExtraInfo("D0:merged", variables={'M': 'M_preFit'}, path=main)
 
-# Dstar reconstruction
-myDst = '[massDifference(0)<0.2] and [useCMSFrame(p)>1.5]'
-ma.reconstructDecay('D*+:good -> D0:merged pi+:soft', cut=myDst, path=main)
-
-ma.variablesToExtraInfo("D*+:good", variables={'M': 'M_preFit'}, path=main)
-
 conf_level_cut = -1.0 if args.looseSelection else 0.001
-vx.treeFit(list_name='D*+:good', conf_level=conf_level_cut, ipConstraint=False,
-           updateAllDaughters=True, path=main)
+vx.treeFit(list_name='D0:merged', conf_level=conf_level_cut,
+           ipConstraint=False, updateAllDaughters=True, path=main)
 
-myCuts = '[massDifference(0) < 0.16] and [1.7 < daughter(0,M) < 2.05]' \
-         ' and [useCMSFrame(p) > 1.8]'
-ma.applyCuts('D*+:good', myCuts, path=main)
+ma.applyCuts('D0:merged', '1.7 < M < 2.05', path=main)
 
-ma.matchMCTruth(list_name='D*+:good', path=main)
+ma.matchMCTruth(list_name='D0:merged', path=main)
 
 # List of variables to save
 vm.addAlias('IPCovXX', 'IPCov(0,0)')
@@ -172,62 +154,46 @@ tracksVariables += ['tanLambdaErr']
 tracksVariables += ['charge', 'omegaErr', 'phi0Err', 'z0Err', 'd0Err']
 
 compositeVariables = vc.vertex + ['M', 'ErrM']
-compositeVariables += ['mcProductionVertexX', 'mcProductionVertexY',
-                       'mcProductionVertexZ']
+compositeVariables += ['mcProductionVertexX', 'mcProductionVertexY', 'mcProductionVertexZ']
 
 flightVariables = vc.flight_info
 flightVariables += vc.mc_flight_info
 
 varsKpi = vu.create_aliases_for_selected(
-    commonVariables, '^D*+ -> [^D0 -> ^pi+ ^K-] ^pi+',
-    ['Dst', 'D0', 'pi', 'K', 'pisoft'])
+    commonVariables, '^D0 -> ^pi+ ^K-', ['D0', 'pi', 'K'])
 varsKpi += vu.create_aliases_for_selected(
-    tracksVariables, 'D*+ -> [D0 -> ^pi+ ^K-] ^pi+', ['pi', 'K', 'pisoft'])
+    tracksVariables, 'D0 -> ^pi+ ^K-', ['pi', 'K'])
 varsKpi += vu.create_aliases_for_selected(
-    compositeVariables, '^D*+ -> [^D0 -> pi+ K-] pi+', ['Dst', 'D0'])
-varsKpi += vu.create_aliases_for_selected(
-    flightVariables, '^D*+ -> [^D0 -> pi+ K-] pi+', ['Dst', 'D0'])
+    compositeVariables + flightVariables, '^D0 -> pi+ K-', ['D0'])
 
 varsK3pi = vu.create_aliases_for_selected(
-    commonVariables, '^D*+ -> [^D0 -> ^pi+ ^K- ^pi+ ^pi-] ^pi+',
-    ['Dst', 'D0', 'pi1', 'K', 'pi2', 'pi3', 'pisoft'])
+    commonVariables, '^D0 -> ^pi+ ^K- ^pi+ ^pi-',
+    ['D0', 'pi1', 'K', 'pi2', 'pi3'])
 varsK3pi += vu.create_aliases_for_selected(
-    tracksVariables, 'D*+ -> [D0 -> ^pi+ ^K- ^pi+ ^pi-] ^pi+',
-    ['pi1', 'K', 'pi2', 'pi3', 'pisoft'])
+    tracksVariables, 'D0 -> ^pi+ ^K- ^pi+ ^pi-', ['pi1', 'K', 'pi2', 'pi3'])
 varsK3pi += vu.create_aliases_for_selected(
-    compositeVariables, '^D*+ -> [^D0 -> pi+ K- pi+ pi-] pi+', ['Dst', 'D0'])
-varsK3pi += vu.create_aliases_for_selected(
-    flightVariables, '^D*+ -> [^D0 -> pi+ K- pi+ pi-] pi+', ['Dst', 'D0'])
+    compositeVariables + flightVariables, '^D0 -> pi+ K- pi+ pi-', ['D0'])
 
-vm.addAlias('Dst_M_preFit', 'extraInfo(M_preFit)')
-vm.addAlias('D0_M_preFit', 'daughter(0,extraInfo(M_preFit))')
-prefit_variables = ['Dst_M_preFit', 'D0_M_preFit']
+vm.addAlias('D0_M_preFit', 'extraInfo(M_preFit)')
+prefit_variables = ['D0_M_preFit']
 
-vm.addAlias('Dst_px_CMS', 'useCMSFrame(px)')
-vm.addAlias('Dst_py_CMS', 'useCMSFrame(py)')
-vm.addAlias('Dst_pz_CMS', 'useCMSFrame(pz)')
-vm.addAlias('Dst_p_CMS', 'useCMSFrame(p)')
-cms_variables = ['Dst_px_CMS', 'Dst_py_CMS', 'Dst_pz_CMS', 'Dst_p_CMS']
-
-varsKpi += prefit_variables + cms_variables + eventWiseVariables
-varsK3pi += prefit_variables + cms_variables + eventWiseVariables
+varsKpi += prefit_variables + eventWiseVariables
+varsK3pi += prefit_variables + eventWiseVariables
 
 # Create one ntuple per channel in the same output file
-ma.cutAndCopyList('D*+:Kpi', 'D*+:good', 'daughter(0,extraInfo(decayModeID))==0', path=main)
-ma.cutAndCopyList('D*+:K3pi', 'D*+:good', 'daughter(0,extraInfo(decayModeID))==1', path=main)
+ma.cutAndCopyList('D0:KpiCut', 'D0:merged', 'extraInfo(decayModeID)==0', path=main)
+ma.cutAndCopyList('D0:K3piCut', 'D0:merged', 'extraInfo(decayModeID)==1', path=main)
 
 ma.variablesToNtuple(
-    decayString='D*+:Kpi', variables=varsKpi, filename=args.output,
-    treename='Dst_D0pi_Kpi', path=main)
+    decayString='D0:KpiCut', variables=varsKpi, filename=args.output,
+    treename='D0_Kpi', path=main)
 ma.variablesToNtuple(
-    decayString='D*+:K3pi', variables=varsK3pi, filename=args.output,
-    treename='Dst_D0pi_K3pi', path=main)
-# MC-only tree for debugging
-ma.variablesToNtuple(
-    decayString='D*+:MC', variables=vc.inv_mass + vc.flight_info + vc.mc_flight_info,
-    filename=args.output, treename='DstMC', path=main)
+    decayString='D0:K3piCut', variables=varsK3pi, filename=args.output,
+    treename='D0_K3pi', path=main)
 
 # Process the events
+# b2.set_log_level(b2.LogLevel.ERROR)
+
 main.add_module('ProgressBar')
 b2.process(main)
 print(b2.statistics)

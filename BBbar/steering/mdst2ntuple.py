@@ -107,9 +107,6 @@ if not args.looseSelection:
 ma.fillParticleList('pi+:myTrk', myTrk, path=main)
 ma.fillParticleList('K+:myTrk', myTrk, path=main)
 
-# MC-only particle list for debugging purposes
-ma.fillParticleListFromMC('D*+:MC', "", path=main)
-
 # D0 reconstruction
 myD0 = '1.6 < M < 2.1'
 ma.reconstructDecay('D0:Kpi -> pi+:myTrk K-:myTrk',
@@ -222,10 +219,6 @@ ma.variablesToNtuple(
 ma.variablesToNtuple(
     decayString='D*+:K3pi', variables=varsK3pi, filename=args.output,
     treename='Dst_D0pi_K3pi', path=main)
-# MC-only tree for debugging
-ma.variablesToNtuple(
-    decayString='D*+:MC', variables=vc.inv_mass + vc.flight_info + vc.mc_flight_info,
-    filename=args.output, treename='DstMC', path=main)
 
 # Process the events
 main.add_module('ProgressBar')

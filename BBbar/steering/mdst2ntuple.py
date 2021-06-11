@@ -95,20 +95,20 @@ main = b2.create_path()
 ma.inputMdstList(filelist=args.input, environmentType='default', path=main)
 
 # load pions and kaons from IP and in tracking acceptance
-myTrk = '[abs(dr)<1.0] and [abs(dz)<2.0]'  # TODO Probably need to change this
-myTrkSoft = myTrk + ('' if args.looseSelection else ' and [nCDCHits>0]')
+myTrk = ''
+myTrkSoft = myTrk + ''
 ma.fillParticleList('pi+:soft', myTrkSoft, path=main)
 
 if not args.looseSelection:
     if HAS_VTX:
-        myTrk += ' and [nVTXHits>0] and [nCDCHits>20]'
+        myTrk += ''
     else:
-        myTrk += ' and [nPXDHits>0] and [nSVDHits>0] and [nCDCHits>20]'
+        myTrk += ''
 ma.fillParticleList('pi+:myTrk', myTrk, path=main)
 ma.fillParticleList('K+:myTrk', myTrk, path=main)
 
 # D0 reconstruction
-myD0 = '1.6 < M < 2.1'
+myD0 = ''  # '0.86 < M < 2.86'  # M_D0 = 1.8648 GeV
 ma.reconstructDecay('D0:Kpi -> pi+:myTrk K-:myTrk',
                     cut=myD0, dmID=0, path=main)
 ma.reconstructDecay('D0:K3pi -> pi+:myTrk K-:myTrk pi+:myTrk pi-:myTrk',
@@ -119,7 +119,7 @@ ma.copyLists('D0:merged', ['D0:Kpi', 'D0:K3pi'], True, path=main)
 ma.variablesToExtraInfo("D0:merged", variables={'M': 'M_preFit'}, path=main)
 
 # Dstar reconstruction
-myDst = '[massDifference(0)<0.2] and [useCMSFrame(p)>1.5]'
+myDst = ''  # 'massDifference(0) < 1'  # M_D* = 2.0103, diff = 0.1455
 ma.reconstructDecay('D*+:good -> D0:merged pi+:soft', cut=myDst, path=main)
 
 ma.variablesToExtraInfo("D*+:good", variables={'M': 'M_preFit'}, path=main)
@@ -128,8 +128,7 @@ conf_level_cut = -1.0 if args.looseSelection else 0.001
 vx.treeFit(list_name='D*+:good', conf_level=conf_level_cut, ipConstraint=False,
            updateAllDaughters=True, path=main)
 
-myCuts = '[massDifference(0) < 0.16] and [1.7 < daughter(0,M) < 2.05]' \
-         ' and [useCMSFrame(p) > 1.8]'
+myCuts = ''
 ma.applyCuts('D*+:good', myCuts, path=main)
 
 ma.matchMCTruth(list_name='D*+:good', path=main)

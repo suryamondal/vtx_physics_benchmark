@@ -6,6 +6,9 @@
 output/
 outputs/
 outputs.*/
+output
+outputs
+outputs.*
 *.root
 *.pdf
 kkmc_*.txt*

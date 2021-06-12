@@ -14,6 +14,7 @@
 #include <functional>
 #include <vector>
 #include <tuple>
+#include <map>
 using namespace ROOT;
 using namespace std;
 
@@ -27,6 +28,11 @@ typedef ROOT::RDF::RResultPtr<TH1D> TH1DRes;
 
 const auto mRed = TColor::GetColor("#E24A33");
 const auto mBlue = TColor::GetColor("#348ABD");
+
+const map<TString,TString> particlesTitles {
+  {"Dst", "D*"}, {"D0", "D^{0}"}, {"K", "K"}, {"pisoft", "#pi_{soft}"},
+  {"pi", "#pi"}, {"pi1", "#pi_{1}"}, {"pi3", "#pi_{3}"}, {"pi3", "#pi_{3}"}
+};
 
 TString operator"" TS(const char* s, size_t) { return TString(s); }
 
@@ -56,7 +62,8 @@ void drawSigBkg(TCanvas& c, TH1* sig, TH1* bkg)
   c.Print(PLOTS_FILE, "Title:"TS + sig->GetTitle());
 }
 
-inline void drawSigBkg(TCanvas &c, ROOT::RDF::RResultPtr<TH1D>& sig, ROOT::RDF::RResultPtr<TH1D>& bkg) {
+inline void drawSigBkg(TCanvas &c, ROOT::RDF::RResultPtr<TH1D>& sig, ROOT::RDF::RResultPtr<TH1D>& bkg)
+{
   drawSigBkg(c, (TH1*)sig.GetPtr(), (TH1*)bkg.GetPtr());
 }
 
@@ -76,16 +83,28 @@ void plots(RDataFrame& df, TCanvas& c, TString name, TString title)
     );
   };
 
-  // Only booking here
   vector<tuple<TH1DRes,TH1DRes>> histos;
 
-  histos.push_back(histoSigBkg("Dst_M", "M_{D*};M_{D*} [GeV];Events / bin", 100, 1, 3));
-  histos.push_back(histoSigBkg("D0_M", "M_{D^{0}};M_{D^{0}} [GeV];Events / bin", 100, 1, 3));
+  // histosForParticles({"Dst", "D0", ...}, "variable", "title", ...)
+  //   will call histoSigBkg for each particle with
+  //     v = "Dst_variable", ...
+  //     title = < here "$p" is replaced with the particle's title >
+  function<void(initializer_list<const char*>,const char*,TString,int,double,double)>
+  histosForParticles = [&df2, &histoSigBkg, &histos] (initializer_list<const char*> particles, const char* v, TString tt, int nb, double xl, double xu) {
+    for (const char* p : particles) {
+      TString pp = p, t = tt; // Replacement happens in-place :(
+      TString vv = pp + "_" + v;
+      if (!df2.HasColumn(vv)) continue;
+      histos.push_back(histoSigBkg(vv, t.ReplaceAll("$p", particlesTitles.at(pp)), nb, xl, xu));
+    }
+  };
 
-  histos.push_back(histoSigBkg("Dst_M_preFit", "M_{D*} (pre-fit);M_{D*} [GeV];Events / bin", 100, 1, 3));
-  histos.push_back(histoSigBkg("D0_M_preFit", "M_{D^{0}} (pre-fit);M_{D^{0}} [GeV];Events / bin", 100, 1, 3));
-
+  // Only booking here
+  histosForParticles({"Dst", "D0"}, "M", "M_{$p};M_{$p} [GeV];Events / bin", 100, 1, 3);
+  histosForParticles({"Dst", "D0"}, "M_preFit", "M_{$p};M_{$p} (pre-fit) [GeV];Events / bin", 100, 1, 3);
   histos.push_back(histoSigBkg("massDiffPreFit", "Mass difference (pre-fit);M_{D*} - M_{D^{0}} [GeV];Events / bin", 100, 0, 0.4));
+
+
 
   // TODO PXD, SVD, VTX Hits, repeat for pi, pi1, pi2, pi3, pisoft, K
   // TODO Need to add ifs for VTX and pi/pi123

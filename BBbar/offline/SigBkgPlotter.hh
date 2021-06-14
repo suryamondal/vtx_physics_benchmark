@@ -54,9 +54,6 @@ class SigBkgPlotter {
   void SetTitlePrefix(TString titlePrefix) { m_titlePrefix = titlePrefix; }
 
  private:
-  /** Set line, fill and marker colors in one call. */
-  inline void SetColor(TH1* h, Color_t c) { h->SetLineColor(c); h->SetMarkerColor(c); h->SetFillColor(c); }
-
   /** Prints a signal and a background histograms to PDF. */
   void DrawSigBkg(TH1* sig, TH1* bkg);
 

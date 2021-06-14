@@ -43,7 +43,7 @@ void SigBkgPlotter::PrintAll(bool clearInternalList)
 void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
 {
   THStack s("ths", sig->GetTitle() + ";"TS + sig->GetXaxis()->GetTitle() + ";" + sig->GetYaxis()->GetTitle() + ";" + sig->GetZaxis()->GetTitle());
-  SetColor(sig, MyBlue);
+  SetColor(sig, kBlack, MyBlue);
   SetColor(bkg, MyRed);
   bkg->SetFillStyle(3454);
 

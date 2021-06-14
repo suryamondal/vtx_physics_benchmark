@@ -34,8 +34,8 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   plt.Histo1D({"Dst", "D0"}, "M_preFit", "M_{$p} (pre-fit);M_{$p} [GeV/c^{2}];Events / bin", 100, 1, 3);
   plt.Histo1D("massDiffPreFit", "#DeltaM (pre-fit);M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 100, 0, 0.4);
 
-  plt.Histo1D(particlesFS, "dr", "dr_{$p};dr_{$p} [cm];Events / bin", 100, 0, 20);
-  plt.Histo1D(particlesFS, "dz", "dz_{$p};dz_{$p} [cm];Events / bin", 100, -10, 10);
+  plt.Histo1D(particlesFS, "dr", "dr_{$p};dr_{$p} [cm];Events / bin", 100, 0, 3);
+  plt.Histo1D(particlesFS, "dz", "dz_{$p};dz_{$p} [cm];Events / bin", 100, -3, 3);
 
   plt.Histo1D(particlesFS, "nCDCHits", "CDC Hits_{$p};CDC Hits_{$p};Events / bin", 101, -0.5, 100.5);
   // VXD = PXD+SVD+VTX

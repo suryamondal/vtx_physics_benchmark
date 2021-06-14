@@ -12,7 +12,13 @@ const std::map<TString,TString> ParticlesTitles {
 };
 
 /// Offline cuts common to Kpi and K3pi
-extern const char* CommonCuts;
+extern const TString CommonCuts;
+
+/// Offline cuts for Kpi only
+extern const TString KpiCuts;
+
+/// Offline cuts for K3pi only
+extern const TString K3piCuts;
 
 // Final state particles of Kpi
 const std::initializer_list<TString> KPiFSParticles {"K", "pi", "pisoft"};

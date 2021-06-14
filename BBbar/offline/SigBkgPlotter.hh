@@ -62,7 +62,7 @@ class SigBkgPlotter {
   TString GetTitlePrefix() const { return m_titlePrefix; }
   void SetTitlePrefix(TString titlePrefix) { m_titlePrefix = titlePrefix; }
 
-  bool HasVTX() { return m_sig.HasColumn("nVTXHits"); } // TODO does not work, why?
+  bool HasVTX() { return m_sig.HasColumn("nVTXHits"); }
 
  private:
   /** Prints a signal and a background histograms to PDF. */

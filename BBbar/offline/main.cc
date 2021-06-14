@@ -19,7 +19,8 @@ SigBkgPlotter::DefineDF defineVariables(RDataFrame& df, bool isK3pi)
 
 SigBkgPlotter::FilterDF applyOfflineCuts(SigBkgPlotter::DefineDF& df, bool isK3pi)
 {
-  return df.Filter(CommonCuts, "Offline Cuts");
+  TString cuts = CommonCuts + " && " + (isK3pi ? K3piCuts : KpiCuts);
+  return df.Filter(cuts.Data(), "Offline Cuts");
 }
 
 /** Books plots. */
@@ -37,6 +38,7 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   plt.Histo1D(particlesFS, "dz", "dz_{$p};dz_{$p} [cm];Events / bin", 100, -10, 10);
 
   plt.Histo1D(particlesFS, "nCDCHits", "CDC Hits_{$p};CDC Hits_{$p};Events / bin", 51, -0.5, 50.5);
+  plt.Histo1D(particlesFS, "nVXDHits", "VXD Hits_{$p};VXD Hits_{$p};Events / bin", 51, -0.5, 50.5);
   if (plt.HasVTX()) {
     plt.Histo1D(particlesFS, "nVTXHits", "VTX Hits_{$p};VTX Hits_{$p};Events / bin", 11, -0.5, 10.5);
   } else {

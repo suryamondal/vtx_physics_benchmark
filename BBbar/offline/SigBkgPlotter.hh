@@ -10,7 +10,7 @@
  */
 class SigBkgPlotter {
  public:
-  typedef ROOT::RDF::RInterface<ROOT::Detail::RDF::RJittedFilter,void> RFilter;
+  typedef ROOT::RDF::RInterface<ROOT::Detail::RDF::RJittedFilter,void> FilterDF;
   typedef ROOT::RDF::RResultPtr<TH1D> RRes1D;
   typedef ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager,void> DefineDF;
   typedef std::tuple<RRes1D,RRes1D> TRRes1D;
@@ -25,6 +25,15 @@ class SigBkgPlotter {
    * tell signal from background and prints plots to c.
    */
   SigBkgPlotter(DefineDF& df, TString sigCond, PDFCanvas& c,
+                TString namePrefix = "undefined", TString titlePrefix = "Undefined")
+  : m_sig(df.Filter((const char*)sigCond, "Signal")),
+    m_bkg(df.Filter((const char*)("!(" + sigCond + ")"), "Background")),
+    m_c(c), m_namePrefix(namePrefix), m_titlePrefix(titlePrefix) {}
+
+  /** Constructor for a SigBkgPlotter that takes data from df, uses sigCond to
+   * tell signal from background and prints plots to c.
+   */
+  SigBkgPlotter(FilterDF& df, TString sigCond, PDFCanvas& c,
                 TString namePrefix = "undefined", TString titlePrefix = "Undefined")
   : m_sig(df.Filter((const char*)sigCond, "Signal")),
     m_bkg(df.Filter((const char*)("!(" + sigCond + ")"), "Background")),
@@ -53,6 +62,8 @@ class SigBkgPlotter {
   TString GetTitlePrefix() const { return m_titlePrefix; }
   void SetTitlePrefix(TString titlePrefix) { m_titlePrefix = titlePrefix; }
 
+  bool HasVTX() { return m_sig.HasColumn("nVTXHits"); } // TODO does not work, why?
+
  private:
   /** Prints a signal and a background histograms to PDF. */
   void DrawSigBkg(TH1* sig, TH1* bkg);
@@ -63,8 +74,8 @@ class SigBkgPlotter {
   /** Print a {sig,bkg} histograms tuple to PDF. */
   inline void DrawSigBkg(TRRes1D tuple) { DrawSigBkg(std::get<0>(tuple), std::get<1>(tuple)); }
 
-  RFilter m_sig; /**< Signal dataframe. */
-  RFilter m_bkg; /**< Background dataframe. */
+  FilterDF m_sig; /**< Signal dataframe. */
+  FilterDF m_bkg; /**< Background dataframe. */
   PDFCanvas& m_c; /**< The output canvas. */
   std::vector<std::tuple<RRes1D,RRes1D>> m_h1s; /**< 1D histograms go here. */
   TString m_namePrefix; /**< Prefix for the name of the histograms. */

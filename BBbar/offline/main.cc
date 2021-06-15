@@ -26,25 +26,27 @@ SigBkgPlotter::FilterDF applyOfflineCuts(SigBkgPlotter::DefineDF& df, bool isK3p
 /** Books plots. */
 void bookHistos(SigBkgPlotter& plt, bool isK3pi)
 {
-  const auto& particlesFS = isK3pi ? K3PiFSParticles : KPiFSParticles;
+  const auto& CompParts = CompositeParticles;
+  const auto& FSParts = isK3pi ? K3PiFSParticles : KPiFSParticles;
+  const auto& AllParts = isK3pi ? K3PiAllParticles : KPiAllParticles;
 
-  plt.Histo1D({"Dst", "D0"}, "M", "M_{$p};M_{$p} [GeV/c^{2}];Events / bin", 100, 1, 3);
+  plt.Histo1D(CompParts, "M", "M_{$p};M_{$p} [GeV/c^{2}];Events / bin", 100, 1, 3);
   plt.Histo1D("massDiff", "#DeltaM;M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 100, 0, 0.4);
 
-  plt.Histo1D({"Dst", "D0"}, "M_preFit", "M_{$p} (pre-fit);M_{$p} [GeV/c^{2}];Events / bin", 100, 1, 3);
+  plt.Histo1D(CompParts, "M_preFit", "M_{$p} (pre-fit);M_{$p} [GeV/c^{2}];Events / bin", 100, 1, 3);
   plt.Histo1D("massDiffPreFit", "#DeltaM (pre-fit);M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 100, 0, 0.4);
 
-  plt.Histo1D(particlesFS, "dr", "dr_{$p};dr_{$p} [cm];Events / bin", 100, 0, 3);
-  plt.Histo1D(particlesFS, "dz", "dz_{$p};dz_{$p} [cm];Events / bin", 100, -3, 3);
+  plt.Histo1D(FSParts, "dr", "dr_{$p};dr_{$p} [cm];Events / bin", 100, 0, 3);
+  plt.Histo1D(FSParts, "dz", "dz_{$p};dz_{$p} [cm];Events / bin", 100, -3, 3);
 
-  plt.Histo1D(particlesFS, "nCDCHits", "CDC Hits_{$p};CDC Hits_{$p};Events / bin", 101, -0.5, 100.5);
+  plt.Histo1D(FSParts, "nCDCHits", "CDC Hits_{$p};CDC Hits_{$p};Events / bin", 101, -0.5, 100.5);
   // VXD = PXD+SVD+VTX
-  plt.Histo1D(particlesFS, "nVXDHits", "VXD Hits_{$p};VXD Hits_{$p};Events / bin", 25, -0.5, 24.5);
+  plt.Histo1D(FSParts, "nVXDHits", "VXD Hits_{$p};VXD Hits_{$p};Events / bin", 25, -0.5, 24.5);
   // if (plt.HasVTX()) {
-  //   plt.Histo1D(particlesFS, "nVTXHits", "VTX Hits_{$p};VTX Hits_{$p};Events / bin", 11, -0.5, 10.5);
+  //   plt.Histo1D(FSParts, "nVTXHits", "VTX Hits_{$p};VTX Hits_{$p};Events / bin", 11, -0.5, 10.5);
   // } else {
-  //   plt.Histo1D(particlesFS, "nSVDHits", "SVD Hits_{$p};SVD Hits_{$p};Events / bin", 11, -0.5, 10.5);
-  //   plt.Histo1D(particlesFS, "nPXDHits", "PXD Hits_{$p};PXD Hits_{$p};Events / bin", 11, -0.5, 10.5);
+  //   plt.Histo1D(FSParts, "nSVDHits", "SVD Hits_{$p};SVD Hits_{$p};Events / bin", 11, -0.5, 10.5);
+  //   plt.Histo1D(FSParts, "nPXDHits", "PXD Hits_{$p};PXD Hits_{$p};Events / bin", 11, -0.5, 10.5);
   // }
 
   plt.Histo1D("Dst_p_CMS", "p_{CM,D*};P_{CM,D*} [GeV/c];Events / bin", 100, 0, 3);
@@ -52,9 +54,14 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   plt.Histo1D("Dst_py_CMS", "p_{y,CM,D*};P_{y,CM,D*} [GeV/c];Events / bin", 100, -3, 3);
   plt.Histo1D("Dst_pz_CMS", "p_{z,CM,D*};P_{z,CM,D*} [GeV/c];Events / bin", 100, -3, 3);
 
-  plt.Histo1D({"Dst", "D0"}, "significanceOfDistance", "Significance of distance $p;Significance of distance $p;Events / bin", 100, 0, 100);
-  plt.Histo1D({"Dst", "D0"}, "flightDistance", "Flight distance $p;Flight distance $p [cm];Events / bin", 100, 0, 100);
-  // plt.Histo1D(particlesFS, "pValue", "p-value $p;p-value $p;Events / bin", 100, 0, 1);
+  // plt.Histo1D(AllParts, "p", "p_{$p};P_{$p} [GeV/c];Events / bin", 100, 0, 3);
+  // plt.Histo1D(AllParts, "px", "p_{x,$p};P_{x,$p} [GeV/c];Events / bin", 100, -3, 3);
+  // plt.Histo1D(AllParts, "py", "p_{y,$p};P_{y,$p} [GeV/c];Events / bin", 100, -3, 3);
+  // plt.Histo1D(AllParts, "pz", "p_{z,$p};P_{z,$p} [GeV/c];Events / bin", 100, -3, 3);
+
+  plt.Histo1D(CompParts, "significanceOfDistance", "Significance of distance $p;Significance of distance $p;Events / bin", 100, 0, 100);
+  plt.Histo1D(CompParts, "flightDistance", "Flight distance $p;Flight distance $p [cm];Events / bin", 100, 0, 100);
+  // plt.Histo1D(FSParts, "pValue", "p-value $p;p-value $p;Events / bin", 100, 0, 1);
 }
 
 void makeHistosAndPlot(RDataFrame& df, SigBkgPlotter& plt, bool isK3pi)

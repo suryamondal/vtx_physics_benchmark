@@ -20,8 +20,17 @@ extern const TString KpiCuts;
 /// Offline cuts for K3pi only
 extern const TString K3piCuts;
 
+// Composite particles (D* and D0)
+const std::initializer_list<TString> CompositeParticles {"Dst", "D0"};
+
 // Final state particles of Kpi
 const std::initializer_list<TString> KPiFSParticles {"K", "pi", "pisoft"};
 
 // Final state particles of K3pi
 const std::initializer_list<TString> K3PiFSParticles {"K", "pi1", "pi2", "pi3", "pisoft"};
+
+// All particles of Kpi
+const std::initializer_list<TString> KPiAllParticles {"Dst", "D0", "K", "pi", "pisoft"};
+
+// All particles of K3pi
+const std::initializer_list<TString> K3PiAllParticles {"Dst", "D0", "K", "pi1", "pi2", "pi3", "pisoft"};

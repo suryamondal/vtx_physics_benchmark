@@ -11,10 +11,10 @@
 inline TString operator""TS(const char *s, size_t sz) { return TString(s, sz); }
 
 /** Set line, fill and marker colors in one call. */
-inline void SetColor(TH1* h, Color_t cLine, Color_t cFM) {
-  h->SetLineColor(cLine);
-  h->SetMarkerColor(cFM);
-  h->SetFillColor(cFM);
+inline void SetColor(TH1* h, Color_t cLineMarker, Color_t cFill) {
+  h->SetLineColor(cLineMarker);
+  h->SetMarkerColor(cLineMarker);
+  h->SetFillColor(cFill);
 }
 
 /** Set line, fill and marker colors in one call. */

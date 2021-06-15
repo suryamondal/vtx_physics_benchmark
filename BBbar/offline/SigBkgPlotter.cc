@@ -58,8 +58,8 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
   s.Draw("nostack");
 
   TLegend leg(0.8, 0.8, 0.95, 0.91);
-  leg.AddEntry(sig, "Signal", "F");
-  leg.AddEntry(bkg, "Background", "F");
+  leg.AddEntry(sig, "Signal", m_normalizeHistos ? "PLE" : "F");
+  leg.AddEntry(bkg, "Background", m_normalizeHistos ? "PLE" : "F");
   leg.Draw();
 
   m_c->SetLogy();

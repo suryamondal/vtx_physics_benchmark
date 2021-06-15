@@ -47,6 +47,11 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
   SetColor(bkg, MyRed);
   bkg->SetFillStyle(3454);
 
+  if (m_normalizeHistos) {
+    Normalize(sig);
+    Normalize(bkg);
+  }
+
   s.Add(sig);
   s.Add(bkg);
   m_c->cd();

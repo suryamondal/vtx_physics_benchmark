@@ -70,15 +70,19 @@ int main(int argc, char* argv[])
   ArgParser parser("Analysis program for D* -> [D0 -> K pi (pi pi)] pi.");
   parser.AddPositionalArg("inputRootFile");
   parser.AddFlag("--offline-cuts");
+  parser.AddFlag("--normalize-histos");
   auto args = parser.ParseArgs(argc, argv);
   bool offlineCuts = args.find("offline-cuts") != args.end();
+  bool normalizeHistos = args.find("normalize-histos") != args.end();
 
   TString inFileName = args["inputRootFile"];
   if (!inFileName.EndsWith(".root")) {
     cout << "Invalid input file (expected to end with \".root\")." << endl;
     return 1;
   }
-  TString outFileSuffix = offlineCuts ? "_offline_cuts" : "";
+  TString outFileSuffix = "";
+  if (offlineCuts) outFileSuffix += "_offline-cuts";
+  if (normalizeHistos) outFileSuffix += "_norm-hist";
   TString outFileName = inFileName(0, inFileName.Length() - 5) + outFileSuffix + ".pdf";
 
   RDataFrame dfKpi("Dst_D0pi_Kpi", inFileName.Data());
@@ -93,13 +97,13 @@ int main(int argc, char* argv[])
   if (offlineCuts) {
     auto dfCutKpi = applyOfflineCuts(dfDefKpi, false);
     auto dfCutK3pi = applyOfflineCuts(dfDefK3pi, true);
-    SigBkgPlotter plotterKpi(dfCutKpi, "Dst_isSignal==1", canvas, "Kpi", "K#pi");
-    SigBkgPlotter plotterK3pi(dfCutK3pi, "Dst_isSignal==1", canvas, "K3pi", "K3#pi");
+    SigBkgPlotter plotterKpi(dfCutKpi, "Dst_isSignal==1", canvas, "Kpi", "K#pi", normalizeHistos);
+    SigBkgPlotter plotterK3pi(dfCutK3pi, "Dst_isSignal==1", canvas, "K3pi", "K3#pi", normalizeHistos);
     makeHistosAndPlot(dfKpi, plotterKpi, false);
     makeHistosAndPlot(dfK3pi, plotterK3pi, true);
   } else {
-    SigBkgPlotter plotterKpi(dfDefKpi, "Dst_isSignal==1", canvas, "Kpi", "K#pi");
-    SigBkgPlotter plotterK3pi(dfDefK3pi, "Dst_isSignal==1", canvas, "K3pi", "K3#pi");
+    SigBkgPlotter plotterKpi(dfDefKpi, "Dst_isSignal==1", canvas, "Kpi", "K#pi", normalizeHistos);
+    SigBkgPlotter plotterK3pi(dfDefK3pi, "Dst_isSignal==1", canvas, "K3pi", "K3#pi", normalizeHistos);
     makeHistosAndPlot(dfKpi, plotterKpi, false);
     makeHistosAndPlot(dfK3pi, plotterK3pi, true);
   }

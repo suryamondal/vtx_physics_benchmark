@@ -19,3 +19,6 @@ inline void SetColor(TH1* h, Color_t cLine, Color_t cFM) {
 
 /** Set line, fill and marker colors in one call. */
 inline void SetColor(TH1* h, Color_t c) { SetColor(h, c, c); }
+
+/** Normalize an histogram. */
+inline void Normalize(TH1* h) { h->Scale(1.0 / h->GetEntries()); }

@@ -25,19 +25,23 @@ class SigBkgPlotter {
    * tell signal from background and prints plots to c.
    */
   SigBkgPlotter(DefineDF& df, TString sigCond, PDFCanvas& c,
-                TString namePrefix = "undefined", TString titlePrefix = "Undefined")
+                TString namePrefix = "undefined", TString titlePrefix = "Undefined",
+                bool normalizeHistos = false)
   : m_sig(df.Filter((const char*)sigCond, "Signal")),
     m_bkg(df.Filter((const char*)("!(" + sigCond + ")"), "Background")),
-    m_c(c), m_namePrefix(namePrefix), m_titlePrefix(titlePrefix) {}
+    m_c(c), m_namePrefix(namePrefix), m_titlePrefix(titlePrefix),
+    m_normalizeHistos(normalizeHistos) {}
 
   /** Constructor for a SigBkgPlotter that takes data from df, uses sigCond to
    * tell signal from background and prints plots to c.
    */
   SigBkgPlotter(FilterDF& df, TString sigCond, PDFCanvas& c,
-                TString namePrefix = "undefined", TString titlePrefix = "Undefined")
+                TString namePrefix = "undefined", TString titlePrefix = "Undefined",
+                bool normalizeHistos = false)
   : m_sig(df.Filter((const char*)sigCond, "Signal")),
     m_bkg(df.Filter((const char*)("!(" + sigCond + ")"), "Background")),
-    m_c(c), m_namePrefix(namePrefix), m_titlePrefix(titlePrefix) {}
+    m_c(c), m_namePrefix(namePrefix), m_titlePrefix(titlePrefix),
+    m_normalizeHistos(normalizeHistos) {}
 
   /** Makes a tuple {sig,bkg} of histograms of the given variable.
    * The tuple is returned and saved to the interal list of plots.
@@ -62,6 +66,9 @@ class SigBkgPlotter {
   TString GetTitlePrefix() const { return m_titlePrefix; }
   void SetTitlePrefix(TString titlePrefix) { m_titlePrefix = titlePrefix; }
 
+  bool GetNormalizeHistos() const { return m_normalizeHistos; }
+  void SetNormalizeHistos(bool value) { m_normalizeHistos = value; }
+
   bool HasVTX() { return m_sig.HasColumn("nVTXHits"); }
 
  private:
@@ -80,4 +87,5 @@ class SigBkgPlotter {
   std::vector<std::tuple<RRes1D,RRes1D>> m_h1s; /**< 1D histograms go here. */
   TString m_namePrefix; /**< Prefix for the name of the histograms. */
   TString m_titlePrefix; /**< Prefix for the title of the histograms. */
+  bool m_normalizeHistos; /**< Used by DrawSigBkg to decide wether to normalize histograms. */
 };

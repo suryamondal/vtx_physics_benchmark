@@ -62,6 +62,9 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   plt.Histo1D(CompParts, "significanceOfDistance", "Significance of distance $p;Significance of distance $p;Events / bin", 100, 0, 100);
   plt.Histo1D(CompParts, "flightDistance", "Flight distance $p;Flight distance $p [cm];Events / bin", 100, 0, 100);
   // plt.Histo1D(FSParts, "pValue", "p-value $p;p-value $p;Events / bin", 100, 0, 1);
+
+  plt.Histo2D("D0_M", "Dst_M", "D* vs D^{0} masses;M_{D^{0}} [GeV/c^{2}];M_{D*} [GeV/c^{2}];Events / bin",
+              50, 1.66, 2.06, 50, 1.8, 2.2);
 }
 
 void makeHistosAndPlot(RDataFrame& df, SigBkgPlotter& plt, bool isK3pi)

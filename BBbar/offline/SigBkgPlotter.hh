@@ -11,9 +11,11 @@
 class SigBkgPlotter {
  public:
   typedef ROOT::RDF::RInterface<ROOT::Detail::RDF::RJittedFilter,void> FilterDF;
-  typedef ROOT::RDF::RResultPtr<TH1D> RRes1D;
   typedef ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager,void> DefineDF;
+  typedef ROOT::RDF::RResultPtr<TH1D> RRes1D;
   typedef std::tuple<RRes1D,RRes1D> TRRes1D;
+  typedef ROOT::RDF::RResultPtr<TH2D> RRes2D;
+  typedef std::tuple<RRes2D,RRes2D> TRRes2D;
 
   SigBkgPlotter() = delete;
   SigBkgPlotter(const SigBkgPlotter&) = delete;
@@ -55,6 +57,22 @@ class SigBkgPlotter {
   void Histo1D(std::initializer_list<TString> particles, const char *variable,
                TString title, int nBins, double xLow, double xUp);
 
+  /** Makes a tuple {sig,bkg} of 2D histograms of the given variables.
+   * The tuple is returned and saved to the interal list of plots.
+   */
+  TRRes2D Histo2D(const char* vx, const char* vy, TString title,
+                  int xBins, double xLow, double xUp,
+                  int yBins, double yLow, double yUp);
+
+  /** Makes a tuple {sig,bkg} of 2D histograms of the given variables
+   * for each of the given particles. In title, $p is replaced with the
+   * "title" of the particle (see ParticlesTitles in Constants.hh).
+   */
+  void Histo2D(std::initializer_list<TString> particles,
+               const char* vx, const char* vy, TString title,
+               int xBins, double xLow, double xUp,
+               int yBins, double yLow, double yUp);
+
   /** Prints all the plots made up to now to the PDF (via the PDFCanvas).
    * The interal list of plots is then cleared unless otherwise specfied.
    */
@@ -81,10 +99,17 @@ class SigBkgPlotter {
   /** Print a {sig,bkg} histograms tuple to PDF. */
   inline void DrawSigBkg(TRRes1D tuple) { DrawSigBkg(std::get<0>(tuple), std::get<1>(tuple)); }
 
+  /** Prints a signal and a background histograms to PDF. */
+  inline void DrawSigBkg(RRes2D sig, RRes2D bkg) { DrawSigBkg(sig.GetPtr(), bkg.GetPtr()); }
+
+  /** Print a {sig,bkg} histograms tuple to PDF. */
+  inline void DrawSigBkg(TRRes2D tuple) { DrawSigBkg(std::get<0>(tuple), std::get<1>(tuple)); }
+
   FilterDF m_sig; /**< Signal dataframe. */
   FilterDF m_bkg; /**< Background dataframe. */
   PDFCanvas& m_c; /**< The output canvas. */
-  std::vector<std::tuple<RRes1D,RRes1D>> m_h1s; /**< 1D histograms go here. */
+  std::vector<TRRes1D> m_h1s; /**< 1D histograms go here. */
+  std::vector<TRRes2D> m_h2s; /**< 1D histograms go here. */
   TString m_namePrefix; /**< Prefix for the name of the histograms. */
   TString m_titlePrefix; /**< Prefix for the title of the histograms. */
   bool m_normalizeHistos; /**< Used by DrawSigBkg to decide wether to normalize histograms. */

@@ -73,15 +73,15 @@ class SigBkgPlotter {
                int xBins, double xLow, double xUp,
                int yBins, double yLow, double yUp);
 
-  /** TODO Finds the *signal* histogram called name and fits it with
-   * func, then prints it to PDF. Removes the histo from the list of
-   * histos to be plotted (unless otherwise specified).
+  /** Finds the *signal* histogram called name and fits it with
+   * func, then prints it to PDF. Dose not remove the histo from the
+   * list of histos to be plotted (unless otherwise specified).
    *
    * @param p0 is a list of {param_name, initial_value} pairs
    */
-  // void FitAndPrint(TString name, const char* func,
-  //                  std::initializer_list<std::pair<TString,double>> p0,
-  //                  bool removeFromList = true);
+  void FitAndPrint(TString name, const char* func,
+                   std::initializer_list<std::pair<TString,double>> p0 = {},
+                   bool removeFromList = false);
 
   /** Prints all the plots made up to now to the PDF (via the PDFCanvas).
    * The interal list of plots is then cleared unless otherwise specfied.

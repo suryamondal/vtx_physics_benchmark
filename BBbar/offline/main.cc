@@ -109,7 +109,15 @@ void makeHistosAndPlot(RDataFrame& df, SigBkgPlotter& plt, bool isK3pi)
   bookHistos(plt, isK3pi);
   cout << "Processing " << (isK3pi ? "K3pi" : "Kpi") << "..." << endl;
   df.Report()->Print();
-  plt.PrintAll();
+  // Plots
+  plt.PrintAll(false);
+  // Fits
+  plt.FitAndPrint("Dst_residualDecayX", "gaus");
+  plt.FitAndPrint("Dst_residualDecayY", "gaus");
+  plt.FitAndPrint("Dst_residualDecayZ", "gaus");
+  plt.FitAndPrint("D0_residualDecayX", "gaus");
+  plt.FitAndPrint("D0_residualDecayY", "gaus");
+  plt.FitAndPrint("D0_residualDecayZ", "gaus");
 }
 
 int main(int argc, char* argv[])

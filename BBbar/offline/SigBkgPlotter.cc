@@ -4,6 +4,8 @@
 #include <THStack.h>
 #include <TCanvas.h>
 #include <TLegend.h>
+#include <TF1.h>
+#include <TMath.h>
 #include <TPaveText.h>
 using namespace std;
 
@@ -136,4 +138,64 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
   m_c->SetLogy(is2d ? 0 : 1);
   m_c->SetLogz(is2d ? 1 : 0);
   m_c.PrintPage(sig->GetTitle());
+}
+
+void SigBkgPlotter::FitAndPrint(
+  TString name, const char* func, std::initializer_list<std::pair<TString,double>> p0,
+  bool removeFromList)
+{
+  TH1* h = nullptr;
+  name = m_namePrefix + "_sig_" + name;
+  for (auto& t : m_h1s) {
+    if (get<0>(t)->GetName() == name) {
+      h = get<0>(t).GetPtr();
+      break;
+    }
+  }
+  CHECK(h);
+  SetColor(h, kBlack, MyBlue);
+
+  TF1 ff("ff", func, h->GetBinLowEdge(1), h->GetBinLowEdge(h->GetNbinsX() + 1), TF1::EAddToList::kNo);
+  for (const auto& pp0 : p0)
+    ff.SetParameter(pp0.first, pp0.second);
+  ff.SetLineColor(MyRed);
+  ff.SetLineWidth(2);
+
+  m_c->cd();
+  h->Draw();
+  h->Fit(&ff, "Q");
+
+  TLegend leg(0.8, 0.8, 0.95, 0.91);
+  leg.AddEntry(h, "Signal", "F");
+  leg.AddEntry(&ff, "Fit", "L");
+  leg.Draw();
+
+  TPaveText fr(0.8, 0.79 - 0.055 * (ff.GetNpar() + 1), 0.95, 0.79, "brNDC");
+  TString sf;
+  for (int i = 0; i < ff.GetNpar(); i++) {
+    double p = ff.GetParameter(i), e = ff.GetParError(i);
+    int poom = TMath::Max(TMath::FloorNint(TMath::Log10(TMath::Abs(p))), -10);
+    int eoom = TMath::Max(TMath::FloorNint(TMath::Log10(TMath::Abs(e) / 2.0)), -10);
+    int nf = TMath::Min(TMath::Max(poom - eoom, 3) + 1, 2);
+    if (poom > 3 || poom < -3) {
+      int oom = (poom / 3) * 3;
+      p /= TMath::Power(10, oom);
+      e /= TMath::Power(10, oom);
+      int nd = TMath::Max(nf - poom + oom - 1, 0);
+      sf.Form("%s = (%.*lf #pm %.*lf)e%d", ff.GetParName(i), nd, p, nd, e, oom);
+    } else {
+      int nd = TMath::Max(nf - poom - 1, 0);
+      sf.Form("%s = %.*lf#pm%.*lf", ff.GetParName(i), nd, p, nd ,e);
+    }
+    fr.AddText(sf);
+  }
+  sf.Form("#chi^{2}/ndf = %.0lf/%d", ff.GetChisquare(), ff.GetNDF());
+  fr.AddText(sf);
+  SetPaveStyle(fr);
+  fr.Draw();
+
+  m_c->SetLogy();
+  m_c.PrintPage(h->GetTitle());
+
+  if (removeFromList) CHECK(false); // Not implemented!
 }

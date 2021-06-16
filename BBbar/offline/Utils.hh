@@ -1,6 +1,7 @@
 #pragma once
 #include <TH1.h>
 #include <TString.h>
+#include <TPaveText.h>
 #include <stdexcept>
 
 #define STRNG(x) #x
@@ -11,10 +12,21 @@
 inline TString operator""TS(const char *s, size_t sz) { return TString(s, sz); }
 
 /** Set line, fill and marker colors in one call. */
-inline void SetColor(TH1* h, Color_t cLineMarker, Color_t cFill) {
+inline void SetColor(TH1* h, Color_t cLineMarker, Color_t cFill)
+{
   h->SetLineColor(cLineMarker);
   h->SetMarkerColor(cLineMarker);
   h->SetFillColor(cFill);
+}
+
+/** Default TPave style setter. */
+inline void SetPaveStyle(TPaveText& p, Color_t c = kBlack)
+{
+  p.SetBorderSize(1);
+  p.SetFillColor(kWhite);
+  p.SetFillStyle(1001);
+  p.SetLineColor(c);
+  p.SetTextColor(c);
 }
 
 /** Set line, fill and marker colors in one call. */

@@ -10,11 +10,52 @@
 using namespace std;
 using namespace ROOT;
 
+/** For each particle and for each {aVar, bVar, newVar} tuple, this
+ * function defines a new variable
+ * "particle_newVar = f(particle_aVar,particle_bVar)"
+ * where f is obtained by replacing "$a" and "$b" in exprTemplate
+ * (which is "$a - $b" by default).
+ */
+SigBkgPlotter::DefineDF defineVarsForParticles(
+  SigBkgPlotter::DefineDF source, initializer_list<TString> particles,
+  initializer_list<TString> aVars, initializer_list<TString> bVars,
+  initializer_list<TString> newVars, TString exprTemplate = "$a - $b")
+{
+  auto df = source;
+  for (const TString& p : particles) {
+    for (auto av = aVars.begin(), bv = bVars.begin(), nv = newVars.begin();
+         av != aVars.end() && bv != bVars.end() && nv != newVars.end();
+         av++, bv++, nv++) {
+      TString pav = p + "_" + *av, pbv = p + "_" + *bv, pnv = p + "_" + *nv;
+      TString expr = exprTemplate;
+      expr = expr.ReplaceAll("$a", pav).ReplaceAll("$b", pbv);
+      df = df.Define(pnv.Data(), expr.Data());
+      // cout << pnv << " = " << expr << endl;
+    }
+  }
+  return df;
+}
+
 /** Define expression variables. */
 SigBkgPlotter::DefineDF defineVariables(RDataFrame& df, bool isK3pi)
 {
-  return df.Define("massDiffPreFit", "Dst_M_preFit-D0_M_preFit")
-           .Define("massDiff", "Dst_M-D0_M");
+  const auto& CompParts = CompositeParticles;
+  const auto& FSParts = isK3pi ? K3PiFSParticles : KPiFSParticles;
+
+  auto ddf = defineVarsForParticles(
+    df, FSParts, {"kaonID"}, {"pionID"}, {"piVsKID"}, "$a/($a+$b)");
+  ddf = defineVarsForParticles(
+    ddf, CompParts,
+    {"x",              "y",              "z"},
+    {"mcDecayVertexX", "mcDecayVertexY", "mcDecayVertexZ"},
+    {"residualDecayX", "residualDecayY", "residualDecayZ"});
+  // ddf = defineVarsForParticles(
+  //   ddf, {"D0"},
+  //   {"prodVertexX",         "prodVertexY",         "prodVertexZ"},
+  //   {"mcProductionVertexX", "mcProductionVertexY", "mcProductionVertexZ"},
+  //   {"residualProdX",       "residualProdY",       "residualProdZ"});
+  return ddf.Define("massDiffPreFit", "Dst_M_preFit-D0_M_preFit")
+            .Define("massDiff", "Dst_M-D0_M");
 }
 
 SigBkgPlotter::FilterDF applyOfflineCuts(SigBkgPlotter::DefineDF& df, bool isK3pi)
@@ -28,13 +69,23 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
 {
   const auto& CompParts = CompositeParticles;
   const auto& FSParts = isK3pi ? K3PiFSParticles : KPiFSParticles;
-  const auto& AllParts = isK3pi ? K3PiAllParticles : KPiAllParticles;
+  // const auto& AllParts = isK3pi ? K3PiAllParticles : KPiAllParticles;
+
+  plt.Histo1D("Dst_residualDecayX", "x_{decay,D*} residual;x_{decay,meas} - x_{decay,MC} [cm];Events / bin", 100, -2, 2);
+  plt.Histo1D("Dst_residualDecayY", "y_{decay,D*} residual;y_{decay,meas} - y_{decay,MC} [cm];Events / bin", 100, -2, 2);
+  plt.Histo1D("Dst_residualDecayZ", "z_{decay,D*} residual;z_{decay,meas} - z_{decay,MC} [cm];Events / bin", 100, -2, 2);
+  plt.Histo1D("D0_residualDecayX", "x_{decay,D^{0}} residual;x_{decay,meas} - x_{decay,MC} [cm];Events / bin", 100, -0.1, 0.1);
+  plt.Histo1D("D0_residualDecayY", "y_{decay,D^{0}} residual;y_{decay,meas} - y_{decay,MC} [cm];Events / bin", 100, -0.1, 0.1);
+  plt.Histo1D("D0_residualDecayZ", "z_{decay,D^{0}} residual;z_{decay,meas} - z_{decay,MC} [cm];Events / bin", 100, -0.1, 0.1);
+  // plt.Histo1D({"D0"}, "residualProdX", "x_{prod,$p} residual;x_{prod,meas} - x_{prod,MC} [cm];Events / bin", 100, -10, 10);
+  // plt.Histo1D({"D0"}, "residualProdY", "y_{prod,$p} residual;y_{prod,meas} - y_{prod,MC} [cm];Events / bin", 100, -10, 10);
+  // plt.Histo1D({"D0"}, "residualProdZ", "z_{prod,$p} residual;z_{prod,meas} - z_{prod,MC} [cm];Events / bin", 100, -10, 10);
 
   plt.Histo1D(CompParts, "M", "M_{$p};M_{$p} [GeV/c^{2}];Events / bin", 100, 1, 3);
-  plt.Histo1D("massDiff", "#DeltaM;M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 100, 0, 0.4);
+  plt.Histo1D("massDiff", "#DeltaM;M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 100, 0.13, 0.16);
 
   plt.Histo1D(CompParts, "M_preFit", "M_{$p} (pre-fit);M_{$p} [GeV/c^{2}];Events / bin", 100, 1, 3);
-  plt.Histo1D("massDiffPreFit", "#DeltaM (pre-fit);M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 100, 0, 0.4);
+  plt.Histo1D("massDiffPreFit", "#DeltaM (pre-fit);M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 100, 0.1, 0.3);
 
   plt.Histo1D(FSParts, "dr", "dr_{$p};dr_{$p} [cm];Events / bin", 100, 0, 3);
   plt.Histo1D(FSParts, "dz", "dz_{$p};dz_{$p} [cm];Events / bin", 100, -3, 3);
@@ -50,21 +101,26 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   // }
 
   plt.Histo1D("Dst_p_CMS", "p_{CM,D*};P_{CM,D*} [GeV/c];Events / bin", 100, 0, 3);
-  plt.Histo1D("Dst_px_CMS", "p_{x,CM,D*};P_{x,CM,D*} [GeV/c];Events / bin", 100, -3, 3);
-  plt.Histo1D("Dst_py_CMS", "p_{y,CM,D*};P_{y,CM,D*} [GeV/c];Events / bin", 100, -3, 3);
-  plt.Histo1D("Dst_pz_CMS", "p_{z,CM,D*};P_{z,CM,D*} [GeV/c];Events / bin", 100, -3, 3);
+  // plt.Histo1D("Dst_px_CMS", "p_{x,CM,D*};P_{x,CM,D*} [GeV/c];Events / bin", 100, -3, 3);
+  // plt.Histo1D("Dst_py_CMS", "p_{y,CM,D*};P_{y,CM,D*} [GeV/c];Events / bin", 100, -3, 3);
+  // plt.Histo1D("Dst_pz_CMS", "p_{z,CM,D*};P_{z,CM,D*} [GeV/c];Events / bin", 100, -3, 3);
 
   // plt.Histo1D(AllParts, "p", "p_{$p};P_{$p} [GeV/c];Events / bin", 100, 0, 3);
   // plt.Histo1D(AllParts, "px", "p_{x,$p};P_{x,$p} [GeV/c];Events / bin", 100, -3, 3);
   // plt.Histo1D(AllParts, "py", "p_{y,$p};P_{y,$p} [GeV/c];Events / bin", 100, -3, 3);
   // plt.Histo1D(AllParts, "pz", "p_{z,$p};P_{z,$p} [GeV/c];Events / bin", 100, -3, 3);
 
-  plt.Histo1D(CompParts, "significanceOfDistance", "Significance of distance $p;Significance of distance $p;Events / bin", 100, 0, 100);
-  plt.Histo1D(CompParts, "flightDistance", "Flight distance $p;Flight distance $p [cm];Events / bin", 100, 0, 100);
+  plt.Histo1D(CompParts, "significanceOfDistance", "Significance of distance $p;Significance of distance $p;Events / bin", 100, 0, 10);
+  plt.Histo1D(CompParts, "flightDistance", "Flight distance $p;Flight distance $p [cm];Events / bin", 100, -10, 10);
   // plt.Histo1D(FSParts, "pValue", "p-value $p;p-value $p;Events / bin", 100, 0, 1);
 
-  plt.Histo2D("D0_M", "Dst_M", "D* vs D^{0} masses;M_{D^{0}} [GeV/c^{2}];M_{D*} [GeV/c^{2}];Events / bin",
-              50, 1.66, 2.06, 50, 1.8, 2.2);
+  // plt.Histo2D("D0_M", "Dst_M", "D* vs D^{0} masses;M_{D^{0}} [GeV/c^{2}];M_{D*} [GeV/c^{2}];Events / bin",
+  //             50, 1.66, 2.06, 50, 1.8, 2.2);
+
+  // plt.Histo1D(FSParts, "diffKaonPionID", "K_{ID} to #pi_{ID} difference for $p;K_{ID} - #pi_{ID};Events / bin", 100, -1, 1);
+  //plt.Histo1D(FSParts, "piVsKID", "K vs #pi ID for $p;K_{ID}/(K_{ID}+#pi_{ID});Events / bin", 100, 0, 1);
+  plt.Histo1D({"pisoft"}, "pionID", "#pi ID for $p;#pi_{ID};Events / bin", 100, 0, 1);
+  plt.Histo1D({"pisoft"}, "piVsKID", "K vs #pi ID for $p;K_{ID}/(K_{ID}+#pi_{ID});Events / bin", 100, 0, 0.02);
 }
 
 void makeHistosAndPlot(RDataFrame& df, SigBkgPlotter& plt, bool isK3pi)

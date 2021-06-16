@@ -4,6 +4,7 @@
 #include <THStack.h>
 #include <TCanvas.h>
 #include <TLegend.h>
+#include <TPaveText.h>
 using namespace std;
 
 SigBkgPlotter::TRRes1D SigBkgPlotter::Histo1D(
@@ -77,6 +78,8 @@ void SigBkgPlotter::PrintAll(bool clearInternalList)
 
 void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
 {
+  CHECK(sig);
+  CHECK(bkg);
   bool is2d = sig->GetDimension() == 2;
   THStack s("ths", sig->GetTitle() + ";"TS + sig->GetXaxis()->GetTitle()
             + ";" + sig->GetYaxis()->GetTitle() + ";" + sig->GetZaxis()->GetTitle());
@@ -103,6 +106,32 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
   leg.AddEntry(sig, "Signal", (m_normalizeHistos && !is2d) ? "PLE" : "F");
   leg.AddEntry(bkg, "Background", (m_normalizeHistos && !is2d) ? "PLE" : "F");
   leg.Draw();
+
+  TPaveText oufSig(0.8, 0.68, 0.95, 0.79, "brNDC");
+  TPaveText oufBkg(0.8, 0.56, 0.95, 0.67, "brNDC");
+  if (!is2d && !m_normalizeHistos) {
+    TString sf;
+    double ovf = sig->GetBinContent(sig->GetNbinsX() + 1);
+    double unf = sig->GetBinContent(0);
+    double ent = sig->GetEntries();
+    sf.Form("Overflow %.3lg (%.0lf%%)", ovf, ovf * 100.0 / ent);
+    oufSig.AddText(sf);
+    sf.Form("Underflow %.3lg (%.0lf%%)", unf, unf * 100.0 / ent);
+    oufSig.AddText(sf);
+
+    ovf = bkg->GetBinContent(bkg->GetNbinsX() + 1);
+    unf = bkg->GetBinContent(0);
+    ent = bkg->GetEntries();
+    sf.Form("Overflow %.3lg (%.0lf%%)", ovf, ovf * 100.0 / ent);
+    oufBkg.AddText(sf);
+    sf.Form("Underflow %.3lg (%.0lf%%)", unf, unf * 100.0 / ent);
+    oufBkg.AddText(sf);
+
+    SetPaveStyle(oufSig, MyBlue);
+    SetPaveStyle(oufBkg, MyRed);
+    oufSig.Draw();
+    oufBkg.Draw();
+  }
 
   m_c->SetLogy(is2d ? 0 : 1);
   m_c->SetLogz(is2d ? 1 : 0);

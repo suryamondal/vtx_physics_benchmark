@@ -123,11 +123,7 @@ int main(int argc, char* argv[])
 {
   ArgParser parser("Analysis program for D* -> [D0 -> K pi (pi pi)] pi.");
   parser.AddPositionalArg("inputRootFile");
-  parser.AddFlag("--normalize-histos");
-  parser.AddFlag("--no-log-scale");
   auto args = parser.ParseArgs(argc, argv);
-  bool normalizeHistos = args.find("normalize-histos") != args.end();
-  bool logScale = args.find("no-log-scale") == args.end();
 
   EnableImplicitMT(8);
 
@@ -136,11 +132,8 @@ int main(int argc, char* argv[])
     cout << "Invalid input file (expected to end with \".root\")." << endl;
     return 1;
   }
-  TString outFileSuffix = "";
-  if (normalizeHistos) outFileSuffix += "_norm-hist";
-  if (!logScale) outFileSuffix += "_no-log-scale";
-  TString outFileName = inFileName(0, inFileName.Length() - 5) + outFileSuffix + ".pdf";
-  TString outFileNameCuts = inFileName(0, inFileName.Length() - 5) + "_offline-cuts" + outFileSuffix + ".pdf";
+  TString outFileName = inFileName(0, inFileName.Length() - 5);
+  TString outFileNameCuts = inFileName(0, inFileName.Length() - 5) + "_offline_cuts";
 
   RDataFrame dfKpi("Dst_D0pi_Kpi", inFileName.Data());
   RDataFrame dfK3pi("Dst_D0pi_K3pi", inFileName.Data());
@@ -151,17 +144,13 @@ int main(int argc, char* argv[])
   auto dfCutK3pi = applyOfflineCuts(dfDefK3pi, true);
 
   gStyle->SetOptStat(0); // TODO If more style lines appear, make a function
-  PDFCanvas canvas(outFileName, "c"); // Default size is fine (I wrote it!)
-  PDFCanvas canvasCuts(outFileNameCuts, "cc");
+  PDFCanvas canvas(outFileName + ".pdf", "c"); // Default size is fine (I wrote it!)
+  PDFCanvas canvasCuts(outFileNameCuts + ".pdf", "cc");
 
-  SigBkgPlotter plotterKpi(dfDefKpi, "Dst_isSignal==1", canvas,
-                           "Kpi", "K#pi", normalizeHistos, logScale);
-  SigBkgPlotter plotterK3pi(dfDefK3pi, "Dst_isSignal==1", canvas,
-                            "K3pi", "K3#pi", normalizeHistos, logScale);
-  SigBkgPlotter plotterKpiCuts(dfCutKpi, "Dst_isSignal==1", canvasCuts,
-                               "KpiCuts", "K#pi", normalizeHistos, logScale);
-  SigBkgPlotter plotterK3piCuts(dfCutK3pi, "Dst_isSignal==1", canvasCuts,
-                                "K3piCuts", "K3#pi", normalizeHistos, logScale);
+  SigBkgPlotter plotterKpi(dfDefKpi, "Dst_isSignal==1", canvas, "Kpi", "K#pi");
+  SigBkgPlotter plotterK3pi(dfDefK3pi, "Dst_isSignal==1", canvas, "K3pi", "K3#pi");
+  SigBkgPlotter plotterKpiCuts(dfCutKpi, "Dst_isSignal==1", canvasCuts, "KpiCuts", "K#pi");
+  SigBkgPlotter plotterK3piCuts(dfCutK3pi, "Dst_isSignal==1", canvasCuts, "K3piCuts", "K3#pi");
 
   bookHistos(plotterKpi, false);
   bookHistos(plotterK3pi, true);
@@ -173,8 +162,25 @@ int main(int argc, char* argv[])
   cout << "Processing K3pi..." << endl;
   dfK3pi.Report()->Print();
 
-  DoPlot(plotterKpi);
-  DoPlot(plotterK3pi);
-  DoPlot(plotterKpiCuts);
-  DoPlot(plotterK3piCuts);
+  for (bool normalizeHistos : {false, true}) {
+    for (bool logScale : {true, false}) {
+      TString outFileSuffix = "";
+      if (normalizeHistos) outFileSuffix += "_norm-hist";
+      if (!logScale) outFileSuffix += "_no-log-scale";
+      canvas.SetPDFFileName(outFileName + outFileSuffix + ".pdf");
+      canvasCuts.SetPDFFileName(outFileNameCuts + outFileSuffix + ".pdf");
+      plotterKpi.SetNormalizeHistos(normalizeHistos);
+      plotterKpi.SetLogScale(logScale);
+      plotterK3pi.SetNormalizeHistos(normalizeHistos);
+      plotterK3pi.SetLogScale(logScale);
+      plotterKpiCuts.SetNormalizeHistos(normalizeHistos);
+      plotterKpiCuts.SetLogScale(logScale);
+      plotterK3piCuts.SetNormalizeHistos(normalizeHistos);
+      plotterK3piCuts.SetLogScale(logScale);
+      DoPlot(plotterKpi);
+      DoPlot(plotterK3pi);
+      DoPlot(plotterKpiCuts);
+      DoPlot(plotterK3piCuts);
+    }
+  }
 }

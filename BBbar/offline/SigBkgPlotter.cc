@@ -68,6 +68,21 @@ void SigBkgPlotter::Histo2D(
 
 void SigBkgPlotter::PrintAll(bool clearInternalList)
 {
+  if (m_normalizeHistos != m_histsAlreadyNormalized) {
+    if (m_normalizeHistos) {
+      for (auto &t : m_h1s) {
+        Normalize(get<0>(t).GetPtr());
+        Normalize(get<1>(t).GetPtr());
+      }
+    } else {
+      for (auto &t : m_h1s) {
+        Unnormalize(get<0>(t).GetPtr());
+        Unnormalize(get<1>(t).GetPtr());
+      }
+    }
+  }
+  m_histsAlreadyNormalized = m_normalizeHistos;
+
   for (const auto& t : m_h1s)
     DrawSigBkg(t);
   for (const auto& t : m_h2s)
@@ -83,7 +98,7 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
   CHECK(sig);
   CHECK(bkg);
   if (sig->GetDimension() == 2) {
-    TString pageTitle = sig->GetTitle();
+    TString sigTitle = sig->GetTitle(), bkgTitle = bkg->GetTitle();
     sig->SetTitle(sig->GetTitle() + " - Signal"TS);
     bkg->SetTitle(bkg->GetTitle() + " - Background"TS);
 
@@ -93,30 +108,29 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
     m_c->cd(1);
     gPad->SetRightMargin(0.16);
     sig->Draw("COLZ");
-    if (m_logScale) gPad->SetLogz();
+    gPad->SetLogy(0);
+    gPad->SetLogz(m_logScale ? 1 : 0);
 
     m_c->cd(2);
     gPad->SetRightMargin(0.16);
     bkg->Draw("COLZ");
-    if (m_logScale) gPad->SetLogz();
+    gPad->SetLogy(0);
+    gPad->SetLogz(m_logScale ? 1 : 0);
 
     double hmax = TMath::Max(sig->GetMaximum(), bkg->GetMaximum());
     sig->SetMaximum(hmax);
     bkg->SetMaximum(hmax);
 
-    m_c.PrintPage(pageTitle);
+    m_c.PrintPage(sigTitle);
     m_c->Clear();
+    sig->SetTitle(sigTitle);
+    bkg->SetTitle(bkgTitle);
   } else {
     THStack s("ths", sig->GetTitle() + ";"TS + sig->GetXaxis()->GetTitle()
               + ";" + sig->GetYaxis()->GetTitle() + ";" + sig->GetZaxis()->GetTitle());
     SetColor(sig, kBlack, MyBlue);
     SetColor(bkg, MyRed);
     bkg->SetFillStyle(3454);
-
-    if (m_normalizeHistos) {
-      Normalize(sig);
-      Normalize(bkg);
-    }
 
     s.Add(sig);
     s.Add(bkg);
@@ -154,10 +168,8 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
       oufBkg.Draw();
     }
 
-    if (m_logScale) {
-      m_c->SetLogy(1);
-      m_c->SetLogz(0);
-    }
+    m_c->SetLogy(m_logScale ? 1 : 0);
+    m_c->SetLogz(0);
     m_c.PrintPage(sig->GetTitle());
   }
 }
@@ -189,7 +201,7 @@ void SigBkgPlotter::FitAndPrint(
 
   TLegend leg(0.8, 0.8, 0.95, 0.91);
   leg.AddEntry(h, "Signal", "F");
-  leg.AddEntry(&ff, "Fit", "L");
+  leg.AddEntry(&ff, "Fit function", "L");
   leg.Draw();
 
   TPaveText fr(0.8, 0.79 - 0.055 * (ff.GetNpar() + 1), 0.95, 0.79, "brNDC");
@@ -218,6 +230,8 @@ void SigBkgPlotter::FitAndPrint(
 
   if (m_logScale) m_c->SetLogy();
   m_c.PrintPage(h->GetTitle());
+
+  h->GetListOfFunctions()->Delete();
 
   if (removeFromList) CHECK(false); // Not implemented!
 }

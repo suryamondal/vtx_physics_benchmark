@@ -34,3 +34,6 @@ inline void SetColor(TH1* h, Color_t c) { SetColor(h, c, c); }
 
 /** Normalize an histogram. */
 inline void Normalize(TH1* h) { h->Scale(1.0 / h->GetEntries()); }
+
+/** Restores a previously normalized histogram. */
+inline void Unnormalize(TH1* h) { h->Scale(h->GetEntries()); }

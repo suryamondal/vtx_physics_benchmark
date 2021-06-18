@@ -20,3 +20,10 @@ PDFCanvas::~PDFCanvas()
 void PDFCanvas::PrintPage() { m_c->Print(m_pdfName); }
 
 void PDFCanvas::PrintPage(TString title) { m_c->Print(m_pdfName, "Title:" + title); }
+
+void PDFCanvas::SetPDFFileName(TString newFileName)
+{
+  m_c->Print(m_pdfName + "]");
+  m_pdfName = newFileName;
+  m_c->Print(m_pdfName + "[");
+}

@@ -127,4 +127,5 @@ class SigBkgPlotter {
   TString m_titlePrefix; /**< Prefix for the title of the histograms. */
   bool m_normalizeHistos; /**< Used by DrawSigBkg to decide wether to normalize histograms. */
   bool m_logScale; /**< Histograms y (or z) axis with log scale. */
+  bool m_histsAlreadyNormalized = false;
 };

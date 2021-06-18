@@ -28,6 +28,12 @@ class PDFCanvas {
   /** Prints a page to the PDF (no need to remeber the file's name). */
   void PrintPage(TString title);
 
+  /** Gets the name/path of the current PDF file. */
+  TString GetPDFFileName() { return m_pdfName; }
+
+  /** Sets the name/path of the PDF file. The previous one is closed. */
+  void SetPDFFileName(TString newFileName);
+
  private:
   TString m_pdfName;
   TCanvas* m_c;

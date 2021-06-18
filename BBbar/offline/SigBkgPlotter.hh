@@ -28,22 +28,22 @@ class SigBkgPlotter {
    */
   SigBkgPlotter(DefineDF& df, TString sigCond, PDFCanvas& c,
                 TString namePrefix = "undefined", TString titlePrefix = "Undefined",
-                bool normalizeHistos = false)
+                bool normalizeHistos = false, bool logScale = true)
   : m_sig(df.Filter((const char*)sigCond, "Signal")),
     m_bkg(df.Filter((const char*)("!(" + sigCond + ")"), "Background")),
     m_c(c), m_namePrefix(namePrefix), m_titlePrefix(titlePrefix),
-    m_normalizeHistos(normalizeHistos) {}
+    m_normalizeHistos(normalizeHistos), m_logScale(logScale) {}
 
   /** Constructor for a SigBkgPlotter that takes data from df, uses sigCond to
    * tell signal from background and prints plots to c.
    */
   SigBkgPlotter(FilterDF& df, TString sigCond, PDFCanvas& c,
                 TString namePrefix = "undefined", TString titlePrefix = "Undefined",
-                bool normalizeHistos = false)
+                bool normalizeHistos = false, bool logScale = true)
   : m_sig(df.Filter((const char*)sigCond, "Signal")),
     m_bkg(df.Filter((const char*)("!(" + sigCond + ")"), "Background")),
     m_c(c), m_namePrefix(namePrefix), m_titlePrefix(titlePrefix),
-    m_normalizeHistos(normalizeHistos) {}
+    m_normalizeHistos(normalizeHistos), m_logScale(logScale) {}
 
   /** Makes a tuple {sig,bkg} of histograms of the given variable.
    * The tuple is returned and saved to the interal list of plots.
@@ -123,4 +123,5 @@ class SigBkgPlotter {
   TString m_namePrefix; /**< Prefix for the name of the histograms. */
   TString m_titlePrefix; /**< Prefix for the title of the histograms. */
   bool m_normalizeHistos; /**< Used by DrawSigBkg to decide wether to normalize histograms. */
+  bool m_logScale; /**< Histograms y (or z) axis with log scale. */
 };

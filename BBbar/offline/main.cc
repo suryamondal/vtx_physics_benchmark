@@ -128,9 +128,13 @@ int main(int argc, char* argv[])
   parser.AddPositionalArg("inputRootFile");
   parser.AddFlag("--offline-cuts");
   parser.AddFlag("--normalize-histos");
+  parser.AddFlag("--no-log-scale");
   auto args = parser.ParseArgs(argc, argv);
   bool offlineCuts = args.find("offline-cuts") != args.end();
   bool normalizeHistos = args.find("normalize-histos") != args.end();
+  bool logScale = args.find("no-log-scale") == args.end();
+
+  EnableImplicitMT(8);
 
   TString inFileName = args["inputRootFile"];
   if (!inFileName.EndsWith(".root")) {
@@ -140,6 +144,7 @@ int main(int argc, char* argv[])
   TString outFileSuffix = "";
   if (offlineCuts) outFileSuffix += "_offline-cuts";
   if (normalizeHistos) outFileSuffix += "_norm-hist";
+  if (!logScale) outFileSuffix += "_no-log-scale";
   TString outFileName = inFileName(0, inFileName.Length() - 5) + outFileSuffix + ".pdf";
 
   RDataFrame dfKpi("Dst_D0pi_Kpi", inFileName.Data());
@@ -154,13 +159,13 @@ int main(int argc, char* argv[])
   if (offlineCuts) {
     auto dfCutKpi = applyOfflineCuts(dfDefKpi, false);
     auto dfCutK3pi = applyOfflineCuts(dfDefK3pi, true);
-    SigBkgPlotter plotterKpi(dfCutKpi, "Dst_isSignal==1", canvas, "Kpi", "K#pi", normalizeHistos);
-    SigBkgPlotter plotterK3pi(dfCutK3pi, "Dst_isSignal==1", canvas, "K3pi", "K3#pi", normalizeHistos);
+    SigBkgPlotter plotterKpi(dfCutKpi, "Dst_isSignal==1", canvas, "Kpi", "K#pi", normalizeHistos, logScale);
+    SigBkgPlotter plotterK3pi(dfCutK3pi, "Dst_isSignal==1", canvas, "K3pi", "K3#pi", normalizeHistos, logScale);
     makeHistosAndPlot(dfKpi, plotterKpi, false);
     makeHistosAndPlot(dfK3pi, plotterK3pi, true);
   } else {
-    SigBkgPlotter plotterKpi(dfDefKpi, "Dst_isSignal==1", canvas, "Kpi", "K#pi", normalizeHistos);
-    SigBkgPlotter plotterK3pi(dfDefK3pi, "Dst_isSignal==1", canvas, "K3pi", "K3#pi", normalizeHistos);
+    SigBkgPlotter plotterKpi(dfDefKpi, "Dst_isSignal==1", canvas, "Kpi", "K#pi", normalizeHistos, logScale);
+    SigBkgPlotter plotterK3pi(dfDefK3pi, "Dst_isSignal==1", canvas, "K3pi", "K3#pi", normalizeHistos, logScale);
     makeHistosAndPlot(dfKpi, plotterKpi, false);
     makeHistosAndPlot(dfK3pi, plotterK3pi, true);
   }

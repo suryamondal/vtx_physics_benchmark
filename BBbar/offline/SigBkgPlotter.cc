@@ -93,12 +93,16 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
     m_c->cd(1);
     gPad->SetRightMargin(0.16);
     sig->Draw("COLZ");
-    gPad->SetLogz();
+    if (m_logScale) gPad->SetLogz();
 
     m_c->cd(2);
     gPad->SetRightMargin(0.16);
     bkg->Draw("COLZ");
-    gPad->SetLogz();
+    if (m_logScale) gPad->SetLogz();
+
+    double hmax = TMath::Max(sig->GetMaximum(), bkg->GetMaximum());
+    sig->SetMaximum(hmax);
+    bkg->SetMaximum(hmax);
 
     m_c.PrintPage(pageTitle);
     m_c->Clear();
@@ -150,8 +154,10 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
       oufBkg.Draw();
     }
 
-    m_c->SetLogy(1);
-    m_c->SetLogz(0);
+    if (m_logScale) {
+      m_c->SetLogy(1);
+      m_c->SetLogz(0);
+    }
     m_c.PrintPage(sig->GetTitle());
   }
 }
@@ -210,7 +216,7 @@ void SigBkgPlotter::FitAndPrint(
   SetPaveStyle(fr);
   fr.Draw();
 
-  m_c->SetLogy();
+  if (m_logScale) m_c->SetLogy();
   m_c.PrintPage(h->GetTitle());
 
   if (removeFromList) CHECK(false); // Not implemented!

@@ -78,8 +78,8 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   plt.Histo1D("D0_residualDecayY", "y_{decay,D^{0}} residual;y_{decay,meas} - y_{decay,MC} [cm];Events / bin", 100, -0.1, 0.1);
   plt.Histo1D("D0_residualDecayZ", "z_{decay,D^{0}} residual;z_{decay,meas} - z_{decay,MC} [cm];Events / bin", 100, -0.1, 0.1);
 
-  plt.Histo1D(CompParts, "M", "M_{$p};M_{$p} [GeV/c^{2}];Events / bin", 100, 1, 3);
-  plt.Histo1D("massDiff", "#DeltaM;M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 100, 0.13, 0.16);
+  plt.Histo1D(CompParts, "M", "M_{$p};M_{$p} [GeV/c^{2}];Events / bin", 100, 1.6, 2.3);
+  plt.Histo1D("massDiff", "#DeltaM;M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 100, 0.135, 0.155);
 
   plt.Histo1D(CompParts, "M_preFit", "M_{$p} (pre-fit);M_{$p} [GeV/c^{2}];Events / bin", 100, 1, 3);
   plt.Histo1D("massDiffPreFit", "#DeltaM (pre-fit);M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 100, 0.1, 0.3);

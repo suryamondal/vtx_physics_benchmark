@@ -97,6 +97,9 @@ class SigBkgPlotter {
   bool GetNormalizeHistos() const { return m_normalizeHistos; }
   void SetNormalizeHistos(bool value) { m_normalizeHistos = value; }
 
+  bool GetLogScale() const { return m_logScale; }
+  void SetLogScale(bool value) { m_logScale = value; }
+
   bool HasVTX() { return m_sig.HasColumn("nVTXHits"); }
 
  private:

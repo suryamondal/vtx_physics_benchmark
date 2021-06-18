@@ -1,9 +1,9 @@
 #include "Constants.hh" // Own include
 
 const TString CommonCuts =
-  "Dst_M > 1.8 && Dst_M < 2.2 && Dst_M_preFit > 1.6 && Dst_M_preFit < 2.4"
-  "&& D0_M > 1.66 && D0_M < 2.06 && D0_M_preFit > 1.4 && D0_M_preFit < 2.2"
-  "&& massDiffPreFit < 0.2 && massDiff < 0.151" // In the steering file it's < 0.16
+  "Dst_M > 1.98 && Dst_M < 2.04 && Dst_M_preFit > 1.6 && Dst_M_preFit < 2.4" // In steering file is [1.8,2.2]
+  "&& D0_M > 1.834 && D0_M < 1.894 && D0_M_preFit > 1.4 && D0_M_preFit < 2.2" // In steering file is [1.66,2.06]
+  "&& massDiffPreFit < 0.2 && massDiff > 0.143 && massDiff < 0.148" // In the steering file it's < 0.16
   "&& K_dr < 2 && K_dz > -2 && K_dz < 2"
   "&& pisoft_dr < 2 && pisoft_dz > -2 && pisoft_dz < 2"
   "&& K_nVXDHits > 0 && pisoft_nVXDHits > 0" // VXD = PXD+SVD+VTX

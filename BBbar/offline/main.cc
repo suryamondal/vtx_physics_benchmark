@@ -102,7 +102,7 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
 
   plt.Histo1D(FSParts, "pionID", "#pi_{ID} for $p;#pi_{ID};Events / bin", 100, 0, 1);
   plt.Histo1D(FSParts, "kaonID", "K_{ID} for $p;K_{ID};Events / bin", 100, 0, 1);
-  plt.Histo2D(FSParts, "pionID", "kaonID", "K_{ID} vs #pi_{ID} for $p;#pi_{ID};K_{ID};Events / bin", 100, 0, 1, 100, 0, 1);
+  plt.Histo2D(FSParts, "pionID", "kaonID", "K_{ID} vs #pi_{ID} for $p;#pi_{ID};K_{ID};Events / bin", 20, 0, 1, 20, 0, 1);
   // plt.Histo1D({"pisoft"}, "piVsKID", "K vs #pi ID for $p;K_{ID}/(K_{ID}+#pi_{ID});Events / bin", 100, 0, 0.02);
 }
 

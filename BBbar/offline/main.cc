@@ -106,11 +106,8 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   // plt.Histo1D({"pisoft"}, "piVsKID", "K vs #pi ID for $p;K_{ID}/(K_{ID}+#pi_{ID});Events / bin", 100, 0, 0.02);
 }
 
-void makeHistosAndPlot(RDataFrame& df, SigBkgPlotter& plt, bool isK3pi)
+void DoPlot(SigBkgPlotter& plt)
 {
-  bookHistos(plt, isK3pi);
-  cout << "Processing " << (isK3pi ? "K3pi" : "Kpi") << "..." << endl;
-  df.Report()->Print();
   // Plots
   plt.PrintAll(false);
   // Fits
@@ -126,11 +123,9 @@ int main(int argc, char* argv[])
 {
   ArgParser parser("Analysis program for D* -> [D0 -> K pi (pi pi)] pi.");
   parser.AddPositionalArg("inputRootFile");
-  parser.AddFlag("--offline-cuts");
   parser.AddFlag("--normalize-histos");
   parser.AddFlag("--no-log-scale");
   auto args = parser.ParseArgs(argc, argv);
-  bool offlineCuts = args.find("offline-cuts") != args.end();
   bool normalizeHistos = args.find("normalize-histos") != args.end();
   bool logScale = args.find("no-log-scale") == args.end();
 
@@ -142,31 +137,44 @@ int main(int argc, char* argv[])
     return 1;
   }
   TString outFileSuffix = "";
-  if (offlineCuts) outFileSuffix += "_offline-cuts";
   if (normalizeHistos) outFileSuffix += "_norm-hist";
   if (!logScale) outFileSuffix += "_no-log-scale";
   TString outFileName = inFileName(0, inFileName.Length() - 5) + outFileSuffix + ".pdf";
+  TString outFileNameCuts = inFileName(0, inFileName.Length() - 5) + "_offline-cuts" + outFileSuffix + ".pdf";
 
   RDataFrame dfKpi("Dst_D0pi_Kpi", inFileName.Data());
   RDataFrame dfK3pi("Dst_D0pi_K3pi", inFileName.Data());
 
   auto dfDefKpi = defineVariables(dfKpi, false);
   auto dfDefK3pi = defineVariables(dfK3pi, true);
+  auto dfCutKpi = applyOfflineCuts(dfDefKpi, false);
+  auto dfCutK3pi = applyOfflineCuts(dfDefK3pi, true);
 
   gStyle->SetOptStat(0); // TODO If more style lines appear, make a function
-  PDFCanvas canvas(outFileName); // Default size is fine (I wrote it!)
+  PDFCanvas canvas(outFileName, "c"); // Default size is fine (I wrote it!)
+  PDFCanvas canvasCuts(outFileNameCuts, "cc");
 
-  if (offlineCuts) {
-    auto dfCutKpi = applyOfflineCuts(dfDefKpi, false);
-    auto dfCutK3pi = applyOfflineCuts(dfDefK3pi, true);
-    SigBkgPlotter plotterKpi(dfCutKpi, "Dst_isSignal==1", canvas, "Kpi", "K#pi", normalizeHistos, logScale);
-    SigBkgPlotter plotterK3pi(dfCutK3pi, "Dst_isSignal==1", canvas, "K3pi", "K3#pi", normalizeHistos, logScale);
-    makeHistosAndPlot(dfKpi, plotterKpi, false);
-    makeHistosAndPlot(dfK3pi, plotterK3pi, true);
-  } else {
-    SigBkgPlotter plotterKpi(dfDefKpi, "Dst_isSignal==1", canvas, "Kpi", "K#pi", normalizeHistos, logScale);
-    SigBkgPlotter plotterK3pi(dfDefK3pi, "Dst_isSignal==1", canvas, "K3pi", "K3#pi", normalizeHistos, logScale);
-    makeHistosAndPlot(dfKpi, plotterKpi, false);
-    makeHistosAndPlot(dfK3pi, plotterK3pi, true);
-  }
+  SigBkgPlotter plotterKpi(dfDefKpi, "Dst_isSignal==1", canvas,
+                           "Kpi", "K#pi", normalizeHistos, logScale);
+  SigBkgPlotter plotterK3pi(dfDefK3pi, "Dst_isSignal==1", canvas,
+                            "K3pi", "K3#pi", normalizeHistos, logScale);
+  SigBkgPlotter plotterKpiCuts(dfCutKpi, "Dst_isSignal==1", canvasCuts,
+                               "KpiCuts", "K#pi", normalizeHistos, logScale);
+  SigBkgPlotter plotterK3piCuts(dfCutK3pi, "Dst_isSignal==1", canvasCuts,
+                                "K3piCuts", "K3#pi", normalizeHistos, logScale);
+
+  bookHistos(plotterKpi, false);
+  bookHistos(plotterK3pi, true);
+  bookHistos(plotterKpiCuts, false);
+  bookHistos(plotterK3piCuts, true);
+
+  cout << "Processing Kpi..." << endl;
+  dfKpi.Report()->Print();
+  cout << "Processing K3pi..." << endl;
+  dfK3pi.Report()->Print();
+
+  DoPlot(plotterKpi);
+  DoPlot(plotterK3pi);
+  DoPlot(plotterKpiCuts);
+  DoPlot(plotterK3piCuts);
 }

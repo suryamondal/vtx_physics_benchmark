@@ -100,8 +100,10 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   // plt.Histo2D("D0_M", "Dst_M", "D* vs D^{0} masses;M_{D^{0}} [GeV/c^{2}];M_{D*} [GeV/c^{2}];Events / bin",
   //             50, 1.66, 2.06, 50, 1.8, 2.2);
 
-  plt.Histo1D({"pisoft"}, "pionID", "#pi ID for $p;#pi_{ID};Events / bin", 100, 0, 1);
-  plt.Histo1D({"pisoft"}, "piVsKID", "K vs #pi ID for $p;K_{ID}/(K_{ID}+#pi_{ID});Events / bin", 100, 0, 0.02);
+  plt.Histo1D(FSParts, "pionID", "#pi_{ID} for $p;#pi_{ID};Events / bin", 100, 0, 1);
+  plt.Histo1D(FSParts, "kaonID", "K_{ID} for $p;K_{ID};Events / bin", 100, 0, 1);
+  plt.Histo2D(FSParts, "pionID", "kaonID", "K_{ID} vs #pi_{ID} for $p;#pi_{ID};K_{ID};Events / bin", 100, 0, 1, 100, 0, 1);
+  // plt.Histo1D({"pisoft"}, "piVsKID", "K vs #pi ID for $p;K_{ID}/(K_{ID}+#pi_{ID});Events / bin", 100, 0, 0.02);
 }
 
 void makeHistosAndPlot(RDataFrame& df, SigBkgPlotter& plt, bool isK3pi)

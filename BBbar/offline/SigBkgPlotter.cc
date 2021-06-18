@@ -60,8 +60,8 @@ void SigBkgPlotter::Histo2D(
 {
   for (const TString& p : particles) {
     TString t = title; // Replacement happens in-place :(
-    TString vx = p + "_" + vx , vy = p + "_" + vy;
-    Histo2D(vx, vy, t.ReplaceAll("$p", ParticlesTitles.at(p)),
+    TString pvx = p + "_" + vx, pvy = p + "_" + vy;
+    Histo2D(pvx, pvy, t.ReplaceAll("$p", ParticlesTitles.at(p)),
             xBins, xLow, xUp, yBins, yLow, yUp);
   }
 }

@@ -8,7 +8,7 @@ const TString CommonCuts =
   "&& pisoft_dr < 2 && pisoft_dz > -2 && pisoft_dz < 2"
   "&& K_nVXDHits > 0 && pisoft_nVXDHits > 0" // VXD = PXD+SVD+VTX
   "&& Dst_p_CMS < 2.45" // This comes from conservation of momentum
-  "&& pisoft_pionID > 0.1";
+  ;//"&& pisoft_pionID > 0.1";
   //"&& !(pisoft_diffKaonPionID > 0.2)"; // This is NOT in the steering file, and there are some nans
 
 const TString KpiCuts =

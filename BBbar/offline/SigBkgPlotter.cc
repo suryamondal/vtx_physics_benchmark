@@ -12,14 +12,12 @@ using namespace std;
 SigBkgPlotter::TRRes1D SigBkgPlotter::Histo1D(
   const char* variable, TString title, int nBins, double xLow, double xUp)
 {
+  TString nameSig = GetUniqueName(m_namePrefix + "_sig_" + variable);
+  TString nameBkg = GetUniqueName(m_namePrefix + "_bkg_" + variable);
+  title = m_titlePrefix + " - " + title;
   TRRes1D res = make_tuple(
-    m_sig.Histo1D(
-      {m_namePrefix + "_sig_" + variable, m_titlePrefix + " - " + title, nBins, xLow, xUp},
-      variable),
-    m_bkg.Histo1D(
-      {m_namePrefix + "_bkg_" + variable, m_titlePrefix + " - " + title, nBins, xLow, xUp},
-      variable)
-  );
+    m_sig.Histo1D({nameSig, title, nBins, xLow, xUp}, variable),
+    m_bkg.Histo1D({nameBkg, title, nBins, xLow, xUp}, variable));
   m_h1s.push_back(res);
   return res;
 }
@@ -40,13 +38,14 @@ SigBkgPlotter::TRRes2D SigBkgPlotter::Histo2D(
   int xBins, double xLow, double xUp,
   int yBins, double yLow, double yUp)
 {
+  TString nameSig = GetUniqueName(m_namePrefix + "_sig_" + vx + "_" + vy);
+  TString nameBkg = GetUniqueName(m_namePrefix + "_bkg_" + vx + "_" + vy);
+  title = m_titlePrefix + " - " + title;
   TRRes2D res = make_tuple(
     m_sig.Histo2D(ROOT::RDF::TH2DModel(
-      m_namePrefix + "_sig_" + vx + "_" + vy, m_titlePrefix + " - " + title,
-      xBins, xLow, xUp, yBins, yLow, yUp), vx, vy),
+      nameSig, title, xBins, xLow, xUp, yBins, yLow, yUp), vx, vy),
     m_bkg.Histo2D(ROOT::RDF::TH2DModel(
-      m_namePrefix + "_bkg_" + vx + "_" + vy, m_titlePrefix + " - " + title,
-      xBins, xLow, xUp, yBins, yLow, yUp), vx, vy)
+      nameBkg, title, xBins, xLow, xUp, yBins, yLow, yUp), vx, vy)
   );
   m_h2s.push_back(res);
   return res;

@@ -10,8 +10,6 @@ const TString CommonCuts =
   "&& Dst_p_CMS < 2.45" // This comes from conservation of momentum
   "&& K_pionID < 0.3 && K_kaonID > 0.02" // This is NOT in the steering file, and there are some nans
   "&& pisoft_kaonID < 0.3 && pisoft_pionID > 0.02"; // This is NOT in the steering file, and there are some nans
-  //"&& pisoft_pionID > 0.1";
-  //"&& !(pisoft_diffKaonPionID > 0.2)"; // This is NOT in the steering file, and there are some nans
 
 const TString KpiCuts =
   "pi_dr < 2 && pi_dz > -2 && pi_dz < 2"

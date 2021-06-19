@@ -37,3 +37,11 @@ inline void Normalize(TH1* h) { h->Scale(1.0 / h->GetEntries()); }
 
 /** Restores a previously normalized histogram. */
 inline void Unnormalize(TH1* h) { h->Scale(h->GetEntries()); }
+
+/** This function shall be called with the name you want to give to sth.
+ *  - The first time a name is used, the function returns the name.
+ *  - The second time, it returns the name + "_2"
+ *  - The third time, it returns the name + "_3"
+ *  - ...
+ */
+TString GetUniqueName(TString baseName);

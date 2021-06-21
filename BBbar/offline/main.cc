@@ -2,9 +2,11 @@
 #include "PDFCanvas.hh"
 #include "Utils.hh"
 #include "ArgParser.hh"
+#include "CutEfficiency.hh"
 #include "Constants.hh"
 #include <TString.h>
 #include <TStyle.h>
+#include <TCanvas.h>
 #include <ROOT/RDataFrame.hxx>
 #include <iostream>
 using namespace std;
@@ -122,13 +124,41 @@ void DoPlot(SigBkgPlotter& plt)
   plt.FitAndPrint("D0_residualDecayZ", "gaus");
 }
 
+void DoCandAna(tuple<TH2D*,UInt_t,UInt_t> noCuts, tuple<TH2D*,UInt_t,UInt_t> cuts,
+               PDFCanvas& c, TString title)
+{
+  auto h = get<0>(noCuts), hCuts = get<0>(cuts);
+  h->SetTitle(title + " - " + h->GetTitle() + " (no cuts)");
+  hCuts->SetTitle(title + " - " + hCuts->GetTitle() + " (with cuts)");
+  c->cd();
+  c->SetRightMargin(0.16);
+  h->Draw("COLZ");
+  c->SetLogy();
+  c.PrintPage(h->GetTitle());
+  hCuts->Draw("COLZ");
+  c->SetLogy();
+  c.PrintPage(hCuts->GetTitle());
+
+  double ns = get<1>(noCuts), nb = get<2>(noCuts), nsc = get<1>(cuts), nbc = get<2>(cuts);
+  double nt = ns + nb, ntc = nsc + nbc;
+  TString fs;
+  cout << "             | w/o cuts | w/ cuts  |Efficiency" << endl;
+  cout << "   ----------+----------+----------+----------" << endl;
+  fs.Form("     Total   |%10.5g|%10.5g|%9.4g%%", nt, ntc, 100.0 * ntc / nt);
+  cout << fs << endl;
+  fs.Form("     Signal  |%10.5g|%10.5g|%9.4g%%", ns, nsc, 100.0 * nsc / ns);
+  cout << fs << endl;
+  fs.Form("   Background|%10.5g|%10.5g|%9.4g%%", nb, nbc, 100.0 * nbc / nb);
+  cout << fs << endl;
+}
+
 int main(int argc, char* argv[])
 {
   ArgParser parser("Analysis program for D* -> [D0 -> K pi (pi pi)] pi.");
   parser.AddPositionalArg("inputRootFile");
   auto args = parser.ParseArgs(argc, argv);
 
-  EnableImplicitMT(8);
+  EnableImplicitMT(NThreads);
 
   TString inFileName = args["inputRootFile"];
   if (!inFileName.EndsWith(".root")) {
@@ -149,6 +179,7 @@ int main(int argc, char* argv[])
   gStyle->SetOptStat(0); // TODO If more style lines appear, make a function
   PDFCanvas canvas(outFileName + ".pdf", "c"); // Default size is fine (I wrote it!)
   PDFCanvas canvasCuts(outFileNameCuts + ".pdf", "cc");
+  PDFCanvas canvasCand(outFileName + "_candidates.pdf", "ccc");
 
   SigBkgPlotter plotterKpi(dfDefKpi, "Dst_isSignal==1", canvas, "Kpi", "K#pi");
   SigBkgPlotter plotterK3pi(dfDefK3pi, "Dst_isSignal==1", canvas, "K3pi", "K3#pi");
@@ -161,9 +192,15 @@ int main(int argc, char* argv[])
   bookHistos(plotterK3piCuts, true);
 
   cout << "Processing Kpi..." << endl;
-  dfKpi.Report()->Print();
+  auto hCandKpi = CutEfficiencyAnalysis(dfDefKpi);
+  auto hCandKpiCuts = CutEfficiencyAnalysis(dfCutKpi);
+  DoCandAna(hCandKpi, hCandKpiCuts, canvasCand, "K#pi");
+  //dfKpi.Report()->Print();
   cout << "Processing K3pi..." << endl;
-  dfK3pi.Report()->Print();
+  auto hCandK3pi = CutEfficiencyAnalysis(dfDefK3pi);
+  auto hCandK3piCuts = CutEfficiencyAnalysis(dfCutK3pi);
+  DoCandAna(hCandK3pi, hCandK3piCuts, canvasCand, "K3#pi");
+  //dfK3pi.Report()->Print();
 
   for (bool normalizeHistos : {false, true}) {
     for (bool logScale : {true, false}) {

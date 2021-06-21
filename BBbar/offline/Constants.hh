@@ -3,6 +3,8 @@
 #include <TString.h>
 #include <map>
 
+const int NThreads = 8;
+
 const auto MyRed = TColor::GetColor("#E24A33");
 const auto MyBlue = TColor::GetColor("#348ABD");
 

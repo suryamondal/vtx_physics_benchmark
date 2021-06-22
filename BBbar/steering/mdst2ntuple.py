@@ -163,8 +163,8 @@ else:
 # This variable changed name after release-05
 if 'tanlambdaErr' in (v.name for v in vm.getVariables()):
     vm.addAlias("tanLambdaErr", "tanlambdaErr")
-tracksVariables += ['tanLambdaErr']
-tracksVariables += ['charge', 'omegaErr', 'phi0Err', 'z0Err', 'd0Err']
+tracksVariables += ['charge', 'omegaErr', 'phi0Err', 'z0Err', 'd0Err', 'tanLambdaErr']
+tracksVariables += ['omegaPull', 'phi0Pull', 'z0Pull', 'd0Pull', 'tanLambdaPull']
 
 compositeVariables = vc.vertex + ['M', 'ErrM']
 compositeVariables += ['mcProductionVertexX', 'mcProductionVertexY',

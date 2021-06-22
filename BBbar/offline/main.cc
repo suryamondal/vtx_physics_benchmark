@@ -72,6 +72,7 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   const auto& CompParts = CompositeParticles;
   const auto& FSParts = isK3pi ? K3PiFSParticles : KPiFSParticles;
   // const auto& AllParts = isK3pi ? K3PiAllParticles : KPiAllParticles;
+  const auto& Pions = isK3pi ? K3PiPions : KPiPions;
 
   plt.Histo1D("Dst_residualDecayX", "x_{decay,D*} residual;x_{decay,meas} - x_{decay,MC} [cm];Events / bin", 100, -2, 2);
   plt.Histo1D("Dst_residualDecayY", "y_{decay,D*} residual;y_{decay,meas} - y_{decay,MC} [cm];Events / bin", 100, -2, 2);
@@ -85,12 +86,12 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   plt.Histo1D(CompParts, "M_preFit", "M_{$p} (pre-fit);M_{$p} [GeV/c^{2}];Events / bin", 100, 1, 3);
   plt.Histo1D("massDiffPreFit", "#DeltaM (pre-fit);M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 100, 0.1, 0.3);
   // Post-fit masses and diff also plotted with greater resolution
-  plt.Histo1D({"Dst"}, "M", "M_{$p};M_{$p} [GeV/c^{2}];Events / bin", 120, 1.98, 2.04);
-  plt.Histo1D({"D0"}, "M", "M_{$p};M_{$p} [GeV/c^{2}];Events / bin", 120, 1.834, 1.894);
+  plt.Histo1D({"Dst"}, "M", "M_{$p};M_{$p} [GeV/c^{2}];Events / bin", 120, 1.95, 2.07);
+  plt.Histo1D({"D0"}, "M", "M_{$p};M_{$p} [GeV/c^{2}];Events / bin", 120, 1.804, 1.924);
   plt.Histo1D("massDiff", "#DeltaM;M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 50, 0.143, 0.148);
 
-  plt.Histo1D(FSParts, "dr", "dr_{$p};dr_{$p} [cm];Events / bin", 100, 0, 3);
-  plt.Histo1D(FSParts, "dz", "dz_{$p};dz_{$p} [cm];Events / bin", 100, -3, 3);
+  plt.Histo1D(FSParts, "dr", "dr_{$p};dr_{$p} [cm];Events / bin", 100, 0, 1);
+  plt.Histo1D(FSParts, "dz", "dz_{$p};dz_{$p} [cm];Events / bin", 100, -1, 1);
 
   plt.Histo1D(FSParts, "nCDCHits", "CDC Hits_{$p};CDC Hits_{$p};Events / bin", 101, -0.5, 100.5);
   plt.Histo1D(FSParts, "nVXDHits", "VXD Hits_{$p};VXD Hits_{$p};Events / bin", 25, -0.5, 24.5);
@@ -104,6 +105,11 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
 
   plt.Histo1D(FSParts, "pionID", "#pi_{ID} for $p;#pi_{ID};Events / bin", 100, 0, 1);
   plt.Histo1D(FSParts, "kaonID", "K_{ID} for $p;K_{ID};Events / bin", 100, 0, 1);
+  // Also with better resolution for cuts optimization
+  plt.Histo1D(Pions, "pionID", "#pi_{ID} for $p;#pi_{ID};Events / bin", 100, 0.98, 1);
+  plt.Histo1D({"K"}, "pionID", "#pi_{ID} for $p;#pi_{ID};Events / bin", 100, 0, 0.02);
+  plt.Histo1D(Pions, "kaonID", "K_{ID} for $p;K_{ID};Events / bin", 100, 0, 0.02);
+  plt.Histo1D({"K"}, "kaonID", "K_{ID} for $p;K_{ID};Events / bin", 100, 0.98, 1);
   plt.Histo2D(FSParts, "pionID", "kaonID", "K_{ID} vs #pi_{ID} for $p;#pi_{ID};K_{ID};Events / bin", 20, 0, 1, 20, 0, 1);
 }
 
@@ -111,6 +117,7 @@ void DoPlot(SigBkgPlotter& plt, bool isK3pi)
 {
   const auto& CompParts = CompositeParticles;
   const auto& FSParts = isK3pi ? K3PiFSParticles : KPiFSParticles;
+  const auto& Pions = isK3pi ? K3PiPions : KPiPions;
 
   // Histograms
   plt.PrintAll(false);
@@ -126,8 +133,14 @@ void DoPlot(SigBkgPlotter& plt, bool isK3pi)
   plt.PrintROC(FSParts, "dz", false);
   plt.PrintROC(FSParts, "nVXDHits", false);
   plt.PrintROC(FSParts, "nCDCHits", false);
-  plt.PrintROC(FSParts, "pionID", false);
-  plt.PrintROC(FSParts, "kaonID", false);
+  plt.PrintROC(Pions, "pionID", false);
+  plt.PrintROC("K_pionID", true);
+  plt.PrintROC(Pions, "kaonID", true);
+  plt.PrintROC("K_kaonID", false);
+  plt.PrintROC(Pions, "pionID_2", false);
+  plt.PrintROC("K_pionID_2", true);
+  plt.PrintROC(Pions, "kaonID_2", true);
+  plt.PrintROC("K_kaonID_2", false);
 
   // Fits
   plt.FitAndPrint("Dst_residualDecayX", "gaus");

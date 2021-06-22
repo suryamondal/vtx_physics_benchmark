@@ -6,6 +6,7 @@
 #include <TLegend.h>
 #include <TF1.h>
 #include <TMath.h>
+#include <TLine.h>
 #include <TPaveText.h>
 #include <TGraph.h>
 using namespace std;
@@ -259,6 +260,9 @@ void SigBkgPlotter::FitAndPrint(
 
 void SigBkgPlotter::PrintROC(TString name, bool keepLow, bool removeFromList)
 {
+  static double linePoints[2] = {0.0, 100.0};
+  static TGraph gLine(2, linePoints, linePoints);
+
   TH1* sig = nullptr;
   TH1* bkg = nullptr;
   name = m_namePrefix + "_sig_" + name;
@@ -304,6 +308,7 @@ void SigBkgPlotter::PrintROC(TString name, bool keepLow, bool removeFromList)
   auto gROC = new TGraph(nb, sigEff.data(), bkgEff.data());
   gROC->SetName(GetUniqueName("gROC_" + name));
   gROC->SetTitle(sig->GetTitle() + " - ROC;Signal efficiency [%];Background efficiency [%]"TS);
+  gLine.SetTitle(sig->GetTitle() + " - ROC;Signal efficiency [%];Background efficiency [%]"TS);
   gROC->SetLineColor(kBlack);
   gROC->SetLineWidth(2);
 
@@ -324,10 +329,13 @@ void SigBkgPlotter::PrintROC(TString name, bool keepLow, bool removeFromList)
   leg.Draw();
 
   m_c->cd(2);
-  gROC->SetMinimum(0);
-  gROC->SetMaximum(100);
-  gROC->GetXaxis()->SetRangeUser(0, 100);
-  gROC->Draw("AL");
+  gLine.SetMinimum(0);
+  gLine.SetMaximum(100);
+  gLine.SetLineColor(kRed);
+  gLine.SetLineWidth(1);
+  gLine.Draw("AL");
+  gLine.GetXaxis()->SetRangeUser(0, 100);
+  gROC->Draw("L same");
   gPad->SetLeftMargin(0.16);
   gPad->SetLogy(0);
   gPad->SetGrid();

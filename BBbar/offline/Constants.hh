@@ -31,6 +31,12 @@ const std::initializer_list<TString> KPiFSParticles {"K", "pi", "pisoft"};
 // Final state particles of K3pi
 const std::initializer_list<TString> K3PiFSParticles {"K", "pi1", "pi2", "pi3", "pisoft"};
 
+// Final state pions of Kpi
+const std::initializer_list<TString> KPiPions {"pi", "pisoft"};
+
+// Final state pions of K3pi
+const std::initializer_list<TString> K3PiPions {"pi1", "pi2", "pi3", "pisoft"};
+
 // All particles of Kpi
 const std::initializer_list<TString> KPiAllParticles {"Dst", "D0", "K", "pi", "pisoft"};
 

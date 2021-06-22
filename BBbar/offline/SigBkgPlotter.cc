@@ -109,12 +109,33 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
     sig->Draw("COLZ");
     gPad->SetLogy(0);
     gPad->SetLogz(m_logScale ? 1 : 0);
+    TPaveText oufSig(0.5, 0.6, 0.8, 0.8, "brNDC");
+    TString sf;
+    TH2UO uo = Get2DHistUnderOverFlows(sig);
+    sf.Form("%.0lf %.0lf %.0lf", uo.xuyo, uo.xiyo, uo.xoyo);
+    oufSig.AddText(sf);
+    sf.Form("%.0lf %.0lf %.0lf", uo.xuyi, uo.xiyi, uo.xoyi);
+    oufSig.AddText(sf);
+    sf.Form("%.0lf %.0lf %.0lf", uo.xuyu, uo.xiyu, uo.xoyu);
+    oufSig.AddText(sf);
+    SetPaveStyle(oufSig);
+    oufSig.Draw();
 
     m_c->cd(2);
     gPad->SetRightMargin(0.16);
     bkg->Draw("COLZ");
     gPad->SetLogy(0);
     gPad->SetLogz(m_logScale ? 1 : 0);
+    TPaveText oufBkg(0.5, 0.6, 0.8, 0.8, "brNDC");
+    uo = Get2DHistUnderOverFlows(bkg);
+    sf.Form("%.0lf %.0lf %.0lf", uo.xuyo, uo.xiyo, uo.xoyo);
+    oufBkg.AddText(sf);
+    sf.Form("%.0lf %.0lf %.0lf", uo.xuyi, uo.xiyi, uo.xoyi);
+    oufBkg.AddText(sf);
+    sf.Form("%.0lf %.0lf %.0lf", uo.xuyu, uo.xiyu, uo.xoyu);
+    oufBkg.AddText(sf);
+    SetPaveStyle(oufBkg);
+    oufBkg.Draw();
 
     double hmax = TMath::Max(sig->GetMaximum(), bkg->GetMaximum());
     sig->SetMaximum(hmax);

@@ -45,3 +45,21 @@ inline void Unnormalize(TH1* h) { h->Scale(h->GetEntries()); }
  *  - ...
  */
 TString GetUniqueName(TString baseName);
+
+/** Type for the 3x3 matrix with the under/over-flows of a 2D histo. */
+typedef struct TH2UO {
+  Double_t xuyo; /**< X under, Y over */
+  Double_t xiyo; /**< X inside, Y over */
+  Double_t xoyo; /**< X over, Y over */
+
+  Double_t xuyi; /**< X under, Y inside */
+  Double_t xiyi; /**< X inside, Y inside */
+  Double_t xoyi; /**< X over, Y inside */
+
+  Double_t xuyu; /**< X under, Y under */
+  Double_t xiyu; /**< X inside, Y under */
+  Double_t xoyu; /**< X over, Y under */
+} TH2UO;
+
+/** Returns a 3x3 matrix with the under/over-flows of a 2D histogram. */
+TH2UO Get2DHistUnderOverFlows(TH1* h);

@@ -52,6 +52,13 @@ def change_ext(pathspec, newext):
     return base + newext
 
 
+def log(msg, inp=None, out=None):
+    parts = [f"[{msg:^10s}]"]
+    if inp is not None: parts.append(inp)
+    if out is not None: parts += ["->", out]
+    print(f"{WHITE}{' '.join(parts)}{NORM}")
+
+
 if __name__ == "__main__":
     os.chdir(SCRIPT_DIR)
     if not os.path.isdir("build"):
@@ -60,9 +67,9 @@ if __name__ == "__main__":
     for source_file in map(os.path.relpath, glob.glob("*.cc")):
         out_file = change_ext(os.path.join("build", source_file), ".o")
         if is_up_to_date(source_file, out_file):
-            print(f"{WHITE}UP-TO-DATE {source_file} -> {out_file}{NORM}")
+            log("UP TO DATE", source_file, out_file)
         else:
-            print(f"{WHITE}COMPILING  {source_file} -> {out_file}{NORM}")
+            log("COMPILING", source_file, out_file)
             cmd = [CPP_COMPILER, "-c", "-o", out_file, source_file]
             cmd += CPP_FLAGS
             cmd += ROOT_FLAGS
@@ -70,12 +77,12 @@ if __name__ == "__main__":
 
     out_files = glob.glob("build/*.o")
     if all(is_newer("ana", out_file) for out_file in out_files):
-        print(f"{WHITE}UP-TO-DATE ana{NORM}")
+        log("UP TO DATE", "build/*.o", "ana")
     else:
-        print(f"{WHITE}LINKING    ana{NORM}")
+        log("LINKING", "build/*.o", "ana")
         cmd = [CPP_COMPILER, "-o", "ana"] + out_files
         cmd += CPP_FLAGS
         cmd += ROOT_FLAGS
         run(*cmd)
 
-    print(f"{WHITE}DONE{NORM}")
+    log("DONE")

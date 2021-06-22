@@ -207,7 +207,7 @@ void SigBkgPlotter::FitAndPrint(
       break;
     }
   }
-  CHECK(h);
+  CHECKA(h, name);
   SetColor(h, kBlack, MyBlue);
 
   TF1 ff("ff", func, h->GetBinLowEdge(1), h->GetBinLowEdge(h->GetNbinsX() + 1), TF1::EAddToList::kNo);

@@ -17,3 +17,4 @@ ana
 
 # C++ output
 *.o
+build/

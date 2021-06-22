@@ -74,7 +74,7 @@ class SigBkgPlotter {
                int yBins, double yLow, double yUp);
 
   /** Finds the *signal* histogram called name and fits it with
-   * func, then prints it to PDF. Dose not remove the histo from the
+   * func, then prints it to PDF. Does not remove the histo from the
    * list of histos to be plotted (unless otherwise specified).
    *
    * @param p0 is a list of {param_name, initial_value} pairs
@@ -82,6 +82,17 @@ class SigBkgPlotter {
   void FitAndPrint(TString name, const char* func,
                    std::initializer_list<std::pair<TString,double>> p0 = {},
                    bool removeFromList = false);
+
+  /** Finds the signal and backgound histograms called name and produces
+   * the ROC curve plot for a cut var < threshold (if keepLow is true)
+   * or var > threshodl (if keepLow is false). Does not remove the histo
+   * from the list of histos to be plotted (unless otherwise specified).
+   */
+  void PrintROC(TString name, bool keepLow, bool removeFromList = false);
+
+  /** Like the other PrintROC, but repeats for each particle. */
+  void PrintROC(std::initializer_list<TString> particles,
+                TString name, bool keepLow, bool removeFromList = false);
 
   /** Prints all the plots made up to now to the PDF (via the PDFCanvas).
    * The interal list of plots is then cleared unless otherwise specfied.

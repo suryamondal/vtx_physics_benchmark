@@ -7,6 +7,7 @@
 #include <TF1.h>
 #include <TMath.h>
 #include <TPaveText.h>
+#include <TGraph.h>
 using namespace std;
 
 SigBkgPlotter::TRRes1D SigBkgPlotter::Histo1D(
@@ -254,4 +255,92 @@ void SigBkgPlotter::FitAndPrint(
   h->GetListOfFunctions()->Delete();
 
   if (removeFromList) CHECK(false); // Not implemented!
+}
+
+void SigBkgPlotter::PrintROC(TString name, bool keepLow, bool removeFromList)
+{
+  TH1* sig = nullptr;
+  TH1* bkg = nullptr;
+  name = m_namePrefix + "_sig_" + name;
+  for (auto& t : m_h1s) {
+    if (get<0>(t)->GetName() == name) {
+      sig = get<0>(t).GetPtr();
+      bkg = get<1>(t).GetPtr();
+      break;
+    }
+  }
+  CHECKA(sig, name);
+  CHECKA(bkg, name);
+
+  // Build ROC curve
+  vector<double> threshold, sigEff, bkgEff;
+  const int nb = sig->GetNbinsX();
+  threshold.reserve(nb);
+  sigEff.reserve(nb);
+  bkgEff.reserve(nb);
+  const double sigInt = sig->Integral(0, nb + 1);
+  const double bkgInt = bkg->Integral(0, nb + 1);
+  int i1 = 0, i2 = nb + 1;
+  for (int i = 1; i <= nb; i++) {
+    threshold.push_back(sig->GetBinLowEdge(i)); // Cut on low edge of bin i
+    if (keepLow)
+      i2 = i - 1;
+    else
+      i1 = i;
+    sigEff.push_back(sig->Integral(i1, i2) * 100.0 / sigInt);
+    bkgEff.push_back(bkg->Integral(i1, i2) * 100.0 / bkgInt);
+  }
+
+  auto gSig = new TGraph(nb, threshold.data(), sigEff.data());
+  gSig->SetName(GetUniqueName("gROCSig_" + name));
+  gSig->SetTitle(sig->GetTitle() + " - ROC;"TS + sig->GetXaxis()->GetTitle() + ";Cut efficiency [%]");
+  gSig->SetLineColor(MyBlue);
+  gSig->SetLineWidth(2);
+  auto gBkg = new TGraph(nb, threshold.data(), bkgEff.data());
+  gBkg->SetName(GetUniqueName("gROCBkg_" + name));
+  gBkg->SetTitle(bkg->GetTitle() + " - ROC;"TS + bkg->GetXaxis()->GetTitle() + ";Cut efficiency [%]");
+  gBkg->SetLineColor(MyRed);
+  gBkg->SetLineWidth(2);
+  auto gROC = new TGraph(nb, sigEff.data(), bkgEff.data());
+  gROC->SetName(GetUniqueName("gROC_" + name));
+  gROC->SetTitle(sig->GetTitle() + " - ROC;Signal efficiency [%];Background efficiency [%]"TS);
+  gROC->SetLineColor(kBlack);
+  gROC->SetLineWidth(2);
+
+  m_c->Clear();
+  m_c->Divide(2);
+
+  m_c->cd(1);
+  gSig->SetMinimum(0);
+  gSig->SetMaximum(100);
+  gSig->Draw("AL");
+  gBkg->Draw("L same");
+  gPad->SetLeftMargin(0.16);
+  gPad->SetLogy(0);
+  gPad->SetGrid();
+  TLegend leg(keepLow ? 0.2 : 0.7, 0.8, keepLow ? 0.45 : 0.95, 0.91);
+  leg.AddEntry(gSig, "Signal", "L");
+  leg.AddEntry(gBkg, "Background", "L");
+  leg.Draw();
+
+  m_c->cd(2);
+  gROC->SetMinimum(0);
+  gROC->SetMaximum(100);
+  gROC->GetXaxis()->SetRangeUser(0, 100);
+  gROC->Draw("AL");
+  gPad->SetLeftMargin(0.16);
+  gPad->SetLogy(0);
+  gPad->SetGrid();
+
+  m_c.PrintPage(sig->GetTitle() + " ROC"TS);
+  m_c->Clear();
+
+  if (removeFromList) CHECK(false); // Not implemented!
+}
+
+void SigBkgPlotter::PrintROC(
+  std::initializer_list<TString> particles, TString name, bool keepLow, bool removeFromList)
+{
+  for (const TString& p : particles)
+    PrintROC(p + "_" + name, keepLow, removeFromList);
 }

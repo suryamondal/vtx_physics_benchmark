@@ -111,10 +111,28 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   // plt.Histo1D({"pisoft"}, "piVsKID", "K vs #pi ID for $p;K_{ID}/(K_{ID}+#pi_{ID});Events / bin", 100, 0, 0.02);
 }
 
-void DoPlot(SigBkgPlotter& plt)
+void DoPlot(SigBkgPlotter& plt, bool isK3pi)
 {
-  // Plots
+  const auto& CompParts = CompositeParticles;
+  const auto& FSParts = isK3pi ? K3PiFSParticles : KPiFSParticles;
+
+  // Histograms
   plt.PrintAll(false);
+
+  // ROC curves
+  plt.PrintROC(CompParts, "M_2", true);
+  plt.PrintROC(CompParts, "M_2", false);
+  plt.PrintROC("massDiff_2", true);
+  plt.PrintROC("massDiff_2", false);
+  plt.PrintROC("Dst_p_CMS", true);
+  plt.PrintROC(FSParts, "dr", true);
+  plt.PrintROC(FSParts, "dz", true);
+  plt.PrintROC(FSParts, "dz", false);
+  plt.PrintROC(FSParts, "nVXDHits", false);
+  plt.PrintROC(FSParts, "nCDCHits", false);
+  plt.PrintROC(FSParts, "pionID", false);
+  plt.PrintROC(FSParts, "kaonID", false);
+
   // Fits
   plt.FitAndPrint("Dst_residualDecayX", "gaus");
   plt.FitAndPrint("Dst_residualDecayY", "gaus");
@@ -217,10 +235,10 @@ int main(int argc, char* argv[])
       plotterKpiCuts.SetLogScale(logScale);
       plotterK3piCuts.SetNormalizeHistos(normalizeHistos);
       plotterK3piCuts.SetLogScale(logScale);
-      DoPlot(plotterKpi);
-      DoPlot(plotterK3pi);
-      DoPlot(plotterKpiCuts);
-      DoPlot(plotterK3piCuts);
+      DoPlot(plotterKpi, false);
+      DoPlot(plotterK3pi, true);
+      DoPlot(plotterKpiCuts, false);
+      DoPlot(plotterK3piCuts, true);
     }
   }
 }

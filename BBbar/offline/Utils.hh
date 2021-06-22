@@ -7,6 +7,7 @@
 #define STRNG(x) #x
 #define STRNG2(x) STRNG(x)
 #define CHECK(assertion) if(!(assertion)) throw std::runtime_error("At " STRNG2(__FILE__) ":" STRNG2(__LINE__))
+#define CHECKA(assertion,tstring) if(!(assertion)) throw std::runtime_error("At " STRNG2(__FILE__) ":" STRNG2(__LINE__) ". Extra: " + (tstring))
 
 /** Allows TString literals with "string"TS (raises a warning, ignore it) */
 inline TString operator""TS(const char *s, size_t sz) { return TString(s, sz); }

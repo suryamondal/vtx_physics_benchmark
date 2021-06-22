@@ -72,7 +72,7 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   const auto& CompParts = CompositeParticles;
   const auto& FSParts = isK3pi ? K3PiFSParticles : KPiFSParticles;
   // const auto& AllParts = isK3pi ? K3PiAllParticles : KPiAllParticles;
-  const auto& Pions = isK3pi ? K3PiPions : KPiPions;
+  // const auto& Pions = isK3pi ? K3PiPions : KPiPions;
 
   plt.Histo1D("Dst_residualDecayX", "x_{decay,D*} residual;x_{decay,meas} - x_{decay,MC} [cm];Events / bin", 100, -2, 2);
   plt.Histo1D("Dst_residualDecayY", "y_{decay,D*} residual;y_{decay,meas} - y_{decay,MC} [cm];Events / bin", 100, -2, 2);
@@ -105,11 +105,6 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
 
   plt.Histo1D(FSParts, "pionID", "#pi_{ID} for $p;#pi_{ID};Events / bin", 100, 0, 1);
   plt.Histo1D(FSParts, "kaonID", "K_{ID} for $p;K_{ID};Events / bin", 100, 0, 1);
-  // Also with better resolution for cuts optimization
-  plt.Histo1D(Pions, "pionID", "#pi_{ID} for $p;#pi_{ID};Events / bin", 100, 0.98, 1);
-  plt.Histo1D({"K"}, "pionID", "#pi_{ID} for $p;#pi_{ID};Events / bin", 100, 0, 0.02);
-  plt.Histo1D(Pions, "kaonID", "K_{ID} for $p;K_{ID};Events / bin", 100, 0, 0.02);
-  plt.Histo1D({"K"}, "kaonID", "K_{ID} for $p;K_{ID};Events / bin", 100, 0.98, 1);
   plt.Histo2D(FSParts, "pionID", "kaonID", "K_{ID} vs #pi_{ID} for $p;#pi_{ID};K_{ID};Events / bin", 20, 0, 1, 20, 0, 1);
 }
 
@@ -133,14 +128,10 @@ void DoPlot(SigBkgPlotter& plt, bool isK3pi)
   plt.PrintROC(FSParts, "dz", false);
   plt.PrintROC(FSParts, "nVXDHits", false);
   plt.PrintROC(FSParts, "nCDCHits", false);
-  plt.PrintROC(Pions, "pionID", false);
-  plt.PrintROC("K_pionID", true);
-  plt.PrintROC(Pions, "kaonID", true);
-  plt.PrintROC("K_kaonID", false);
-  plt.PrintROC(Pions, "pionID_2", false);
-  plt.PrintROC("K_pionID_2", true);
-  plt.PrintROC(Pions, "kaonID_2", true);
-  plt.PrintROC("K_kaonID_2", false);
+  plt.PrintROC(Pions, "pionID", false, true);
+  plt.PrintROC("K_pionID", true, true);
+  plt.PrintROC(Pions, "kaonID", true, true);
+  plt.PrintROC("K_kaonID", false, true);
 
   // Fits
   plt.FitAndPrint("Dst_residualDecayX", "gaus");

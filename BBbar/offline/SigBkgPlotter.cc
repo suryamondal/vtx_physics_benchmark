@@ -258,7 +258,7 @@ void SigBkgPlotter::FitAndPrint(
   if (removeFromList) CHECK(false); // Not implemented!
 }
 
-void SigBkgPlotter::PrintROC(TString name, bool keepLow, bool removeFromList)
+void SigBkgPlotter::PrintROC(TString name, bool keepLow, bool excludeOUF, bool removeFromList)
 {
   static double linePoints[2] = {0.0, 100.0};
   static TGraph gLine(2, linePoints, linePoints);
@@ -282,33 +282,39 @@ void SigBkgPlotter::PrintROC(TString name, bool keepLow, bool removeFromList)
   threshold.reserve(nb);
   sigEff.reserve(nb);
   bkgEff.reserve(nb);
-  const double sigInt = sig->Integral(0, nb + 1);
-  const double bkgInt = bkg->Integral(0, nb + 1);
-  int i1 = 0, i2 = nb + 1;
+  int i1 = excludeOUF ? 1 : 0, i2 = excludeOUF ? nb : (nb + 1);
+  const double sigInt = sig->Integral(i1, i2);
+  const double bkgInt = bkg->Integral(i1, i2);
   for (int i = 1; i <= nb; i++) {
     threshold.push_back(sig->GetBinLowEdge(i)); // Cut on low edge of bin i
     if (keepLow)
       i2 = i - 1;
     else
       i1 = i;
-    sigEff.push_back(sig->Integral(i1, i2) * 100.0 / sigInt);
-    bkgEff.push_back(bkg->Integral(i1, i2) * 100.0 / bkgInt);
+    if (i2 < i1) {
+      sigEff.push_back(0);
+      bkgEff.push_back(0);
+    } else {
+      sigEff.push_back(sig->Integral(i1, i2) * 100.0 / sigInt);
+      bkgEff.push_back(bkg->Integral(i1, i2) * 100.0 / bkgInt);
+    }
   }
 
+  TString lEff = excludeOUF ? " efficiency (excl. o/u-flows) [%]" : " efficiency [%]";
   auto gSig = new TGraph(nb, threshold.data(), sigEff.data());
   gSig->SetName(GetUniqueName("gROCSig_" + name));
-  gSig->SetTitle(sig->GetTitle() + " - ROC;"TS + sig->GetXaxis()->GetTitle() + ";Cut efficiency [%]");
+  gSig->SetTitle(sig->GetTitle() + " - ROC;"TS + sig->GetXaxis()->GetTitle() + ";Cut" + lEff);
   gSig->SetLineColor(MyBlue);
   gSig->SetLineWidth(2);
   auto gBkg = new TGraph(nb, threshold.data(), bkgEff.data());
   gBkg->SetName(GetUniqueName("gROCBkg_" + name));
-  gBkg->SetTitle(bkg->GetTitle() + " - ROC;"TS + bkg->GetXaxis()->GetTitle() + ";Cut efficiency [%]");
+  gBkg->SetTitle(bkg->GetTitle() + " - ROC;"TS + bkg->GetXaxis()->GetTitle() + ";Cut" + lEff);
   gBkg->SetLineColor(MyRed);
   gBkg->SetLineWidth(2);
   auto gROC = new TGraph(nb, sigEff.data(), bkgEff.data());
   gROC->SetName(GetUniqueName("gROC_" + name));
-  gROC->SetTitle(sig->GetTitle() + " - ROC;Signal efficiency [%];Background efficiency [%]"TS);
-  gLine.SetTitle(sig->GetTitle() + " - ROC;Signal efficiency [%];Background efficiency [%]"TS);
+  gROC->SetTitle(sig->GetTitle() + " - ROC;Signal"TS + lEff + ";Background" + lEff);
+  gLine.SetTitle(sig->GetTitle() + " - ROC;Signal"TS + lEff + ";Background" + lEff);
   gROC->SetLineColor(kBlack);
   gROC->SetLineWidth(2);
 
@@ -323,9 +329,10 @@ void SigBkgPlotter::PrintROC(TString name, bool keepLow, bool removeFromList)
   gPad->SetLeftMargin(0.16);
   gPad->SetLogy(0);
   gPad->SetGrid();
-  TLegend leg(keepLow ? 0.2 : 0.7, 0.8, keepLow ? 0.45 : 0.95, 0.91);
-  leg.AddEntry(gSig, "Signal", "L");
-  leg.AddEntry(gBkg, "Background", "L");
+  TLegend leg(keepLow ? 0.8 : 0.2, 0.2, keepLow ? 0.95 : 0.35, 0.3);
+  leg.AddEntry(gSig, "Sig.", "L");
+  leg.AddEntry(gBkg, "Bkg.", "L");
+  leg.SetTextSize(0.042);
   leg.Draw();
 
   m_c->cd(2);
@@ -333,6 +340,7 @@ void SigBkgPlotter::PrintROC(TString name, bool keepLow, bool removeFromList)
   gLine.SetMaximum(100);
   gLine.SetLineColor(kRed);
   gLine.SetLineWidth(1);
+  gLine.SetLineStyle(kDashed);
   gLine.Draw("AL");
   gLine.GetXaxis()->SetRangeUser(0, 100);
   gROC->Draw("L same");
@@ -347,8 +355,9 @@ void SigBkgPlotter::PrintROC(TString name, bool keepLow, bool removeFromList)
 }
 
 void SigBkgPlotter::PrintROC(
-  std::initializer_list<TString> particles, TString name, bool keepLow, bool removeFromList)
+  std::initializer_list<TString> particles, TString name, bool keepLow,
+  bool excludeOUF, bool removeFromList)
 {
   for (const TString& p : particles)
-    PrintROC(p + "_" + name, keepLow, removeFromList);
+    PrintROC(p + "_" + name, keepLow, excludeOUF, removeFromList);
 }

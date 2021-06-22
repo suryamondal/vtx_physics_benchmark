@@ -87,12 +87,14 @@ class SigBkgPlotter {
    * the ROC curve plot for a cut var < threshold (if keepLow is true)
    * or var > threshodl (if keepLow is false). Does not remove the histo
    * from the list of histos to be plotted (unless otherwise specified).
+   *
+   * @param excludeUOF Excludes overflow and underflow (default false)
    */
-  void PrintROC(TString name, bool keepLow, bool removeFromList = false);
+  void PrintROC(TString name, bool keepLow, bool excludeOUF = false, bool removeFromList = false);
 
   /** Like the other PrintROC, but repeats for each particle. */
   void PrintROC(std::initializer_list<TString> particles,
-                TString name, bool keepLow, bool removeFromList = false);
+                TString name, bool keepLow, bool excludeOUF = false, bool removeFromList = false);
 
   /** Prints all the plots made up to now to the PDF (via the PDFCanvas).
    * The interal list of plots is then cleared unless otherwise specfied.

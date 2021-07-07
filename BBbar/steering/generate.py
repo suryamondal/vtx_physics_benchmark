@@ -15,7 +15,6 @@
 import argparse
 import os
 import sys
-import glob
 import basf2 as b2
 import generators as ge
 import simulation as simu
@@ -26,13 +25,12 @@ try:
     import vtx
     HAS_VTX = True
 except ImportError:
+    import background
     HAS_VTX = False
 
 # Can't use __file__, the interpreter doesn't set it
 SCRIPT_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
 DECAY_FILE = os.path.join(SCRIPT_DIR, "decays.dec")
-
-MASTER_BKG_FILES = '/group/belle2/BGFile/OfficialBKG/TODO'
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--exp", type=int, default=0,
@@ -67,7 +65,7 @@ if args.bkg:
     if args.vtx:
         bkg_files = vtx.get_upgrade_background_files()
     else:
-        bkg_files = glob.glob(MASTER_BKG_FILES)
+        bkg_files = background.get_background_files()
     if not bkg_files:
         b2.B2FATAL("Using --bkg but no background file was found.")
 else:
@@ -94,7 +92,8 @@ if args.print_mc_particles:
 # simulate
 vtx_kwa = {'useVTX': True} if args.vtx else {}
 simu.add_simulation(main, bkgfiles=bkg_files, **vtx_kwa)
-l1t.add_tsim(main)  # TRG simulation
+if HAS_VTX:  # In master tsim is included in add_simulation
+    l1t.add_tsim(main)  # TRG simulation
 if args.print_mc_particles and args.debug_gen:
     main.add_module("PrintMCParticles").set_name("PrintMCParticles_simulated")
 

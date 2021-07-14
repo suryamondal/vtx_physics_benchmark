@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Reconstructs D*+ -> [D0 -> K- pi+ (pi+ pi-)] pi+ from mDST."""
 
-##############################################################
+################################################################
 # This functions perform the reconstruction of the
 # following decay chains (and c.c. decay chain):
 #
@@ -12,23 +12,23 @@
 #        +-> K- pi+ pi+ pi-
 #
 # USAGE:
-# > basf2 mdst2ntuple.py -- --input INPUT --output OUTPUT \
-#                           [--looseSelection] [--addTopoAna]
+# > basf2 mdst2ntuple.py -- -i INPUT -o OUTPUT [--addTopoAna] \
+#                           [-c loose|normal|tight]
 #
 # input = input mdst file
 # output = output ROOT file
-# looseSelection = add to remove selection on tracks
+# c = cuts to be used (see README)
 # addTopoAna = add to include TopoAna/MCGen variables
 #
 # Contributors: G. Casarosa, A. Di Canto (Dec 2019)
 #               L. Massaccesi (June 2021)
 #
-# Software Version: release-05-02-06 / upgrade / master
+# Software Version: upgrade or master branch
 #
-# Must use release-05-02-06 or master without --vtx
-# Must use upgrade branch with --vtx
+# Must use the same version of basf2 used for input files
+# generation (master without --vtx, upgrade with --vtx).
 # The script will terminate if used with the wrong version.
-##############################################################
+################################################################
 
 import argparse
 import os
@@ -45,6 +45,36 @@ try:  # Dummy import to check basf2 version
     HAS_VTX = True
 except ImportError:
     HAS_VTX = False
+
+CUTS = {
+    "loose": {  # These are intended for intial study of cuts only
+        "pisoft": "",
+        "pi": "",
+        "K": "",
+        "D0": "abs(dM) < 0.45",
+        "D*reco": "[abs(dM) < 0.4] and [massDifference(0) < 0.2]",
+        "D*fit": "[massDifference(0) < 0.2] and [abs(daughter(0,dM)) < 0.4] " \
+                 "and [abs(dM) < 0.45] and [useCMSFrame(p) < 2.5]"
+    },
+    "normal": {
+        "pisoft": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",  # VXD=PXD+SVD+VTX
+        "pi": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
+        "K": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
+        "D0": "abs(dM) < 0.45",  # M_D0 = 1.8648 GeV, M_D* = 2.0103, diff = 0.1455
+        "D*reco": "[abs(dM) < 0.4] and [massDifference(0) < 0.2]",
+        "D*fit": "[massDifference(0) < 0.16] and [abs(daughter(0,dM)) < 0.2] " \
+                 "and [abs(dM) < 0.2] and [useCMSFrame(p) < 2.45]"
+    },
+    "tight": {  # These are close to those of the offline analysis
+        "pisoft": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
+        "pi": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
+        "K": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
+        "D0": "abs(dM) < 0.1",
+        "D*reco": "[abs(dM) < 0.1] and [massDifference(0) < 0.155]",
+        "D*fit": "[0.14 < massDifference(0) < 0.15] and [abs(daughter(0,dM)) < 0.05] " \
+                 "and [abs(dM) < 0.05] and [useCMSFrame(p) < 2.45]"
+    }
+}
 
 
 def check_globaltags(base_tags, user_tags, metadata):
@@ -76,14 +106,15 @@ def check_globaltags(base_tags, user_tags, metadata):
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--addTopoAna', action="store_true",
                     help='add TopoAna/MCGen variables for MC')
-parser.add_argument('--looseSelection', action="store_true",
-                    help='use to remove selection on tracks')
+parser.add_argument("-c", "--cuts", choices=["loose", "normal", "tight"],
+                    default="normal", help="Set of cuts to be used.")
 parser.add_argument("-i", '--input', nargs='+',
                     help='mDST input file(s)')
 parser.add_argument("-o", '--output', default='test.root',
                     help='ROOT output file, default test.root')
 args = parser.parse_args()
 b2.B2INFO(f"Steering file args = {args}")
+cuts = CUTS[args.cuts]
 
 # Set basf2 to check the input files' globaltags and the version used
 b2.conditions.set_globaltag_callback(check_globaltags)
@@ -95,39 +126,30 @@ main = b2.create_path()
 ma.inputMdstList(filelist=args.input, environmentType='default', path=main)
 
 # load pions and kaons from IP and in tracking acceptance
-if args.looseSelection:
-    myTrk = ''
-else:
-    myTrk = '[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]'  # VXD=PXD+SVD+VTX
-myTrkSoft = myTrk
-ma.fillParticleList('pi+:soft', myTrkSoft, path=main)
-ma.fillParticleList('pi+:myTrk', myTrk, path=main)
-ma.fillParticleList('K+:myTrk', myTrk, path=main)
+ma.fillParticleList('pi+:soft', cuts["pisoft"], path=main)
+ma.fillParticleList('pi+:myTrk', cuts["pi"], path=main)
+ma.fillParticleList('K+:myTrk', cuts["K"], path=main)
 
 # D0 reconstruction
-myD0 = '1.4 < M < 2.2'  # M_D0 = 1.8648 GeV
 ma.reconstructDecay('D0:Kpi -> pi+:myTrk K-:myTrk',
-                    cut=myD0, dmID=0, path=main)
+                    cut=cuts["D0"], dmID=0, path=main)
 ma.reconstructDecay('D0:K3pi -> pi+:myTrk K-:myTrk pi+:myTrk pi-:myTrk',
-                    cut=myD0, dmID=1, path=main)
+                    cut=cuts["D0"], dmID=1, path=main)
 
 ma.copyLists('D0:merged', ['D0:Kpi', 'D0:K3pi'], True, path=main)
 
 ma.variablesToExtraInfo("D0:merged", variables={'M': 'M_preFit'}, path=main)
 
 # Dstar reconstruction
-myDst = '[1.6 < M < 2.4] and [massDifference(0) < 0.2]'  # M_D* = 2.0103, diff = 0.1455
-ma.reconstructDecay('D*+:good -> D0:merged pi+:soft', cut=myDst, path=main)
+ma.reconstructDecay('D*+:good -> D0:merged pi+:soft', cut=cuts["D*reco"], path=main)
 
 ma.variablesToExtraInfo("D*+:good", variables={'M': 'M_preFit'}, path=main)
 
-conf_level_cut = -1.0 if args.looseSelection else 0.001
+conf_level_cut = -1.0 if args.cuts == "loose" else 0.001
 vx.treeFit(list_name='D*+:good', conf_level=conf_level_cut, ipConstraint=False,
            updateAllDaughters=True, path=main)
 
-myCuts = '[massDifference(0) < 0.16] and [1.66 < daughter(0,M) < 2.06]'
-myCuts += ' and [1.8 < M < 2.2] and [useCMSFrame(p) < 2.45]'
-ma.applyCuts('D*+:good', myCuts, path=main)
+ma.applyCuts('D*+:good', cuts["D*fit"], path=main)
 
 ma.matchMCTruth(list_name='D*+:good', path=main)
 

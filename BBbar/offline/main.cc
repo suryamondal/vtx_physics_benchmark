@@ -85,10 +85,13 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   plt.Histo1D("massDiff", "#DeltaM;M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 100, 0.1, 0.3);
   plt.Histo1D(CompParts, "M_preFit", "M_{$p} (pre-fit);M_{$p} [GeV/c^{2}];Events / bin", 100, 1, 3);
   plt.Histo1D("massDiffPreFit", "#DeltaM (pre-fit);M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 100, 0.1, 0.3);
-  // Post-fit masses and diff also plotted with greater resolution
+  // Masses and diff also plotted with greater resolution
   plt.Histo1D({"Dst"}, "M", "M_{$p};M_{$p} [GeV/c^{2}];Events / bin", 120, 1.95, 2.07);
   plt.Histo1D({"D0"}, "M", "M_{$p};M_{$p} [GeV/c^{2}];Events / bin", 120, 1.804, 1.924);
   plt.Histo1D("massDiff", "#DeltaM;M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 50, 0.143, 0.148);
+  plt.Histo1D({"Dst"}, "M_preFit", "M_{$p} (pre-fit);M_{$p} [GeV/c^{2}];Events / bin", 120, 1.95, 2.07);
+  plt.Histo1D({"D0"}, "M_preFit", "M_{$p} (pre-fit);M_{$p} [GeV/c^{2}];Events / bin", 120, 1.804, 1.924);
+  plt.Histo1D("massDiffPreFit", "#DeltaM (pre-fit);M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 50, 0.143, 0.148);
 
   plt.Histo1D(FSParts, "dr", "dr_{$p};dr_{$p} [cm];Events / bin", 100, 0, 1);
   plt.Histo1D(FSParts, "dz", "dz_{$p};dz_{$p} [cm];Events / bin", 100, -1, 1);

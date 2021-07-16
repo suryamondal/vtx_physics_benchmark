@@ -53,8 +53,7 @@ CUTS = {
         "K": "",
         "D0": "abs(dM) < 0.45",
         "D*reco": "[abs(dM) < 0.4] and [massDifference(0) < 0.2]",
-        "D*fit": "[massDifference(0) < 0.2] and [abs(daughter(0,dM)) < 0.4] " \
-                 "and [abs(dM) < 0.45] and [useCMSFrame(p) < 2.5]"
+        "D*fit": "[useCMSFrame(p) < 3]"
     },
     "normal": {
         "pisoft": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",  # VXD=PXD+SVD+VTX
@@ -62,17 +61,15 @@ CUTS = {
         "K": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
         "D0": "abs(dM) < 0.45",  # M_D0 = 1.8648 GeV, M_D* = 2.0103, diff = 0.1455
         "D*reco": "[abs(dM) < 0.4] and [massDifference(0) < 0.2]",
-        "D*fit": "[massDifference(0) < 0.16] and [abs(daughter(0,dM)) < 0.2] " \
-                 "and [abs(dM) < 0.2] and [useCMSFrame(p) < 2.45]"
+        "D*fit": "[useCMSFrame(p) < 2.5]"
     },
-    "tight": {  # These are close to those of the offline analysis
+    "tight": {  # These are mostly identical to those of the offline analysis
         "pisoft": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
         "pi": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
         "K": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
         "D0": "abs(dM) < 0.1",
-        "D*reco": "[abs(dM) < 0.1] and [massDifference(0) < 0.155]",
-        "D*fit": "[0.14 < massDifference(0) < 0.15] and [abs(daughter(0,dM)) < 0.05] " \
-                 "and [abs(dM) < 0.05] and [useCMSFrame(p) < 2.45]"
+        "D*reco": "[abs(dM) < 0.1] and [massDifference(0) < 0.151]",
+        "D*fit": "[useCMSFrame(p) < 2.5]"
     }
 }
 
@@ -122,7 +119,7 @@ b2.conditions.set_globaltag_callback(check_globaltags)
 # create path
 main = b2.create_path()
 
-# load the samples
+# Load the samples
 ma.inputMdstList(filelist=args.input, environmentType='default', path=main)
 
 # load pions and kaons from IP and in tracking acceptance
@@ -135,22 +132,18 @@ ma.reconstructDecay('D0:Kpi -> pi+:myTrk K-:myTrk',
                     cut=cuts["D0"], dmID=0, path=main)
 ma.reconstructDecay('D0:K3pi -> pi+:myTrk K-:myTrk pi+:myTrk pi-:myTrk',
                     cut=cuts["D0"], dmID=1, path=main)
-
 ma.copyLists('D0:merged', ['D0:Kpi', 'D0:K3pi'], True, path=main)
-
 ma.variablesToExtraInfo("D0:merged", variables={'M': 'M_preFit'}, path=main)
 
-# Dstar reconstruction
+# D* reconstruction
 ma.reconstructDecay('D*+:good -> D0:merged pi+:soft', cut=cuts["D*reco"], path=main)
-
 ma.variablesToExtraInfo("D*+:good", variables={'M': 'M_preFit'}, path=main)
 
+# Tree fitting and final ajustments
 conf_level_cut = -1.0 if args.cuts == "loose" else 0.001
 vx.treeFit(list_name='D*+:good', conf_level=conf_level_cut, ipConstraint=False,
            updateAllDaughters=True, path=main)
-
 ma.applyCuts('D*+:good', cuts["D*fit"], path=main)
-
 ma.matchMCTruth(list_name='D*+:good', path=main)
 
 # List of variables to save
@@ -191,9 +184,9 @@ tracksVariables += ['omegaPull', 'phi0Pull', 'z0Pull', 'd0Pull', 'tanLambdaPull'
 compositeVariables = vc.vertex + ['M', 'ErrM']
 compositeVariables += ['mcProductionVertexX', 'mcProductionVertexY',
                        'mcProductionVertexZ']
-
-flightVariables = vc.flight_info
-flightVariables += vc.mc_flight_info
+# Flight variables
+compositeVariables += vc.flight_info
+compositeVariables += vc.mc_flight_info
 
 varsKpi = vu.create_aliases_for_selected(
     commonVariables, '^D*+ -> [^D0 -> ^pi+ ^K-] ^pi+',
@@ -202,8 +195,6 @@ varsKpi += vu.create_aliases_for_selected(
     tracksVariables, 'D*+ -> [D0 -> ^pi+ ^K-] ^pi+', ['pi', 'K', 'pisoft'])
 varsKpi += vu.create_aliases_for_selected(
     compositeVariables, '^D*+ -> [^D0 -> pi+ K-] pi+', ['Dst', 'D0'])
-varsKpi += vu.create_aliases_for_selected(
-    flightVariables, '^D*+ -> [^D0 -> pi+ K-] pi+', ['Dst', 'D0'])
 
 varsK3pi = vu.create_aliases_for_selected(
     commonVariables, '^D*+ -> [^D0 -> ^pi+ ^K- ^pi+ ^pi-] ^pi+',
@@ -213,8 +204,6 @@ varsK3pi += vu.create_aliases_for_selected(
     ['pi1', 'K', 'pi2', 'pi3', 'pisoft'])
 varsK3pi += vu.create_aliases_for_selected(
     compositeVariables, '^D*+ -> [^D0 -> pi+ K- pi+ pi-] pi+', ['Dst', 'D0'])
-varsK3pi += vu.create_aliases_for_selected(
-    flightVariables, '^D*+ -> [^D0 -> pi+ K- pi+ pi-] pi+', ['Dst', 'D0'])
 
 vm.addAlias('Dst_M_preFit', 'extraInfo(M_preFit)')
 vm.addAlias('D0_M_preFit', 'daughter(0,extraInfo(M_preFit))')

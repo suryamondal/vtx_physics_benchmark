@@ -82,6 +82,7 @@ if __name__ == "__main__":
         print()
         print(f"Job #{i}: {n_events} events ({first_event} to {last_event})")
         basf_cmd = ["basf2", STEER_FILE, "--skip-events", str(skip_events),
+                    "--random-seed", str((args.exp, args.run, skip_events, last_event)),
                     "-n", str(last_event), "--", "--exp", str(args.exp),
                     "--run", str(args.run), "-o", out_file_name]
         if args.bkg: basf_cmd += ["--bkg"]

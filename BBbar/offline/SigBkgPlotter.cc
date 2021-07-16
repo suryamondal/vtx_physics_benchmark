@@ -101,7 +101,7 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
   if (sig->GetDimension() == 2) {
     TString sigTitle = sig->GetTitle(), bkgTitle = bkg->GetTitle();
     sig->SetTitle(sig->GetTitle() + " - Signal"TS);
-    bkg->SetTitle(bkg->GetTitle() + " - Background"TS);
+    bkg->SetTitle(bkg->GetTitle() + " - Mis-reco'ed"TS);
 
     m_c->Clear();
     m_c->Divide(2);
@@ -161,7 +161,7 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
 
     TLegend leg(0.8, 0.8, 0.95, 0.91);
     leg.AddEntry(sig, "Signal", m_normalizeHistos ? "PLE" : "F");
-    leg.AddEntry(bkg, "Background", m_normalizeHistos ? "PLE" : "F");
+    leg.AddEntry(bkg, "Mis-reco'ed", m_normalizeHistos ? "PLE" : "F");
     leg.Draw();
 
     TPaveText oufSig(0.8, 0.68, 0.95, 0.79, "brNDC");
@@ -313,8 +313,8 @@ void SigBkgPlotter::PrintROC(TString name, bool keepLow, bool excludeOUF, bool r
   gBkg->SetLineWidth(2);
   auto gROC = new TGraph(nb, sigEff.data(), bkgEff.data());
   gROC->SetName(GetUniqueName("gROC_" + name));
-  gROC->SetTitle(sig->GetTitle() + " - ROC;Signal"TS + lEff + ";Background" + lEff);
-  gLine.SetTitle(sig->GetTitle() + " - ROC;Signal"TS + lEff + ";Background" + lEff);
+  gROC->SetTitle(sig->GetTitle() + " - ROC;Signal"TS + lEff + ";Mis-reco'ed" + lEff);
+  gLine.SetTitle(sig->GetTitle() + " - ROC;Signal"TS + lEff + ";Mis-reco'ed" + lEff);
   gROC->SetLineColor(kBlack);
   gROC->SetLineWidth(2);
 

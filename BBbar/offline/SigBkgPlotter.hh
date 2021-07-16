@@ -28,7 +28,7 @@ class SigBkgPlotter {
    */
   SigBkgPlotter(DefineDF& df, TString sigCond, PDFCanvas& c,
                 TString namePrefix = "undefined", TString titlePrefix = "Undefined",
-                bool normalizeHistos = false, bool logScale = true)
+                bool normalizeHistos = false, bool logScale = false)
   : m_sig(df.Filter((const char*)sigCond, "Signal")),
     m_bkg(df.Filter((const char*)("!(" + sigCond + ")"), "Background")),
     m_c(c), m_namePrefix(namePrefix), m_titlePrefix(titlePrefix),
@@ -39,7 +39,7 @@ class SigBkgPlotter {
    */
   SigBkgPlotter(FilterDF& df, TString sigCond, PDFCanvas& c,
                 TString namePrefix = "undefined", TString titlePrefix = "Undefined",
-                bool normalizeHistos = false, bool logScale = true)
+                bool normalizeHistos = false, bool logScale = false)
   : m_sig(df.Filter((const char*)sigCond, "Signal")),
     m_bkg(df.Filter((const char*)("!(" + sigCond + ")"), "Background")),
     m_c(c), m_namePrefix(namePrefix), m_titlePrefix(titlePrefix),

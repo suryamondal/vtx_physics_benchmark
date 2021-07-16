@@ -69,7 +69,7 @@ SigBkgPlotter::FilterDF applyOfflineCuts(SigBkgPlotter::DefineDF& df, bool isK3p
 /** Books plots. */
 void bookHistos(SigBkgPlotter& plt, bool isK3pi)
 {
-  const auto& CompParts = CompositeParticles;
+  // const auto& CompParts = CompositeParticles;
   const auto& FSParts = isK3pi ? K3PiFSParticles : KPiFSParticles;
   // const auto& AllParts = isK3pi ? K3PiAllParticles : KPiAllParticles;
   // const auto& Pions = isK3pi ? K3PiPions : KPiPions;
@@ -81,60 +81,32 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   plt.Histo1D("D0_residualDecayY", "y_{decay,D^{0}} residual;y_{decay,meas} - y_{decay,MC} [cm];Events / bin", 100, -0.1, 0.1);
   plt.Histo1D("D0_residualDecayZ", "z_{decay,D^{0}} residual;z_{decay,meas} - z_{decay,MC} [cm];Events / bin", 100, -0.1, 0.1);
 
-  plt.Histo1D(CompParts, "M", "M_{$p};M_{$p} [GeV/c^{2}];Events / bin", 100, 1, 3);
-  plt.Histo1D("massDiff", "#DeltaM;M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 100, 0.1, 0.3);
-  plt.Histo1D(CompParts, "M_preFit", "M_{$p} (pre-fit);M_{$p} [GeV/c^{2}];Events / bin", 100, 1, 3);
-  plt.Histo1D("massDiffPreFit", "#DeltaM (pre-fit);M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 100, 0.1, 0.3);
-  // Masses and diff also plotted with greater resolution
-  plt.Histo1D({"Dst"}, "M", "M_{$p};M_{$p} [GeV/c^{2}];Events / bin", 120, 1.95, 2.07);
-  plt.Histo1D({"D0"}, "M", "M_{$p};M_{$p} [GeV/c^{2}];Events / bin", 120, 1.804, 1.924);
-  plt.Histo1D("massDiff", "#DeltaM;M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 50, 0.143, 0.148);
-  plt.Histo1D({"Dst"}, "M_preFit", "M_{$p} (pre-fit);M_{$p} [GeV/c^{2}];Events / bin", 120, 1.95, 2.07);
-  plt.Histo1D({"D0"}, "M_preFit", "M_{$p} (pre-fit);M_{$p} [GeV/c^{2}];Events / bin", 120, 1.804, 1.924);
-  plt.Histo1D("massDiffPreFit", "#DeltaM (pre-fit);M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 50, 0.143, 0.148);
+  plt.Histo1D({"Dst"}, "M_preFit", "M_{$p} (pre-fit);M_{$p} [GeV/c^{2}];Events / bin", 110, 1.9, 2.12);
+  plt.Histo1D({"D0"}, "M_preFit", "M_{$p} (pre-fit);M_{$p} [GeV/c^{2}];Events / bin", 110, 1.75, 1.97);
+  plt.Histo1D("massDiffPreFit", "#DeltaM (pre-fit);M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 110, 0.14, 0.151);
+  plt.Histo1D({"Dst"}, "M", "M_{$p};M_{$p} [GeV/c^{2}];Events / bin", 110, 1.9, 2.12);
+  plt.Histo1D({"D0"}, "M", "M_{$p};M_{$p} [GeV/c^{2}];Events / bin", 110, 1.75, 1.97);
+  plt.Histo1D("massDiff", "#DeltaM;M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 110, 0.14, 0.151);
 
-  plt.Histo1D(FSParts, "dr", "dr_{$p};dr_{$p} [cm];Events / bin", 100, 0, 1);
-  plt.Histo1D(FSParts, "dz", "dz_{$p};dz_{$p} [cm];Events / bin", 100, -1, 1);
+  plt.Histo1D(FSParts, "dr", "dr_{$p};dr_{$p} [cm];Events / bin", 100, 0, 0.1);
+  plt.Histo1D(FSParts, "dz", "dz_{$p};dz_{$p} [cm];Events / bin", 100, -0.2, 0.2);
 
-  plt.Histo1D(FSParts, "nCDCHits", "CDC Hits_{$p};CDC Hits_{$p};Events / bin", 101, -0.5, 100.5);
-  plt.Histo1D(FSParts, "nVXDHits", "VXD Hits_{$p};VXD Hits_{$p};Events / bin", 25, -0.5, 24.5);
-  plt.Histo1D(FSParts, "nVXDHits", "VXD Hits_{$p};VXD Hits_{$p};Events / bin", 25, -0.5, 24.5);
-  plt.Histo1D(FSParts, "firstVXDLayer", "First VXD layer for $p;Layer;Events / bin", 11, -0.5, 10.5);
+  plt.Histo1D(FSParts, "nCDCHits", "CDC Hits_{$p};CDC Hits_{$p};Events / (1 hit)", 101, -0.5, 100.5);
+  plt.Histo1D(FSParts, "nVXDHits", "VXD Hits_{$p};VXD Hits_{$p};Events / (1 hit)", 11, -0.5, 10.5);
 
-  plt.Histo1D("Dst_p_CMS", "p_{CM,D*};P_{CM,D*} [GeV/c];Events / bin", 100, 0, 3);
+  plt.Histo1D("Dst_p_CMS", "p_{CM,D*};P_{CM,D*} [GeV/c];Events / bin", 120, 0, 3);
 
-  plt.Histo1D(CompParts, "significanceOfDistance", "Significance of distance $p;Significance of distance $p;Events / bin", 100, 0, 10);
-  plt.Histo1D(CompParts, "flightDistance", "Flight distance $p;Flight distance $p [cm];Events / bin", 100, -10, 10);
-
-  plt.Histo1D(FSParts, "pionID", "#pi_{ID} for $p;#pi_{ID};Events / bin", 100, 0, 1);
-  plt.Histo1D(FSParts, "kaonID", "K_{ID} for $p;K_{ID};Events / bin", 100, 0, 1);
-  plt.Histo2D(FSParts, "pionID", "kaonID", "K_{ID} vs #pi_{ID} for $p;#pi_{ID};K_{ID};Events / bin", 20, 0, 1, 20, 0, 1);
+  plt.Histo1D({"D0"}, "flightTime", "Flight time of $p;$p flight time [ns?];Events / bin", 100, -0.02, 0.02);
 }
 
 void DoPlot(SigBkgPlotter& plt, bool isK3pi)
 {
-  const auto& CompParts = CompositeParticles;
-  const auto& FSParts = isK3pi ? K3PiFSParticles : KPiFSParticles;
-  const auto& Pions = isK3pi ? K3PiPions : KPiPions;
+  // const auto& CompParts = CompositeParticles;
+  // const auto& FSParts = isK3pi ? K3PiFSParticles : KPiFSParticles;
+  // const auto& Pions = isK3pi ? K3PiPions : KPiPions;
 
   // Histograms
   plt.PrintAll(false);
-
-  // ROC curves
-  plt.PrintROC(CompParts, "M_2", true);
-  plt.PrintROC(CompParts, "M_2", false);
-  plt.PrintROC("massDiff_2", true);
-  plt.PrintROC("massDiff_2", false);
-  plt.PrintROC("Dst_p_CMS", true);
-  plt.PrintROC(FSParts, "dr", true);
-  plt.PrintROC(FSParts, "dz", true);
-  plt.PrintROC(FSParts, "dz", false);
-  plt.PrintROC(FSParts, "nVXDHits", false);
-  plt.PrintROC(FSParts, "nCDCHits", false);
-  plt.PrintROC(Pions, "pionID", false, true);
-  plt.PrintROC("K_pionID", true, true);
-  plt.PrintROC(Pions, "kaonID", true, true);
-  plt.PrintROC("K_kaonID", false, true);
 
   // Fits
   plt.FitAndPrint("Dst_residualDecayX", "gaus");
@@ -216,32 +188,14 @@ int main(int argc, char* argv[])
   auto hCandKpi = CutEfficiencyAnalysis(dfDefKpi);
   auto hCandKpiCuts = CutEfficiencyAnalysis(dfCutKpi);
   DoCandAna(hCandKpi, hCandKpiCuts, canvasCand, "K#pi");
-  //dfKpi.Report()->Print();
+
   cout << "Processing K3pi..." << endl;
   auto hCandK3pi = CutEfficiencyAnalysis(dfDefK3pi);
   auto hCandK3piCuts = CutEfficiencyAnalysis(dfCutK3pi);
   DoCandAna(hCandK3pi, hCandK3piCuts, canvasCand, "K3#pi");
-  //dfK3pi.Report()->Print();
 
-  for (bool normalizeHistos : {false, true}) {
-    for (bool logScale : {true, false}) {
-      TString outFileSuffix = "";
-      if (normalizeHistos) outFileSuffix += "_norm-hist";
-      if (!logScale) outFileSuffix += "_no-log-scale";
-      canvas.SetPDFFileName(outFileName + outFileSuffix + ".pdf");
-      canvasCuts.SetPDFFileName(outFileNameCuts + outFileSuffix + ".pdf");
-      plotterKpi.SetNormalizeHistos(normalizeHistos);
-      plotterKpi.SetLogScale(logScale);
-      plotterK3pi.SetNormalizeHistos(normalizeHistos);
-      plotterK3pi.SetLogScale(logScale);
-      plotterKpiCuts.SetNormalizeHistos(normalizeHistos);
-      plotterKpiCuts.SetLogScale(logScale);
-      plotterK3piCuts.SetNormalizeHistos(normalizeHistos);
-      plotterK3piCuts.SetLogScale(logScale);
-      DoPlot(plotterKpi, false);
-      DoPlot(plotterK3pi, true);
-      DoPlot(plotterKpiCuts, false);
-      DoPlot(plotterK3piCuts, true);
-    }
-  }
+  DoPlot(plotterKpi, false);
+  DoPlot(plotterK3pi, true);
+  DoPlot(plotterKpiCuts, false);
+  DoPlot(plotterK3piCuts, true);
 }

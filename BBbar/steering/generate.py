@@ -18,7 +18,6 @@ import sys
 import basf2 as b2
 import generators as ge
 import simulation as simu
-import L1trigger as l1t
 import reconstruction as reco
 import mdst
 try:
@@ -92,8 +91,7 @@ if args.print_mc_particles:
 # simulate
 vtx_kwa = {'useVTX': True} if args.vtx else {}
 simu.add_simulation(main, bkgfiles=bkg_files, **vtx_kwa)
-if HAS_VTX:  # In master tsim is included in add_simulation
-    l1t.add_tsim(main)  # TRG simulation
+# l1t.add_tsim(...) --> TRG simulation now included in add_simulation
 if args.print_mc_particles and args.debug_gen:
     main.add_module("PrintMCParticles").set_name("PrintMCParticles_simulated")
 

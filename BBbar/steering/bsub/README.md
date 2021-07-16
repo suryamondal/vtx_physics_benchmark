@@ -3,6 +3,7 @@ Generation jobs submission with bsub (typical usage):
 ```
 ./submit_gen.py -n N_TOTAL_EVENTS [--vtx] [--bkg]
 ```
+Random seed is fixed and depends on the exp/run/events generated.
 
 Logs check:
 ```

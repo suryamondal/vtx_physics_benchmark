@@ -161,7 +161,9 @@ def check_globaltags(base_tags, user_tags, metadata):
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--addTopoAna', action="store_true",
                     help='add TopoAna/MCGen variables for MC')
-parser.add_argument("-c", "--cuts", choices=["loose", "normal", "tight"],
+parser.add_argument('--ipConstraint', action="store_true",  # TODO Set IP constraint as default?
+                    help='Use IP constraint when fitting the decay tree.')
+parser.add_argument("-c", "--cuts", choices=["loose", "normal", "tight"],  # TODO Set tight as deafault
                     default="normal", help="Set of cuts to be used.")
 parser.add_argument("-i", '--input', nargs='+',
                     help='mDST input file(s)')
@@ -205,8 +207,7 @@ ma.variablesToExtraInfo("B0:good", variables={"M": "M_preFit"}, path=main)
 # Tree fitting and final ajustments
 conf_level_cut = -1.0 if args.cuts == "loose" else 0.001
 vx.treeFit(list_name='B0:good', conf_level=conf_level_cut,
-           ipConstraint=False,  # TODO ipConstraint=True, originDimension=2, ??
-           updateAllDaughters=True, path=main)
+           ipConstraint=args.ipConstraint, updateAllDaughters=True, path=main)
 ma.applyCuts('B0:good', cuts["fit"], path=main)
 ma.matchMCTruth(list_name='B0:good', path=main)
 
@@ -308,10 +309,8 @@ main.add_module(FilterByDecay("B0:MCK3pi", Particle("B0", [
     Particle("mu+"),
     Particle("nu_mu")
 ])))
-varsKpiMC = [x for x in varsKpi if x.startswith("gen") or x.startswith("mc")]
-varsK3piMC = [x for x in varsK3pi if x.startswith("gen") or x.startswith("mc")]
-ma.variablesToNtuple('B0:MCKpi', varsKpiMC, filename=args.output, treename='MCKpi', path=main)
-ma.variablesToNtuple('B0:MCK3pi', varsK3piMC, filename=args.output, treename='MCK3pi', path=main)
+ma.variablesToNtuple('B0:MCKpi', varsKpi, filename=args.output, treename='MCKpi', path=main)
+ma.variablesToNtuple('B0:MCK3pi', varsK3pi, filename=args.output, treename='MCK3pi', path=main)
 
 # Process the events
 main.add_module('ProgressBar')

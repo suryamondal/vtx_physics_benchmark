@@ -8,9 +8,11 @@
 #     ./launch_ana.sh <OUTDIR>/mc_vtx [...]
 #
 # These are equivalent to
-#     basf2 -n 20 ../mdst2ntuple.py -- -o <OUTDIR>/mc_vxd.root \
+#     bsub -q s -oo <OUTDIR>/mc_vxd.log \
+#       basf2 ../mdst2ntuple.py -- -o <OUTDIR>/mc_vxd.root \
 #       -i '<OUTDIR>/mc_vxd/*/*.root' [...]
-#     basf2 -n 20 ../mdst2ntuple.py -- -o <OUTDIR>/mc_vtx.root \
+#     bsub -q s -oo <OUTDIR>/mc_vtx.log \
+#       basf2 ../mdst2ntuple.py -- -o <OUTDIR>/mc_vtx.root \
 #       -i '<OUTDIR>/mc_vtx/*/*.root' [...]
 ########################################################################
 
@@ -29,8 +31,10 @@ if [ ! -d "$outdir" ]; then
 fi
 
 outfile="${outdir}_ntuple.root"
+logfile="${outdir}_ntuple.log"
 inglob="$outdir/*/*.root"
 echo "Input files: $inglob"
 echo "Output file: $outfile"
-echo "Running analysis..."
-basf2 -n 20 ../mdst2ntuple.py -- -o "$outfile" -i "$inglob" "${@:2}"
+echo "Log file: $outfile"
+echo "Submitting analysis..."
+bsub -q s -oo "$logfile" basf2 ../mdst2ntuple.py -- -o "$outfile" -i "$inglob" "${@:2}"

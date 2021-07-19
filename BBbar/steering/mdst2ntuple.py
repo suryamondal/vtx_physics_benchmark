@@ -51,25 +51,31 @@ CUTS = {
         "pisoft": "",
         "pi": "",
         "K": "",
+        "mu": "",
         "D0": "abs(dM) < 0.45",
-        "D*reco": "[abs(dM) < 0.4] and [massDifference(0) < 0.2]",
-        "D*fit": "[useCMSFrame(p) < 3]"
+        "D*": "[abs(dM) < 0.4] and [massDifference(0) < 0.2]",
+        "B0": "",
+        "fit": "[daughter(0, useCMSFrame(p)) < 3]"
     },
     "normal": {
         "pisoft": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",  # VXD=PXD+SVD+VTX
         "pi": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
         "K": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
+        "mu": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
         "D0": "abs(dM) < 0.45",  # M_D0 = 1.8648 GeV, M_D* = 2.0103, diff = 0.1455
-        "D*reco": "[abs(dM) < 0.4] and [massDifference(0) < 0.2]",
-        "D*fit": "[useCMSFrame(p) < 2.5]"
+        "D*": "[abs(dM) < 0.4] and [massDifference(0) < 0.2]",
+        "B0": "",  # Missing neutrino
+        "fit": "[daughter(0, useCMSFrame(p)) < 2.5]"
     },
     "tight": {  # These are mostly identical to those of the offline analysis
         "pisoft": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
         "pi": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
         "K": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
+        "mu": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
         "D0": "abs(dM) < 0.1",
-        "D*reco": "[abs(dM) < 0.1] and [massDifference(0) < 0.151]",
-        "D*fit": "[useCMSFrame(p) < 2.5]"
+        "D*": "[abs(dM) < 0.1] and [massDifference(0) < 0.151]",
+        "B0": "",  # Missing neutrino
+        "fit": "[daughter(0, useCMSFrame(p)) < 2.5]"
     }
 }
 
@@ -122,10 +128,11 @@ main = b2.create_path()
 # Load the samples
 ma.inputMdstList(filelist=args.input, environmentType='default', path=main)
 
-# load pions and kaons from IP and in tracking acceptance
+# load pions, kaons and muons from IP and in tracking acceptance
 ma.fillParticleList('pi+:soft', cuts["pisoft"], path=main)
 ma.fillParticleList('pi+:myTrk', cuts["pi"], path=main)
 ma.fillParticleList('K+:myTrk', cuts["K"], path=main)
+ma.fillParticleList('mu+:myTrk', cuts["mu"], path=main)
 
 # D0 reconstruction
 ma.reconstructDecay('D0:Kpi -> pi+:myTrk K-:myTrk',
@@ -136,98 +143,91 @@ ma.copyLists('D0:merged', ['D0:Kpi', 'D0:K3pi'], True, path=main)
 ma.variablesToExtraInfo("D0:merged", variables={'M': 'M_preFit'}, path=main)
 
 # D* reconstruction
-ma.reconstructDecay('D*+:good -> D0:merged pi+:soft', cut=cuts["D*reco"], path=main)
+ma.reconstructDecay('D*+:good -> D0:merged pi+:soft', cut=cuts["D*"], path=main)
 ma.variablesToExtraInfo("D*+:good", variables={'M': 'M_preFit'}, path=main)
+
+# B0 reconstruction
+ma.reconstructDecay('B0:good -> D*-:good mu+:myTrk', cut=cuts["B0"], path=main)
+ma.variablesToExtraInfo("B0:good", variables={"M": "M_preFit"}, path=main)
 
 # Tree fitting and final ajustments
 conf_level_cut = -1.0 if args.cuts == "loose" else 0.001
-vx.treeFit(list_name='D*+:good', conf_level=conf_level_cut, ipConstraint=False,
+vx.treeFit(list_name='B0:good', conf_level=conf_level_cut,
+           ipConstraint=False,  # TODO ipConstraint=True, originDimension=2, ??
            updateAllDaughters=True, path=main)
-ma.applyCuts('D*+:good', cuts["D*fit"], path=main)
-ma.matchMCTruth(list_name='D*+:good', path=main)
+ma.applyCuts('B0:good', cuts["fit"], path=main)
+ma.matchMCTruth(list_name='B0:good', path=main)
 
-# List of variables to save
-vm.addAlias('IPCovXX', 'IPCov(0,0)')
-vm.addAlias('IPCovYY', 'IPCov(1,1)')
-vm.addAlias('IPCovZZ', 'IPCov(2,2)')
-vm.addAlias('IPCovXY', 'IPCov(0,1)')
-vm.addAlias('IPCovXZ', 'IPCov(0,2)')
-vm.addAlias('IPCovYZ', 'IPCov(1,2)')
-eventWiseVariables = [
-    'nTracks', 'IPX', 'IPY', 'IPZ',
-    'IPCovXX', 'IPCovYY', 'IPCovZZ', 'IPCovXY', 'IPCovXZ', 'IPCovYZ',
-    'beamE', 'beamPx', 'beamPy', 'beamPz']
-# These variables don't exist in release-05
-if 'genIPX' in (v.name for v in vm.getVariables()):
-    eventWiseVariables += ['genIPX', 'genIPY', 'genIPZ']
+# Variables of the event
+eventWiseVariables = ['IPX', 'IPY', 'IPZ', 'genIPX', 'genIPY', 'genIPZ',
+                      'nTracks', 'beamE', 'beamPx', 'beamPy', 'beamPz']
+for i, a in enumerate('XYZ'): # IPCovXX -> IPCov(0,0), etc
+    for j, b in enumerate('XYZ'[i:]):
+        vm.addAlias(f'IPCov{a}{b}', f'IPCov({i},{j})')
+        eventWiseVariables.append(f'IPCov{a}{b}')
 if args.addTopoAna:  # TopoAna variables
     eventWiseVariables += mc_gen_topo(200)
 
+# Variables of all the particles
 commonVariables = vc.kinematics
 commonVariables += ['pErr', 'ptErr', 'pxErr', 'pyErr', 'pzErr']
 commonVariables += vc.mc_variables
-commonVariables += ['isSignal', 'isSignalAcceptMissingGamma', 'isPrimarySignal']
+commonVariables += ['isSignal', 'isSignalAcceptMissingGamma', 'isPrimarySignal',
+                    'isSignalAcceptMissingNeutrino']
 
+# Variables of the final-state particles (K, pi, mu)
 tracksVariables = vc.track + vc.track_hits
-if HAS_VTX: tracksVariables += ['nVTXHits']
-tracksVariables += ['pionID', 'kaonID', 'protonID', 'muonID', 'electronID']
-if HAS_VTX:
-    tracksVariables += ['firstVTXLayer']
-else:
-    tracksVariables += ['firstPXDLayer', 'firstSVDLayer']
-# This variable changed name after release-05
-if 'tanlambdaErr' in (v.name for v in vm.getVariables()):
-    vm.addAlias("tanLambdaErr", "tanlambdaErr")
-tracksVariables += ['charge', 'omegaErr', 'phi0Err', 'z0Err', 'd0Err', 'tanLambdaErr']
-tracksVariables += ['omegaPull', 'phi0Pull', 'z0Pull', 'd0Pull', 'tanLambdaPull']
+if HAS_VTX: tracksVariables.append('nVTXHits')
+tracksVariables += ['pionID', 'kaonID', 'protonID', 'muonID', 'electronID',
+                    'charge', 'omegaErr', 'phi0Err', 'z0Err', 'd0Err', 'tanLambdaErr',
+                    'omegaPull', 'phi0Pull', 'z0Pull', 'd0Pull', 'tanLambdaPull']
+tracksVariables += ['firstVTXLayer'] if HAS_VTX else ['firstPXDLayer', 'firstSVDLayer']
 
+# Variables of the composite particles (D0, D*, B0)
 compositeVariables = vc.vertex + ['M', 'ErrM']
 compositeVariables += ['mcProductionVertexX', 'mcProductionVertexY',
-                       'mcProductionVertexZ']
-# Flight variables
-compositeVariables += vc.flight_info
-compositeVariables += vc.mc_flight_info
+                       'mcProductionVertexZ', 'extraInfo(M_preFit)']
+compositeVariables += vc.flight_info + vc.mc_flight_info
 
+# Create aliases for the two decay modes
 varsKpi = vu.create_aliases_for_selected(
-    commonVariables, '^D*+ -> [^D0 -> ^pi+ ^K-] ^pi+',
-    ['Dst', 'D0', 'pi', 'K', 'pisoft'])
+    commonVariables, '^B0 -> [^D*- -> [^anti-D0 -> ^pi- ^K+] ^pi-] ^mu+',
+    ['B0', 'Dst', 'D0', 'pi', 'K', 'pisoft', 'mu'])
 varsKpi += vu.create_aliases_for_selected(
-    tracksVariables, 'D*+ -> [D0 -> ^pi+ ^K-] ^pi+', ['pi', 'K', 'pisoft'])
+    tracksVariables, 'B0 -> [D*- -> [anti-D0 -> ^pi- ^K+] ^pi-] ^mu+',
+    ['pi', 'K', 'pisoft', 'mu'])
 varsKpi += vu.create_aliases_for_selected(
-    compositeVariables, '^D*+ -> [^D0 -> pi+ K-] pi+', ['Dst', 'D0'])
+    compositeVariables, '^B0 -> [^D*- -> [^anti-D0 -> pi- K+] pi-] mu+',
+    ['B0', 'Dst', 'D0'])
 
 varsK3pi = vu.create_aliases_for_selected(
-    commonVariables, '^D*+ -> [^D0 -> ^pi+ ^K- ^pi+ ^pi-] ^pi+',
-    ['Dst', 'D0', 'pi1', 'K', 'pi2', 'pi3', 'pisoft'])
+    commonVariables, '^B0 -> [^D*- -> [^anti-D0 -> ^pi- ^K+ ^pi- ^pi+] ^pi-] ^mu+',
+    ['B0', 'Dst', 'D0', 'pi1', 'K', 'pi2', 'pi3', 'pisoft', 'mu'])
 varsK3pi += vu.create_aliases_for_selected(
-    tracksVariables, 'D*+ -> [D0 -> ^pi+ ^K- ^pi+ ^pi-] ^pi+',
-    ['pi1', 'K', 'pi2', 'pi3', 'pisoft'])
+    tracksVariables, 'B0 -> [D*- -> [anti-D0 -> ^pi- ^K+ ^pi- ^pi+] ^pi-] ^mu+',
+    ['pi1', 'K', 'pi2', 'pi3', 'pisoft', 'mu'])
 varsK3pi += vu.create_aliases_for_selected(
-    compositeVariables, '^D*+ -> [^D0 -> pi+ K- pi+ pi-] pi+', ['Dst', 'D0'])
+    compositeVariables, '^B0 -> [^D*- -> [^anti-D0 -> pi- K+ pi- pi+] pi-] mu+',
+    ['B0', 'Dst', 'D0'])
 
-vm.addAlias('Dst_M_preFit', 'extraInfo(M_preFit)')
-vm.addAlias('D0_M_preFit', 'daughter(0,extraInfo(M_preFit))')
-prefit_variables = ['Dst_M_preFit', 'D0_M_preFit']
+# CMS variables of the D* only
+cms_variables = []
+for v in ['px', 'py', 'pz', 'p']:
+    vm.addAlias(f'Dst_{v}_CMS', f'daughter(0,useCMSFrame({v}))')
+    cms_variables.append(f'Dst_{v}_CMS')
 
-vm.addAlias('Dst_px_CMS', 'useCMSFrame(px)')
-vm.addAlias('Dst_py_CMS', 'useCMSFrame(py)')
-vm.addAlias('Dst_pz_CMS', 'useCMSFrame(pz)')
-vm.addAlias('Dst_p_CMS', 'useCMSFrame(p)')
-cms_variables = ['Dst_px_CMS', 'Dst_py_CMS', 'Dst_pz_CMS', 'Dst_p_CMS']
+# Angle between pi and K
+vm.addAlias('Kpi_MCAngle', 'daughter(0,daughter(0,mcDaughterAngle(0,1)))')
 
-varsKpi += prefit_variables + cms_variables + eventWiseVariables
-varsK3pi += prefit_variables + cms_variables + eventWiseVariables
+varsKpi += cms_variables + eventWiseVariables + ['Kpi_MCAngle']
+varsK3pi += cms_variables + eventWiseVariables
 
 # Create one ntuple per channel in the same output file
-ma.cutAndCopyList('D*+:Kpi', 'D*+:good', 'daughter(0,extraInfo(decayModeID))==0', path=main)
-ma.cutAndCopyList('D*+:K3pi', 'D*+:good', 'daughter(0,extraInfo(decayModeID))==1', path=main)
+ma.cutAndCopyList('B0:Kpi', 'B0:good', 'daughter(0,daughter(0,extraInfo(decayModeID)))==0', path=main)
+ma.cutAndCopyList('B0:K3pi', 'B0:good', 'daughter(0,daughter(0,extraInfo(decayModeID)))==1', path=main)
 
-ma.variablesToNtuple(
-    decayString='D*+:Kpi', variables=varsKpi, filename=args.output,
-    treename='Dst_D0pi_Kpi', path=main)
-ma.variablesToNtuple(
-    decayString='D*+:K3pi', variables=varsK3pi, filename=args.output,
-    treename='Dst_D0pi_K3pi', path=main)
+ma.variablesToNtuple('B0:Kpi', varsKpi, filename=args.output, treename='Kpi', path=main)
+ma.variablesToNtuple('B0:K3pi', varsK3pi, filename=args.output, treename='K3pi', path=main)
 
 # Process the events
 main.add_module('ProgressBar')

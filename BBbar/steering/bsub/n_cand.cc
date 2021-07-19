@@ -29,7 +29,7 @@ void showNCand(TTree* tree) {
   TTreeReaderValue<Int_t> exp(rdr, "__experiment__");
   TTreeReaderValue<Int_t> run(rdr, "__run__");
   TTreeReaderValue<Int_t> evt(rdr, "__event__");
-  TTreeReaderValue<Double_t> isSig(rdr, "Dst_isSignal");
+  TTreeReaderValue<Double_t> isSig(rdr, "B0_isSignalAcceptMissingNeutrino");
   map<EvtID,EvtStats> stats;
   ULong64_t nSigTot = 0, nBkgTot = 0;
 
@@ -54,7 +54,7 @@ void showNCand(TTree* tree) {
 void n_cand(const char* filename) {
   auto inf = TFile::Open(filename);
   cout << " ========== Kpi ===========" << endl;
-  showNCand(inf->Get<TTree>("Dst_D0pi_Kpi"));
+  showNCand(inf->Get<TTree>("Kpi"));
   cout << " ========== K3pi ==========" << endl;
-  showNCand(inf->Get<TTree>("Dst_D0pi_K3pi"));
+  showNCand(inf->Get<TTree>("K3pi"));
 }

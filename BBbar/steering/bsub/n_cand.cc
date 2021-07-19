@@ -51,10 +51,16 @@ void showNCand(TTree* tree) {
     (double)(nSigTot + nBkgTot) / nEvts, (double)nSigTot / nEvts, (double)nBkgTot / nEvts) << endl;
 }
 
+void showNMC(TTree* tree) {
+  cout << tree->GetEntries() << " MC particles." << endl;
+}
+
 void n_cand(const char* filename) {
   auto inf = TFile::Open(filename);
   cout << " ========== Kpi ===========" << endl;
   showNCand(inf->Get<TTree>("Kpi"));
+  showNMC(inf->Get<TTree>("MCKpi"));
   cout << " ========== K3pi ==========" << endl;
   showNCand(inf->Get<TTree>("K3pi"));
+  showNMC(inf->Get<TTree>("MCK3pi"));
 }

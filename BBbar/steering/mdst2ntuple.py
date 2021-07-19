@@ -229,6 +229,29 @@ ma.cutAndCopyList('B0:K3pi', 'B0:good', 'daughter(0,daughter(0,extraInfo(decayMo
 ma.variablesToNtuple('B0:Kpi', varsKpi, filename=args.output, treename='Kpi', path=main)
 ma.variablesToNtuple('B0:K3pi', varsK3pi, filename=args.output, treename='K3pi', path=main)
 
+# MC particles lists for efficiency studies
+commonMCcuts = "nDaughters==3 and daughter(0,abs(mcPDG))==413 and " \
+               "daughter(1,abs(mcPDG))==13 and daughter(2,abs(mcPDG))==14 and " \
+               "daughter(0,nDaughters) == 2 and " \
+               "daughter(0,daughter(0,abs(mcPDG)))==421 and " \
+               "daughter(0,daughter(1,abs(mcPDG)))==211"
+KpiMCcuts = commonMCcuts + " and " \
+            "daughter(0,daughter(0,nDaughters))==2 and " \
+            "daughter(0,daughter(0,daughter(0,abs(mcPDG))))==321 and " \
+            "daughter(0,daughter(0,daughter(1,abs(mcPDG))))==211"
+K3piMCcuts = commonMCcuts + " and " \
+             "daughter(0,daughter(0,nDaughters))==4 and " \
+             "daughter(0,daughter(0,daughter(0,abs(mcPDG))))==321 and " \
+             "daughter(0,daughter(0,daughter(1,abs(mcPDG))))==211 and " \
+             "daughter(0,daughter(0,daughter(2,abs(mcPDG))))==211 and " \
+             "daughter(0,daughter(0,daughter(3,abs(mcPDG))))==211"
+ma.fillParticleListFromMC("B0:MCKpi", KpiMCcuts, addDaughters=True, path=main)
+ma.fillParticleListFromMC("B0:MCK3pi", K3piMCcuts, addDaughters=True, path=main)
+varsKpiMC = [x for x in varsKpi if x.startswith("gen") or x.startswith("mc")]
+varsK3piMC = [x for x in varsK3pi if x.startswith("gen") or x.startswith("mc")]
+ma.variablesToNtuple('B0:MCKpi', varsKpiMC, filename=args.output, treename='MCKpi', path=main)
+ma.variablesToNtuple('B0:MCK3pi', varsK3piMC, filename=args.output, treename='MCK3pi', path=main)
+
 # Process the events
 main.add_module('ProgressBar')
 b2.process(main)

@@ -45,17 +45,19 @@ SigBkgPlotter::DefineDF defineVariables(RDataFrame& df, bool isK3pi)
   const auto& FSParts = isK3pi ? K3PiFSParticles : KPiFSParticles;
 
   auto ddf = defineVarsForParticles(
-    df, FSParts, {"kaonID"}, {"pionID"}, {"piVsKID"}, "$a/($a+$b)");
-  ddf = defineVarsForParticles(
-    ddf, CompParts,
+    df, CompParts,
     {"x",              "y",              "z"},
     {"mcDecayVertexX", "mcDecayVertexY", "mcDecayVertexZ"},
-    {"residualDecayX", "residualDecayY", "residualDecayZ"});
+    {"residualDecayX", "residualDecayY", "residualDecayZ"},
+    "($a - $b) * 1e4"); // Microns!
   for (const TString& p : FSParts)
     ddf = ddf.Define(
       (p + "_firstVXDLayer").Data(),
       ddf.HasColumn((p + "_firstVTXLayer").Data())
       ? (p + "_firstVTXLayer").Data() : (p + "_firstPXDLayer").Data());
+  ddf = ddf.Alias("Dst_M_preFit", "Dst_extraInfo_M_preFit")
+           .Alias("D0_M_preFit", "D0_extraInfo_M_preFit")
+           .Alias("B0_M_preFit", "B0_extraInfo_M_preFit");
   return ddf.Define("massDiffPreFit", "Dst_M_preFit-D0_M_preFit")
             .Define("massDiff", "Dst_M-D0_M");
 }
@@ -74,16 +76,21 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   // const auto& AllParts = isK3pi ? K3PiAllParticles : KPiAllParticles;
   // const auto& Pions = isK3pi ? K3PiPions : KPiPions;
 
-  plt.Histo1D("Dst_residualDecayX", "x_{decay,D*} residual;x_{decay,meas} - x_{decay,MC} [cm];Events / bin", 100, -2, 2);
-  plt.Histo1D("Dst_residualDecayY", "y_{decay,D*} residual;y_{decay,meas} - y_{decay,MC} [cm];Events / bin", 100, -2, 2);
-  plt.Histo1D("Dst_residualDecayZ", "z_{decay,D*} residual;z_{decay,meas} - z_{decay,MC} [cm];Events / bin", 100, -2, 2);
-  plt.Histo1D("D0_residualDecayX", "x_{decay,D^{0}} residual;x_{decay,meas} - x_{decay,MC} [cm];Events / bin", 100, -0.1, 0.1);
-  plt.Histo1D("D0_residualDecayY", "y_{decay,D^{0}} residual;y_{decay,meas} - y_{decay,MC} [cm];Events / bin", 100, -0.1, 0.1);
-  plt.Histo1D("D0_residualDecayZ", "z_{decay,D^{0}} residual;z_{decay,meas} - z_{decay,MC} [cm];Events / bin", 100, -0.1, 0.1);
+  plt.Histo1D("B0_residualDecayX", "x_{decay,B^{0}} residual;x_{decay,meas} - x_{decay,MC} [#mum];Events / bin", 100, -500, 500);
+  plt.Histo1D("B0_residualDecayY", "y_{decay,B^{0}} residual;y_{decay,meas} - y_{decay,MC} [#mum];Events / bin", 100, -500, 500);
+  plt.Histo1D("B0_residualDecayZ", "z_{decay,B^{0}} residual;z_{decay,meas} - z_{decay,MC} [#mum];Events / bin", 100, -500, 500);
+  plt.Histo1D("Dst_residualDecayX", "x_{decay,D*} residual;x_{decay,meas} - x_{decay,MC} [#mum];Events / bin", 100, -500, 500);
+  plt.Histo1D("Dst_residualDecayY", "y_{decay,D*} residual;y_{decay,meas} - y_{decay,MC} [#mum];Events / bin", 100, -500, 500);
+  plt.Histo1D("Dst_residualDecayZ", "z_{decay,D*} residual;z_{decay,meas} - z_{decay,MC} [#mum];Events / bin", 100, -500, 500);
+  plt.Histo1D("D0_residualDecayX", "x_{decay,D^{0}} residual;x_{decay,meas} - x_{decay,MC} [#mum];Events / bin", 100, -500, 500);
+  plt.Histo1D("D0_residualDecayY", "y_{decay,D^{0}} residual;y_{decay,meas} - y_{decay,MC} [#mum];Events / bin", 100, -500, 500);
+  plt.Histo1D("D0_residualDecayZ", "z_{decay,D^{0}} residual;z_{decay,meas} - z_{decay,MC} [#mum];Events / bin", 100, -500, 500);
 
+  plt.Histo1D({"B0"}, "M_preFit", "M_{$p} (pre-fit);M_{$p} [GeV/c^{2}];Events / bin", 100, 1.9, 5.5);
   plt.Histo1D({"Dst"}, "M_preFit", "M_{$p} (pre-fit);M_{$p} [GeV/c^{2}];Events / bin", 110, 1.9, 2.12);
   plt.Histo1D({"D0"}, "M_preFit", "M_{$p} (pre-fit);M_{$p} [GeV/c^{2}];Events / bin", 110, 1.75, 1.97);
   plt.Histo1D("massDiffPreFit", "#DeltaM (pre-fit);M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 110, 0.14, 0.151);
+  plt.Histo1D({"B0"}, "M", "M_{$p};M_{$p} [GeV/c^{2}];Events / bin", 100, 1.9, 5.5);
   plt.Histo1D({"Dst"}, "M", "M_{$p};M_{$p} [GeV/c^{2}];Events / bin", 110, 1.9, 2.12);
   plt.Histo1D({"D0"}, "M", "M_{$p};M_{$p} [GeV/c^{2}];Events / bin", 110, 1.75, 1.97);
   plt.Histo1D("massDiff", "#DeltaM;M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 110, 0.14, 0.151);
@@ -94,9 +101,13 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   plt.Histo1D(FSParts, "nCDCHits", "CDC Hits_{$p};CDC Hits_{$p};Events / (1 hit)", 101, -0.5, 100.5);
   plt.Histo1D(FSParts, "nVXDHits", "VXD Hits_{$p};VXD Hits_{$p};Events / (1 hit)", 11, -0.5, 10.5);
 
-  plt.Histo1D("Dst_p_CMS", "p_{CM,D*};P_{CM,D*} [GeV/c];Events / bin", 120, 0, 3);
+  plt.Histo1D({"mu"}, "pz", "p_{z,$p};p_{z,$p} [GeV/c];Events / bin", 100, -2, 3);
+  plt.Histo1D({"mu"}, "pt", "p_{T,$p};p_{T,$p} [GeV/c];Events / bin", 120, 0, 3);
+  plt.Histo1D({"mu"}, "p", "p_{$p};p_{$p} [GeV/c];Events / bin", 120, 0, 3);
 
-  plt.Histo1D({"D0"}, "flightTime", "Flight time of $p;$p flight time [ns?];Events / bin", 100, -0.02, 0.02);
+  plt.Histo1D("Dst_p_CMS", "p_{CM,D*};p^{CM}_{D*} [GeV/c];Events / bin", 120, 0, 3);
+
+  plt.Histo1D({"D0"}, "flightDistance", "Flight distance of $p;$p flight distance [cm];Events / bin", 100, -0.2, 0.2);
 }
 
 void DoPlot(SigBkgPlotter& plt, bool isK3pi)
@@ -109,6 +120,9 @@ void DoPlot(SigBkgPlotter& plt, bool isK3pi)
   plt.PrintAll(false);
 
   // Fits
+  plt.FitAndPrint("B0_residualDecayX", "gaus");
+  plt.FitAndPrint("B0_residualDecayY", "gaus");
+  plt.FitAndPrint("B0_residualDecayZ", "gaus");
   plt.FitAndPrint("Dst_residualDecayX", "gaus");
   plt.FitAndPrint("Dst_residualDecayY", "gaus");
   plt.FitAndPrint("Dst_residualDecayZ", "gaus");
@@ -147,7 +161,7 @@ void DoCandAna(tuple<TH2D*,UInt_t,UInt_t> noCuts, tuple<TH2D*,UInt_t,UInt_t> cut
 
 int main(int argc, char* argv[])
 {
-  ArgParser parser("Analysis program for D* -> [D0 -> K pi (pi pi)] pi.");
+  ArgParser parser("Analysis program for B0 -> [D* -> [D0 -> K pi (pi pi)] pi] mu nu.");
   parser.AddPositionalArg("inputRootFile");
   auto args = parser.ParseArgs(argc, argv);
 
@@ -161,8 +175,8 @@ int main(int argc, char* argv[])
   TString outFileName = inFileName(0, inFileName.Length() - 5);
   TString outFileNameCuts = inFileName(0, inFileName.Length() - 5) + "_offline_cuts";
 
-  RDataFrame dfKpi("Dst_D0pi_Kpi", inFileName.Data());
-  RDataFrame dfK3pi("Dst_D0pi_K3pi", inFileName.Data());
+  RDataFrame dfKpi("Kpi", inFileName.Data());
+  RDataFrame dfK3pi("K3pi", inFileName.Data());
 
   auto dfDefKpi = defineVariables(dfKpi, false);
   auto dfDefK3pi = defineVariables(dfK3pi, true);
@@ -174,10 +188,10 @@ int main(int argc, char* argv[])
   PDFCanvas canvasCuts(outFileNameCuts + ".pdf", "cc");
   PDFCanvas canvasCand(outFileName + "_candidates.pdf", "ccc");
 
-  SigBkgPlotter plotterKpi(dfDefKpi, "Dst_isSignal==1", canvas, "Kpi", "K#pi");
-  SigBkgPlotter plotterK3pi(dfDefK3pi, "Dst_isSignal==1", canvas, "K3pi", "K3#pi");
-  SigBkgPlotter plotterKpiCuts(dfCutKpi, "Dst_isSignal==1", canvasCuts, "KpiCuts", "K#pi");
-  SigBkgPlotter plotterK3piCuts(dfCutK3pi, "Dst_isSignal==1", canvasCuts, "K3piCuts", "K3#pi");
+  SigBkgPlotter plotterKpi(dfDefKpi, SignalCondition, canvas, "Kpi", "K#pi");
+  SigBkgPlotter plotterK3pi(dfDefK3pi, SignalCondition, canvas, "K3pi", "K3#pi");
+  SigBkgPlotter plotterKpiCuts(dfCutKpi, SignalCondition, canvasCuts, "KpiCuts", "K#pi");
+  SigBkgPlotter plotterK3piCuts(dfCutK3pi, SignalCondition, canvasCuts, "K3piCuts", "K3#pi");
 
   bookHistos(plotterKpi, false);
   bookHistos(plotterK3pi, true);

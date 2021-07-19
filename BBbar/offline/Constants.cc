@@ -1,5 +1,13 @@
 #include "Constants.hh" // Own include
 
+// const TString SignalCondition = "Dst_isSignal";
+// The above one seems to be ~ equal to the below one
+// const TString SignalCondition = "B0_isSignalAcceptMissingNeutrino";
+// This one seems to make a difference
+const TString SignalCondition =
+  "B0_isSignalAcceptMissingNeutrino && Dst_isSignal && D0_isSignal"
+  "&& K_isSignal && pisoft_isSignal && mu_isSignal";
+
 // From PDG (2021) and in GeV
 // M_D* = 2.01026
 // M_D0 = 1.86484
@@ -9,9 +17,10 @@ const TString CommonCuts =
   "TMath::Abs(Dst_M_preFit-2.01026) < 0.1"
   "&& TMath::Abs(D0_M_preFit-1.86484) < 0.1"
   "&& TMath::Abs(massDiffPreFit-0.145426) < 0.005" // Lower cut is not in steering file (for now)
+  "&& mu_dr < 2 && TMath::Abs(mu_dz) < 2"
   "&& K_dr < 2 && TMath::Abs(K_dz) < 2"
   "&& pisoft_dr < 2 && TMath::Abs(pisoft_dz) < 2"
-  "&& K_nVXDHits > 0 && pisoft_nVXDHits > 0" // VXD = PXD+SVD+VTX
+  "&& mu_nVXDHits > 0 && K_nVXDHits > 0 && pisoft_nVXDHits > 0" // VXD = PXD+SVD+VTX
   "&& Dst_p_CMS < 2.5"; // From momentum conservation
 
 const TString KpiCuts =

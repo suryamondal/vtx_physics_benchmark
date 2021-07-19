@@ -37,6 +37,8 @@ import modularAnalysis as ma
 import vertex as vx
 import variables.collections as vc
 import variables.utils as vu
+import pdg
+from ROOT import Belle2
 from variables import variables as vm
 from variables.MCGenTopo import mc_gen_topo
 
@@ -78,6 +80,56 @@ CUTS = {
         "fit": "[daughter(0, useCMSFrame(p)) < 2.5]"
     }
 }
+
+
+class Particle:
+    """A minimalistic particle class for FilterByDecay that works in this case."""
+
+    def __init__(self, str_or_particle, daughters=None):
+        self.daughters = []
+        if isinstance(str_or_particle, str):
+            self.pdg = abs(pdg.from_name(str_or_particle))
+            if not self.pdg in (13, 211, 321):  # FS: pi+, K+, mu
+                self.daughters = list(daughters or [])
+        else:
+            self.pdg = abs(str_or_particle.getPDGCode())
+            if not self.pdg in (13, 211, 321):  # FS: pi+, K+, mu
+                self.daughters = [Particle(d) for d in str_or_particle.getDaughters()
+                                  if abs(d.getPDGCode()) != 22]  # Skip photons
+        self.daughters.sort()  # Makes comparisons easier
+
+    def __lt__(self, other):
+        return self.pdg < other.pdg
+
+    def __eq__(self, other):
+        return self.pdg == other.pdg and self.daughters == other.daughters
+
+    # def __str__(self):  # For debugging
+    #     if self.daughters:
+    #         return f"[{pdg.to_name(self.pdg)} -> {' '.join(str(x) for x in self.daughters)}]"
+    #     return pdg.to_name(self.pdg)
+
+
+class FilterByDecay(b2.Module):
+    """A python module to filter MC particles by their decay tree."""
+
+    def __init__(self, pListName, pDecayTree):
+        self.pListName = pListName
+        self.pDecayTree = pDecayTree
+        super().__init__()
+
+    def initialize(self):
+        self.pList = Belle2.PyStoreObj(self.pListName)
+        b2.B2INFO(f"FilterByDecay: {self.pListName}")
+
+    def event(self):
+        toRemove = []
+        for i in range(self.pList.getListSize()):
+            part = self.pList.getParticle(i)
+            keep = Particle(part) == self.pDecayTree
+            # b2.B2INFO(f"Particle: {part}", keep=keep)  # For debugging
+            if not keep: toRemove.append(part.getArrayIndex())
+        self.pList.removeParticles(toRemove)
 
 
 def check_globaltags(base_tags, user_tags, metadata):
@@ -230,23 +282,32 @@ ma.variablesToNtuple('B0:Kpi', varsKpi, filename=args.output, treename='Kpi', pa
 ma.variablesToNtuple('B0:K3pi', varsK3pi, filename=args.output, treename='K3pi', path=main)
 
 # MC particles lists for efficiency studies
-commonMCcuts = "nDaughters==3 and daughter(0,abs(mcPDG))==413 and " \
-               "daughter(1,abs(mcPDG))==13 and daughter(2,abs(mcPDG))==14 and " \
-               "daughter(0,nDaughters) == 2 and " \
-               "daughter(0,daughter(0,abs(mcPDG)))==421 and " \
-               "daughter(0,daughter(1,abs(mcPDG)))==211"
-KpiMCcuts = commonMCcuts + " and " \
-            "daughter(0,daughter(0,nDaughters))==2 and " \
-            "daughter(0,daughter(0,daughter(0,abs(mcPDG))))==321 and " \
-            "daughter(0,daughter(0,daughter(1,abs(mcPDG))))==211"
-K3piMCcuts = commonMCcuts + " and " \
-             "daughter(0,daughter(0,nDaughters))==4 and " \
-             "daughter(0,daughter(0,daughter(0,abs(mcPDG))))==321 and " \
-             "daughter(0,daughter(0,daughter(1,abs(mcPDG))))==211 and " \
-             "daughter(0,daughter(0,daughter(2,abs(mcPDG))))==211 and " \
-             "daughter(0,daughter(0,daughter(3,abs(mcPDG))))==211"
-ma.fillParticleListFromMC("B0:MCKpi", KpiMCcuts, addDaughters=True, path=main)
-ma.fillParticleListFromMC("B0:MCK3pi", K3piMCcuts, addDaughters=True, path=main)
+ma.fillParticleListFromMC("B0:MCKpi", "", addDaughters=True, path=main)
+ma.fillParticleListFromMC("B0:MCK3pi", "", addDaughters=True, path=main)
+main.add_module(FilterByDecay("B0:MCKpi", Particle("B0", [
+    Particle("D*+", [
+        Particle("D0", [
+            Particle("K+"),
+            Particle("pi+")
+        ]),
+        Particle("pi+")
+    ]),
+    Particle("mu+"),
+    Particle("nu_mu")
+])))
+main.add_module(FilterByDecay("B0:MCK3pi", Particle("B0", [
+    Particle("D*+", [
+        Particle("D0", [
+            Particle("K+"),
+            Particle("pi+"),
+            Particle("pi+"),
+            Particle("pi+")
+        ]),
+        Particle("pi+")
+    ]),
+    Particle("mu+"),
+    Particle("nu_mu")
+])))
 varsKpiMC = [x for x in varsKpi if x.startswith("gen") or x.startswith("mc")]
 varsK3piMC = [x for x in varsK3pi if x.startswith("gen") or x.startswith("mc")]
 ma.variablesToNtuple('B0:MCKpi', varsKpiMC, filename=args.output, treename='MCKpi', path=main)

@@ -91,6 +91,7 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
 {
   const auto& CompParts = CompositeParticles;
   const auto& FSParts = isK3pi ? K3PiFSParticles : KPiFSParticles;
+  const auto& FSHParts = isK3pi ? K3PiFSHParticles : KPiFSHParticles;
   // const auto& AllParts = isK3pi ? K3PiAllParticles : KPiAllParticles;
   // const auto& Pions = isK3pi ? K3PiPions : KPiPions;
 
@@ -115,20 +116,24 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   plt.Histo1D(CompParts, "residualDecayZ", "z_{decay,$p} residual;MC - meas [#mum]", 100, -500, 500, 1e4);
   plt.Histo1D({"D0"}, "residualFlightDistance", "Residual of flight distance of $p;$p MC - meas [#mum]", 100, -2e3, 2e3, 1e4);
   // Pulls
-  plt.Histo1D(CompParts, "pullDecayX", "x_{decay,$p} pull;(MC - meas) / #sigma_{meas}", 100, -5, 5);
-  plt.Histo1D(CompParts, "pullDecayY", "y_{decay,$p} pull;(MC - meas) / #sigma_{meas}", 100, -5, 5);
-  plt.Histo1D(CompParts, "pullDecayZ", "z_{decay,$p} pull;(MC - meas) / #sigma_{meas}", 100, -5, 5);
-  plt.Histo1D({"D0"}, "pullFlightDistance", "Pull of flight distance of $p;(MC - meas) / #sigma_{meas}", 100, -5, 5);
+  plt.Histo1D(CompParts, "pullDecayX", "x_{decay,$p} pull;(MC - meas) / #sigma_{meas}", 100, -10, 10);
+  plt.Histo1D(CompParts, "pullDecayY", "y_{decay,$p} pull;(MC - meas) / #sigma_{meas}", 100, -10, 10);
+  plt.Histo1D(CompParts, "pullDecayZ", "z_{decay,$p} pull;(MC - meas) / #sigma_{meas}", 100, -10, 10);
+  plt.Histo1D({"D0"}, "pullFlightDistance", "Pull of flight distance of $p;(MC - meas) / #sigma_{meas}", 100, -10, 10);
 
   // ==== Impact parameters
-  plt.Histo1D(FSParts, "d0", "d_{0$p} (aka dr);d_{0,$p} [#mum]", 100, 0, 1e3, 1e4);
-  plt.Histo1D(FSParts, "z0", "z_{0$p} (aka dz);z_{0,$p} [#mum]", 100, -2e3, 2e3, 1e4);
+  plt.Histo1D(FSHParts, "d0", "d_{0$p};d_{0,$p} [mm]", 100, -2, 2, 10);
+  plt.Histo1D({"pisoft"}, "d0", "d_{0$p};d_{0,$p} [mm]", 100, -4, 4, 10);
+  plt.Histo1D(FSHParts, "z0", "z_{0$p};z_{0,$p} [mm]", 100, -2, 2, 10);
+  plt.Histo1D({"pisoft"}, "z0", "z_{0$p};z_{0,$p} [mm]", 100, -4, 4, 10);
   // Residuals
-  plt.Histo1D(FSParts, "d0Residual", "d_{0$p} residual;MC - meas [#mum]", 100, -100, 100, 1e4);
-  plt.Histo1D(FSParts, "z0Residual", "z_{0$p} residual;MC - meas [#mum]", 100, -200, 200, 1e4);
+  plt.Histo1D(FSHParts, "d0Residual", "d_{0$p} residual;MC - meas [#mum]", 100, -200, 200, 1e4);
+  plt.Histo1D({"pisoft"}, "d0Residual", "d_{0$p} residual;MC - meas [mm]", 100, -2, 2, 10);
+  plt.Histo1D(FSHParts, "z0Residual", "z_{0$p} residual;MC - meas [#mum]", 100, -400, 400, 1e4);
+  plt.Histo1D({"pisoft"}, "z0Residual", "z_{0$p} residual;MC - meas [mm]", 100, -4, 4, 10);
   // Pulls
-  plt.Histo1D(FSParts, "d0Pull", "d_{0$p} pull;(MC - meas) / #sigma_{meas}", 100, -5, 5);
-  plt.Histo1D(FSParts, "z0Pull", "z_{0$p} pull;(MC - meas) / #sigma_{meas}", 100, -5, 5);
+  plt.Histo1D(FSParts, "d0Pull", "d_{0$p} pull;(MC - meas) / #sigma_{meas}", 100, -10, 10);
+  plt.Histo1D(FSParts, "z0Pull", "z_{0$p} pull;(MC - meas) / #sigma_{meas}", 100, -10, 10);
 }
 
 void DoPlot(SigBkgPlotter& plt, bool isK3pi)
@@ -175,11 +180,11 @@ void DoCandAna(tuple<TH2D*,UInt_t,UInt_t> noCuts, tuple<TH2D*,UInt_t,UInt_t> cut
   TString fs;
   cout << "             | w/o cuts | w/ cuts  |Efficiency" << endl;
   cout << "   ----------+----------+----------+----------" << endl;
-  fs.Form("     Total   |%10.5g|%10.5g|%9.4g%%", nt, ntc, 100.0 * ntc / nt);
+  fs.Form("     Total   |%10.0f|%10.0f|%9.4g%%", nt, ntc, 100.0 * ntc / nt);
   cout << fs << endl;
-  fs.Form("     Signal  |%10.5g|%10.5g|%9.4g%%", ns, nsc, 100.0 * nsc / ns);
+  fs.Form("     Signal  |%10.0f|%10.0f|%9.4g%%", ns, nsc, 100.0 * nsc / ns);
   cout << fs << endl;
-  fs.Form("   Background|%10.5g|%10.5g|%9.4g%%", nb, nbc, 100.0 * nbc / nb);
+  fs.Form("   Background|%10.0f|%10.0f|%9.4g%%", nb, nbc, 100.0 * nbc / nb);
   cout << fs << endl;
 }
 
@@ -231,6 +236,12 @@ int main(int argc, char* argv[])
   auto hCandK3pi = CutEfficiencyAnalysis(dfDefK3pi);
   auto hCandK3piCuts = CutEfficiencyAnalysis(dfCutK3pi);
   DoCandAna(hCandK3pi, hCandK3piCuts, canvasCand, "K3#pi");
+
+  // Factors determined empirically, use 1 (or comment lines) for auto
+  plotterKpi.SetBkgDownScaleFactor(10);
+  plotterKpiCuts.SetBkgDownScaleFactor(10);
+  plotterK3pi.SetBkgDownScaleFactor(25);
+  plotterK3piCuts.SetBkgDownScaleFactor(25);
 
   DoPlot(plotterKpi, false);
   DoPlot(plotterK3pi, true);

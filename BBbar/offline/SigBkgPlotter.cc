@@ -167,14 +167,30 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
     SetColor(bkg, MyRed);
     bkg->SetFillStyle(3454);
 
+    // Scale down bkg if too high
+    TString bkgLabel = "Mis-reco'ed";
+    if (!m_normalizeHistos) {
+      if (m_bkgDownScale == 1) {
+        const double b2sr = bkg->GetBinContent(bkg->GetMaximumBin()) / sig->GetBinContent(sig->GetMaximumBin());
+        if (b2sr > 1.8) {
+          const int scale = TMath::CeilNint(b2sr);
+          bkg->Scale(1.0 / scale);
+          bkgLabel.Form("Mis-reco'ed#divide%d", scale);
+        }
+      } else if (m_bkgDownScale != 0) {
+        bkg->Scale(1.0 / m_bkgDownScale);
+        bkgLabel.Form("Mis-reco'ed#divide%d", m_bkgDownScale);
+      }
+    }
+
     s.Add(sig);
     s.Add(bkg);
     m_c->cd();
-    s.Draw("nostack");
+    s.Draw(m_normalizeHistos ? "nostack" : "nostack hist");
 
     TLegend leg(0.8, 0.8, 0.95, 0.91);
     leg.AddEntry(sig, "Signal", m_normalizeHistos ? "PLE" : "F");
-    leg.AddEntry(bkg, "Mis-reco'ed", m_normalizeHistos ? "PLE" : "F");
+    leg.AddEntry(bkg, bkgLabel, m_normalizeHistos ? "PLE" : "F");
     leg.Draw();
 
     TPaveText oufSig(0.8, 0.68, 0.95, 0.79, "brNDC");

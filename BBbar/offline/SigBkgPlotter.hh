@@ -115,6 +115,10 @@ class SigBkgPlotter {
   bool GetLogScale() const { return m_logScale; }
   void SetLogScale(bool value) { m_logScale = value; }
 
+  bool GetBkgDownScaleFactor() const { return m_bkgDownScale; }
+  /** 0 For no scaling, 1 (default) for auto, any number for fixed. */
+  void SetBkgDownScaleFactor(int value) { m_bkgDownScale = value; }
+
   bool HasVTX() { return m_sig.HasColumn("nVTXHits"); }
 
  private:
@@ -142,5 +146,6 @@ class SigBkgPlotter {
   TString m_titlePrefix; /**< Prefix for the title of the histograms. */
   bool m_normalizeHistos; /**< Used by DrawSigBkg to decide wether to normalize histograms. */
   bool m_logScale; /**< Histograms y (or z) axis with log scale. */
+  int m_bkgDownScale = 1; /**< Down-scaling factor for bkg (for visibility of sig). */
   bool m_histsAlreadyNormalized = false;
 };

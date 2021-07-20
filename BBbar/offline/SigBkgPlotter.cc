@@ -12,26 +12,39 @@
 using namespace std;
 
 SigBkgPlotter::TRRes1D SigBkgPlotter::Histo1D(
-  const char* variable, TString title, int nBins, double xLow, double xUp)
+  const char* variable, TString title, int nBins, double xLow, double xUp, double scale)
 {
   TString nameSig = GetUniqueName(m_namePrefix + "_sig_" + variable);
   TString nameBkg = GetUniqueName(m_namePrefix + "_bkg_" + variable);
   title = m_titlePrefix + " - " + title;
-  TRRes1D res = make_tuple(
-    m_sig.Histo1D({nameSig, title, nBins, xLow, xUp}, variable),
-    m_bkg.Histo1D({nameBkg, title, nBins, xLow, xUp}, variable));
+  if (title.CountChar(';') < 2) {
+    for (int i = title.CountChar(';'); i < 2; i++) title += ";";
+    title += "Candidates / bin";
+  }
+
+  TRRes1D res;
+  if (scale == 1.0) {
+    res = make_tuple(
+      m_sig.Histo1D({nameSig, title, nBins, xLow, xUp}, variable),
+      m_bkg.Histo1D({nameBkg, title, nBins, xLow, xUp}, variable));
+  } else {
+    TString expr = TString::Format("%s*%.18lg", variable, scale);
+    res = make_tuple(
+      m_sig.Define("h1dtmp", expr.Data()).Histo1D({nameSig, title, nBins, xLow, xUp}, "h1dtmp"),
+      m_bkg.Define("h1dtmp", expr.Data()).Histo1D({nameBkg, title, nBins, xLow, xUp}, "h1dtmp"));
+  }
   m_h1s.push_back(res);
   return res;
 }
 
 void SigBkgPlotter::Histo1D(
   std::initializer_list<TString> particles, const char* variable,
-  TString title, int nBins, double xLow, double xUp)
+  TString title, int nBins, double xLow, double xUp, double scale)
 {
   for (const TString& p : particles) {
     TString t = title; // Replacement happens in-place :(
     TString v = p + "_" + variable;
-    Histo1D(v, t.ReplaceAll("$p", ParticlesTitles.at(p)), nBins, xLow, xUp);
+    Histo1D(v, t.ReplaceAll("$p", ParticlesTitles.at(p)), nBins, xLow, xUp, scale);
   }
 }
 

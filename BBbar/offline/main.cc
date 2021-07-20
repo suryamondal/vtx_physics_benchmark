@@ -44,21 +44,39 @@ SigBkgPlotter::DefineDF defineVariables(RDataFrame& df, bool isK3pi)
   const auto& CompParts = CompositeParticles;
   const auto& FSParts = isK3pi ? K3PiFSParticles : KPiFSParticles;
 
-  auto ddf = defineVarsForParticles(
-    df, CompParts,
-    {"x",              "y",              "z"},
+  auto ddf = defineVarsForParticles(df, CompParts,
     {"mcDecayVertexX", "mcDecayVertexY", "mcDecayVertexZ"},
+    {"x",              "y",              "z"},
+    {"residualDecayX", "residualDecayY", "residualDecayZ"});
+  ddf = defineVarsForParticles(ddf, CompParts,
     {"residualDecayX", "residualDecayY", "residualDecayZ"},
-    "($a - $b) * 1e4"); // Microns!
+    {"x_uncertainty",  "y_uncertainty",  "z_uncertainty"},
+    {"pullDecayX", "pullDecayY", "pullDecayZ"},
+    "$a / $b");
+  ddf = defineVarsForParticles(ddf, {"D0"},
+    {"mcFlightDistance",       "mcFlightTime"},
+    {"flightDistance",         "flightTime"},
+    {"residualFlightDistance", "residualFlightTime"});
+  ddf = defineVarsForParticles(ddf, {"D0"},
+    {"residualFlightDistance", "residualFlightTime"},
+    {"flightDistanceErr",      "flightTimeErr"},
+    {"pullFlightDistance",     "pullFlightTime"},
+    "$a / $b");
+  ddf = defineVarsForParticles(ddf, FSParts,
+    {"d0Err",      "z0Err"},
+    {"d0Pull",     "z0Pull"},
+    {"d0Residual", "z0Residual"},
+    "$a * $b"); // Residuals from pulls, not straightforward but works
   for (const TString& p : FSParts)
-    ddf = ddf.Define(
+    ddf = ddf.Alias(
       (p + "_firstVXDLayer").Data(),
-      ddf.HasColumn((p + "_firstVTXLayer").Data())
-      ? (p + "_firstVTXLayer").Data() : (p + "_firstPXDLayer").Data());
-  ddf = ddf.Alias("Dst_M_preFit", "Dst_extraInfo_M_preFit")
-           .Alias("D0_M_preFit", "D0_extraInfo_M_preFit")
-           .Alias("B0_M_preFit", "B0_extraInfo_M_preFit");
-  return ddf.Define("massDiffPreFit", "Dst_M_preFit-D0_M_preFit")
+      ddf.HasColumn((p + "_firstVTXLayer").Data()) ? (p + "_firstVTXLayer").Data()
+                                                   : (p + "_firstPXDLayer").Data()
+    );
+  return ddf.Alias("Dst_M_preFit", "Dst_extraInfo_M_preFit")
+            .Alias("D0_M_preFit", "D0_extraInfo_M_preFit")
+            .Alias("B0_M_preFit", "B0_extraInfo_M_preFit")
+            .Define("massDiffPreFit", "Dst_M_preFit-D0_M_preFit")
             .Define("massDiff", "Dst_M-D0_M");
 }
 
@@ -71,64 +89,70 @@ SigBkgPlotter::FilterDF applyOfflineCuts(SigBkgPlotter::DefineDF& df, bool isK3p
 /** Books plots. */
 void bookHistos(SigBkgPlotter& plt, bool isK3pi)
 {
-  // const auto& CompParts = CompositeParticles;
+  const auto& CompParts = CompositeParticles;
   const auto& FSParts = isK3pi ? K3PiFSParticles : KPiFSParticles;
   // const auto& AllParts = isK3pi ? K3PiAllParticles : KPiAllParticles;
   // const auto& Pions = isK3pi ? K3PiPions : KPiPions;
 
-  plt.Histo1D("B0_residualDecayX", "x_{decay,B^{0}} residual;x_{decay,meas} - x_{decay,MC} [#mum];Events / bin", 100, -500, 500);
-  plt.Histo1D("B0_residualDecayY", "y_{decay,B^{0}} residual;y_{decay,meas} - y_{decay,MC} [#mum];Events / bin", 100, -500, 500);
-  plt.Histo1D("B0_residualDecayZ", "z_{decay,B^{0}} residual;z_{decay,meas} - z_{decay,MC} [#mum];Events / bin", 100, -500, 500);
-  plt.Histo1D("Dst_residualDecayX", "x_{decay,D*} residual;x_{decay,meas} - x_{decay,MC} [#mum];Events / bin", 100, -500, 500);
-  plt.Histo1D("Dst_residualDecayY", "y_{decay,D*} residual;y_{decay,meas} - y_{decay,MC} [#mum];Events / bin", 100, -500, 500);
-  plt.Histo1D("Dst_residualDecayZ", "z_{decay,D*} residual;z_{decay,meas} - z_{decay,MC} [#mum];Events / bin", 100, -500, 500);
-  plt.Histo1D("D0_residualDecayX", "x_{decay,D^{0}} residual;x_{decay,meas} - x_{decay,MC} [#mum];Events / bin", 100, -500, 500);
-  plt.Histo1D("D0_residualDecayY", "y_{decay,D^{0}} residual;y_{decay,meas} - y_{decay,MC} [#mum];Events / bin", 100, -500, 500);
-  plt.Histo1D("D0_residualDecayZ", "z_{decay,D^{0}} residual;z_{decay,meas} - z_{decay,MC} [#mum];Events / bin", 100, -500, 500);
+  // ==== Masses (and cuts variables)
+  // Pre-fit
+  plt.Histo1D({"B0"}, "M_preFit", "M_{$p} (pre-fit);M_{$p} [GeV/c^{2}]", 100, 1.9, 5.5);
+  plt.Histo1D({"Dst"}, "M_preFit", "M_{$p} (pre-fit);M_{$p} [GeV/c^{2}]", 110, 1.9, 2.12);
+  plt.Histo1D({"D0"}, "M_preFit", "M_{$p} (pre-fit);M_{$p} [GeV/c^{2}]", 110, 1.75, 1.97);
+  plt.Histo1D("massDiffPreFit", "#DeltaM (pre-fit);M_{D*} - M_{D^{0}} [GeV/c^{2}]", 110, 0.14, 0.151);
+  // Post-fit
+  plt.Histo1D({"B0"}, "M", "M_{$p};M_{$p} [GeV/c^{2}]", 100, 1.9, 5.5);
+  plt.Histo1D({"Dst"}, "M", "M_{$p};M_{$p} [GeV/c^{2}]", 110, 1.9, 2.12);
+  plt.Histo1D({"D0"}, "M", "M_{$p};M_{$p} [GeV/c^{2}]", 110, 1.75, 1.97);
+  plt.Histo1D("massDiff", "#DeltaM;M_{D*} - M_{D^{0}} [GeV/c^{2}]", 110, 0.14, 0.151);
+  plt.Histo1D("Dst_p_CMS", "p_{CM,D*};p^{CM}_{D*} [GeV/c]", 120, 0, 3);
 
-  plt.Histo1D({"B0"}, "M_preFit", "M_{$p} (pre-fit);M_{$p} [GeV/c^{2}];Events / bin", 100, 1.9, 5.5);
-  plt.Histo1D({"Dst"}, "M_preFit", "M_{$p} (pre-fit);M_{$p} [GeV/c^{2}];Events / bin", 110, 1.9, 2.12);
-  plt.Histo1D({"D0"}, "M_preFit", "M_{$p} (pre-fit);M_{$p} [GeV/c^{2}];Events / bin", 110, 1.75, 1.97);
-  plt.Histo1D("massDiffPreFit", "#DeltaM (pre-fit);M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 110, 0.14, 0.151);
-  plt.Histo1D({"B0"}, "M", "M_{$p};M_{$p} [GeV/c^{2}];Events / bin", 100, 1.9, 5.5);
-  plt.Histo1D({"Dst"}, "M", "M_{$p};M_{$p} [GeV/c^{2}];Events / bin", 110, 1.9, 2.12);
-  plt.Histo1D({"D0"}, "M", "M_{$p};M_{$p} [GeV/c^{2}];Events / bin", 110, 1.75, 1.97);
-  plt.Histo1D("massDiff", "#DeltaM;M_{D*} - M_{D^{0}} [GeV/c^{2}];Events / bin", 110, 0.14, 0.151);
+  // ==== Vertices
+  plt.Histo1D({"D0"}, "flightDistance", "Flight distance of $p;$p flight distance [cm]", 100, -0.2, 0.2);
+  // Residuals
+  plt.Histo1D(CompParts, "residualDecayX", "x_{decay,$p} residual;MC - meas [#mum]", 100, -500, 500, 1e4);
+  plt.Histo1D(CompParts, "residualDecayY", "y_{decay,$p} residual;MC - meas [#mum]", 100, -500, 500, 1e4);
+  plt.Histo1D(CompParts, "residualDecayZ", "z_{decay,$p} residual;MC - meas [#mum]", 100, -500, 500, 1e4);
+  plt.Histo1D({"D0"}, "residualFlightDistance", "Residual of flight distance of $p;$p MC - meas [#mum]", 100, -2e3, 2e3, 1e4);
+  // Pulls
+  plt.Histo1D(CompParts, "pullDecayX", "x_{decay,$p} pull;(MC - meas) / #sigma_{meas}", 100, -5, 5);
+  plt.Histo1D(CompParts, "pullDecayY", "y_{decay,$p} pull;(MC - meas) / #sigma_{meas}", 100, -5, 5);
+  plt.Histo1D(CompParts, "pullDecayZ", "z_{decay,$p} pull;(MC - meas) / #sigma_{meas}", 100, -5, 5);
+  plt.Histo1D({"D0"}, "pullFlightDistance", "Pull of flight distance of $p;(MC - meas) / #sigma_{meas}", 100, -5, 5);
 
-  plt.Histo1D(FSParts, "dr", "dr_{$p};dr_{$p} [cm];Events / bin", 100, 0, 0.1);
-  plt.Histo1D(FSParts, "dz", "dz_{$p};dz_{$p} [cm];Events / bin", 100, -0.2, 0.2);
-
-  plt.Histo1D(FSParts, "nCDCHits", "CDC Hits_{$p};CDC Hits_{$p};Events / (1 hit)", 101, -0.5, 100.5);
-  plt.Histo1D(FSParts, "nVXDHits", "VXD Hits_{$p};VXD Hits_{$p};Events / (1 hit)", 11, -0.5, 10.5);
-
-  plt.Histo1D({"mu"}, "pz", "p_{z,$p};p_{z,$p} [GeV/c];Events / bin", 100, -2, 3);
-  plt.Histo1D({"mu"}, "pt", "p_{T,$p};p_{T,$p} [GeV/c];Events / bin", 120, 0, 3);
-  plt.Histo1D({"mu"}, "p", "p_{$p};p_{$p} [GeV/c];Events / bin", 120, 0, 3);
-
-  plt.Histo1D("Dst_p_CMS", "p_{CM,D*};p^{CM}_{D*} [GeV/c];Events / bin", 120, 0, 3);
-
-  plt.Histo1D({"D0"}, "flightDistance", "Flight distance of $p;$p flight distance [cm];Events / bin", 100, -0.2, 0.2);
+  // ==== Impact parameters
+  plt.Histo1D(FSParts, "d0", "d_{0$p} (aka dr);d_{0,$p} [#mum]", 100, 0, 1e3, 1e4);
+  plt.Histo1D(FSParts, "z0", "z_{0$p} (aka dz);z_{0,$p} [#mum]", 100, -2e3, 2e3, 1e4);
+  // Residuals
+  plt.Histo1D(FSParts, "d0Residual", "d_{0$p} residual;MC - meas [#mum]", 100, -100, 100, 1e4);
+  plt.Histo1D(FSParts, "z0Residual", "z_{0$p} residual;MC - meas [#mum]", 100, -200, 200, 1e4);
+  // Pulls
+  plt.Histo1D(FSParts, "d0Pull", "d_{0$p} pull;(MC - meas) / #sigma_{meas}", 100, -5, 5);
+  plt.Histo1D(FSParts, "z0Pull", "z_{0$p} pull;(MC - meas) / #sigma_{meas}", 100, -5, 5);
 }
 
 void DoPlot(SigBkgPlotter& plt, bool isK3pi)
 {
-  // const auto& CompParts = CompositeParticles;
-  // const auto& FSParts = isK3pi ? K3PiFSParticles : KPiFSParticles;
+  const auto& CompParts = CompositeParticles;
+  const auto& FSParts = isK3pi ? K3PiFSParticles : KPiFSParticles;
   // const auto& Pions = isK3pi ? K3PiPions : KPiPions;
 
-  // Histograms
+  // ==== Histograms
   plt.PrintAll(false);
 
-  // Fits
-  plt.FitAndPrint("B0_residualDecayX", "gaus");
-  plt.FitAndPrint("B0_residualDecayY", "gaus");
-  plt.FitAndPrint("B0_residualDecayZ", "gaus");
-  plt.FitAndPrint("Dst_residualDecayX", "gaus");
-  plt.FitAndPrint("Dst_residualDecayY", "gaus");
-  plt.FitAndPrint("Dst_residualDecayZ", "gaus");
-  plt.FitAndPrint("D0_residualDecayX", "gaus");
-  plt.FitAndPrint("D0_residualDecayY", "gaus");
-  plt.FitAndPrint("D0_residualDecayZ", "gaus");
+  // ==== Fits
+  // Vertices
+  for (const TString& part : CompParts) {
+    plt.FitAndPrint(part + "_residualDecayX", "gaus");
+    plt.FitAndPrint(part + "_residualDecayY", "gaus");
+    plt.FitAndPrint(part + "_residualDecayZ", "gaus");
+  }
+  plt.FitAndPrint("D0_residualFlightDistance", "gaus");
+  // Impact parameters
+  for (const TString &part : FSParts) {
+    plt.FitAndPrint(part + "_d0Residual", "gaus");
+    plt.FitAndPrint(part + "_z0Residual", "gaus");
+  }
 }
 
 void DoCandAna(tuple<TH2D*,UInt_t,UInt_t> noCuts, tuple<TH2D*,UInt_t,UInt_t> cuts,

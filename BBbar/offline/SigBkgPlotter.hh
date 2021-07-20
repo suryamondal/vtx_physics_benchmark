@@ -47,15 +47,17 @@ class SigBkgPlotter {
 
   /** Makes a tuple {sig,bkg} of histograms of the given variable.
    * The tuple is returned and saved to the interal list of plots.
+   * @param scale Multiplies variable by this number before filling
    */
-  TRRes1D Histo1D(const char* variable, TString title, int nBins, double xLow, double xUp);
+  TRRes1D Histo1D(const char* variable, TString title,
+                  int nBins, double xLow, double xUp, double scale = 1.0);
 
   /** Makes a tuple {sig,bkg} of histograms of the given variable for
    * each of the given particles. In title, $p is replaced with the
    * "title" of the particle (see ParticlesTitles in Constants.hh).
    */
   void Histo1D(std::initializer_list<TString> particles, const char *variable,
-               TString title, int nBins, double xLow, double xUp);
+               TString title, int nBins, double xLow, double xUp, double scale = 1.0);
 
   /** Makes a tuple {sig,bkg} of 2D histograms of the given variables.
    * The tuple is returned and saved to the interal list of plots.

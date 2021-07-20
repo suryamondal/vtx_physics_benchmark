@@ -168,8 +168,8 @@ parser.add_argument('--addTopoAna', action="store_true",
                     help='add TopoAna/MCGen variables for MC')
 parser.add_argument('--printVars', action="store_true",
                     help='Just print variables and exit.')
-parser.add_argument('--ipConstraint', action="store_true",  # TODO Set IP constraint as default?
-                    help='Use IP constraint when fitting the decay tree.')
+parser.add_argument('--noIpConstraint', action="store_true",
+                    help="Don't use IP constraint when fitting the decay tree.")
 parser.add_argument("-c", "--cuts", choices=["loose", "normal", "tight"],
                     default="tight", help="Set of cuts to be used.")
 parser.add_argument("-i", '--input', nargs='+',
@@ -214,7 +214,7 @@ ma.variablesToExtraInfo("B0:good", variables={"M": "M_preFit"}, path=main)
 # Tree fitting and final ajustments
 conf_level_cut = -1.0 if args.cuts == "loose" else 0.001
 vx.treeFit(list_name='B0:good', conf_level=conf_level_cut,
-           ipConstraint=args.ipConstraint, updateAllDaughters=True, path=main)
+           ipConstraint=(not args.noIpConstraint), updateAllDaughters=True, path=main)
 ma.applyCuts('B0:good', cuts["fit"], path=main)
 ma.matchMCTruth(list_name='B0:good', path=main)
 

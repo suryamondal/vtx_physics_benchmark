@@ -332,9 +332,9 @@ main.add_module(FilterByDecay("B0:MCK3pi", Particle("B0", [
     Particle("nu_mu")])))
 
 varsMCKpi = [x for x in varsKpi if RE_MC_VARS.match(x)]
-varsMCK3pi = [x for x in varsKpi if RE_MC_VARS.match(x)]
-ma.variablesToNtuple('B0:MCKpi', varsKpi, filename=args.output, treename='MCKpi', path=main)
-ma.variablesToNtuple('B0:MCK3pi', varsK3pi, filename=args.output, treename='MCK3pi', path=main)
+varsMCK3pi = [x for x in varsK3pi if RE_MC_VARS.match(x)]
+ma.variablesToNtuple('B0:MCKpi', varsMCKpi, filename=args.output, treename='MCKpi', path=main)
+ma.variablesToNtuple('B0:MCK3pi', varsMCK3pi, filename=args.output, treename='MCK3pi', path=main)
 
 # Process the events
 main.add_module('ProgressBar')

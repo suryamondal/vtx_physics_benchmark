@@ -32,6 +32,8 @@
 
 import argparse
 import os
+import sys
+import re
 import basf2 as b2
 import modularAnalysis as ma
 import vertex as vx
@@ -80,6 +82,9 @@ CUTS = {
         "fit": "[daughter(0, useCMSFrame(p)) < 2.5]"
     }
 }
+
+# Regex to select vars that start with (particle_) gen or mc
+RE_MC_VARS = re.compile(r'(?:[A-Za-z0-9]+_)?(?:[Gg][Ee][Nn]|[Mm][Cc])')
 
 
 class Particle:
@@ -161,10 +166,12 @@ def check_globaltags(base_tags, user_tags, metadata):
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--addTopoAna', action="store_true",
                     help='add TopoAna/MCGen variables for MC')
+parser.add_argument('--printVars', action="store_true",
+                    help='Just print variables and exit.')
 parser.add_argument('--ipConstraint', action="store_true",  # TODO Set IP constraint as default?
                     help='Use IP constraint when fitting the decay tree.')
-parser.add_argument("-c", "--cuts", choices=["loose", "normal", "tight"],  # TODO Set tight as deafault
-                    default="normal", help="Set of cuts to be used.")
+parser.add_argument("-c", "--cuts", choices=["loose", "normal", "tight"],
+                    default="tight", help="Set of cuts to be used.")
 parser.add_argument("-i", '--input', nargs='+',
                     help='mDST input file(s)')
 parser.add_argument("-o", '--output', default='test.root',
@@ -222,11 +229,11 @@ if args.addTopoAna:  # TopoAna variables
     eventWiseVariables += mc_gen_topo(200)
 
 # Variables of all the particles
-commonVariables = vc.kinematics
-commonVariables += ['pErr', 'ptErr', 'pxErr', 'pyErr', 'pzErr']
-commonVariables += vc.mc_variables
-commonVariables += ['isSignal', 'isSignalAcceptMissingGamma', 'isPrimarySignal',
-                    'isSignalAcceptMissingNeutrino']
+commonVariables = vc.kinematics + vc.mc_variables
+commonVariables += ['pErr', 'ptErr', 'pxErr', 'pyErr', 'pzErr', 'isSignal',
+                    'isSignalAcceptMissingGamma', 'isPrimarySignal',
+                    'isSignalAcceptMissingNeutrino',
+                    'theta', 'thetaErr', 'mcTheta', 'phi', 'phiErr', 'mcPhi']
 
 # Variables of the final-state particles (K, pi, mu)
 tracksVariables = vc.track + vc.track_hits
@@ -240,7 +247,8 @@ tracksVariables += ['firstVTXLayer'] if HAS_VTX else ['firstPXDLayer', 'firstSVD
 compositeVariables = vc.vertex + ['M', 'ErrM']
 compositeVariables += ['mcProductionVertexX', 'mcProductionVertexY',
                        'mcProductionVertexZ', 'extraInfo(M_preFit)']
-compositeVariables += vc.flight_info + vc.mc_flight_info
+# Flight variables for the D0 only
+flightVariables = vc.flight_info + vc.mc_flight_info
 
 # Create aliases for the two decay modes
 varsKpi = vu.create_aliases_for_selected(
@@ -252,6 +260,9 @@ varsKpi += vu.create_aliases_for_selected(
 varsKpi += vu.create_aliases_for_selected(
     compositeVariables, '^B0 -> [^D*- -> [^anti-D0 -> pi- K+] pi-] mu+',
     ['B0', 'Dst', 'D0'])
+varsKpi += vu.create_aliases_for_selected(
+    flightVariables, 'B0 -> [D*- -> [^anti-D0 -> pi- K+] pi-] mu+',
+    ['D0'])
 
 varsK3pi = vu.create_aliases_for_selected(
     commonVariables, '^B0 -> [^D*- -> [^anti-D0 -> ^pi- ^K+ ^pi- ^pi+] ^pi-] ^mu+',
@@ -262,18 +273,34 @@ varsK3pi += vu.create_aliases_for_selected(
 varsK3pi += vu.create_aliases_for_selected(
     compositeVariables, '^B0 -> [^D*- -> [^anti-D0 -> pi- K+ pi- pi+] pi-] mu+',
     ['B0', 'Dst', 'D0'])
+varsK3pi += vu.create_aliases_for_selected(
+    flightVariables, 'B0 -> [D*- -> [^anti-D0 -> pi- K+ pi- pi+] pi-] mu+',
+    ['D0'])
 
-# CMS variables of the D* only
+# CMS variables of the composites
 cms_variables = []
 for v in ['px', 'py', 'pz', 'p']:
+    vm.addAlias(f'B0_{v}_CMS', f'useCMSFrame({v})')
+    cms_variables.append(f'B0_{v}_CMS')
     vm.addAlias(f'Dst_{v}_CMS', f'daughter(0,useCMSFrame({v}))')
     cms_variables.append(f'Dst_{v}_CMS')
+    vm.addAlias(f'D0_{v}_CMS', f'daughter(0,daughter(0,useCMSFrame({v})))')
+    cms_variables.append(f'D0_{v}_CMS')
 
 # Angle between pi and K
 vm.addAlias('Kpi_MCAngle', 'daughter(0,daughter(0,mcDaughterAngle(0,1)))')
 
+# Final output variables
 varsKpi += cms_variables + eventWiseVariables + ['Kpi_MCAngle']
 varsK3pi += cms_variables + eventWiseVariables
+varsKpi.sort()  # I want to be able to find what I need quickly
+varsK3pi.sort()
+if args.printVars:
+    print(" =============== Kpi  ===============")
+    for x in varsKpi: print(x)
+    print(" =============== K3pi ===============")
+    for x in varsK3pi: print(x)
+    sys.exit()
 
 # Create one ntuple per channel in the same output file
 ma.cutAndCopyList('B0:Kpi', 'B0:good', 'daughter(0,daughter(0,extraInfo(decayModeID)))==0', path=main)
@@ -289,26 +316,23 @@ main.add_module(FilterByDecay("B0:MCKpi", Particle("B0", [
     Particle("D*+", [
         Particle("D0", [
             Particle("K+"),
-            Particle("pi+")
-        ]),
-        Particle("pi+")
-    ]),
+            Particle("pi+")]),
+        Particle("pi+")]),
     Particle("mu+"),
-    Particle("nu_mu")
-])))
+    Particle("nu_mu")])))
 main.add_module(FilterByDecay("B0:MCK3pi", Particle("B0", [
     Particle("D*+", [
         Particle("D0", [
             Particle("K+"),
             Particle("pi+"),
             Particle("pi+"),
-            Particle("pi+")
-        ]),
-        Particle("pi+")
-    ]),
+            Particle("pi+")]),
+        Particle("pi+")]),
     Particle("mu+"),
-    Particle("nu_mu")
-])))
+    Particle("nu_mu")])))
+
+varsMCKpi = [x for x in varsKpi if RE_MC_VARS.match(x)]
+varsMCK3pi = [x for x in varsKpi if RE_MC_VARS.match(x)]
 ma.variablesToNtuple('B0:MCKpi', varsKpi, filename=args.output, treename='MCKpi', path=main)
 ma.variablesToNtuple('B0:MCK3pi', varsK3pi, filename=args.output, treename='MCK3pi', path=main)
 

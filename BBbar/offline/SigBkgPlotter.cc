@@ -249,7 +249,7 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
 
       ovf = bkg->GetBinContent(bkg->GetNbinsX() + 1) * scale;
       unf = bkg->GetBinContent(0) * scale;
-      ent = bkg->GetEntries() * scale;
+      ent = bkg->GetEntries();
       sf.Form("Overflow %.0lf (%.0lf%%)", ovf, ovf * 100.0 / ent);
       oufBkg.AddText(sf);
       sf.Form("Underflow %.0lf (%.0lf%%)", unf, unf * 100.0 / ent);

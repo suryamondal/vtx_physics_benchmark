@@ -80,6 +80,44 @@ void SigBkgPlotter::Histo2D(
   }
 }
 
+SigBkgPlotter::TRRes1D SigBkgPlotter::EffH1D(
+  const char* variable, TString title, int nBins, double xLow, double xUp, double scale)
+{
+  TString nameSig = GetUniqueName(m_namePrefix + "_effSig_" + variable);
+  TString nameMC = GetUniqueName(m_namePrefix + "_effMC_" + variable);
+  title = m_titlePrefix + " - " + title;
+  TString titleSig = title, titleMC = title;
+  if (title.CountChar(';') < 2) {
+    for (int i = title.CountChar(';'); i < 2; i++) { titleSig += ";"; titleMC += ";"; }
+    titleSig += "Candidates / bin"; titleMC += "MC particles / bin";
+  }
+
+  TRRes1D res;
+  if (scale == 1.0) {
+    res = make_tuple(
+      m_sig.Histo1D({nameSig, titleSig, nBins, xLow, xUp}, variable),
+      m_mc.Histo1D({nameMC, titleMC, nBins, xLow, xUp}, variable));
+  } else {
+    TString expr = TString::Format("%s*%.18lg", variable, scale);
+    res = make_tuple(
+      m_sig.Define("h1dtmp", expr.Data()).Histo1D({nameSig, titleSig, nBins, xLow, xUp}, "h1dtmp"),
+      m_mc.Define("h1dtmp", expr.Data()).Histo1D({nameMC, titleMC, nBins, xLow, xUp}, "h1dtmp"));
+  }
+  m_effh1s.push_back(res);
+  return res;
+}
+
+void SigBkgPlotter::EffH1D(
+  std::initializer_list<TString> particles, const char *variable,
+  TString title, int nBins, double xLow, double xUp, double scale)
+{
+  for (const TString& p : particles) {
+    TString t = title; // Replacement happens in-place :(
+    TString v = p + "_" + variable;
+    EffH1D(v, t.ReplaceAll("$p", ParticlesTitles.at(p)), nBins, xLow, xUp, scale);
+  }
+}
+
 void SigBkgPlotter::PrintAll(bool clearInternalList)
 {
   if (m_normalizeHistos != m_histsAlreadyNormalized) {
@@ -101,9 +139,12 @@ void SigBkgPlotter::PrintAll(bool clearInternalList)
     DrawSigBkg(t);
   for (const auto& t : m_h2s)
     DrawSigBkg(t);
+  for (const auto& t : m_effh1s)
+    DrawEff(t);
   if (clearInternalList) {
     m_h1s.clear();
     m_h2s.clear();
+    m_effh1s.clear();
   }
 }
 
@@ -114,7 +155,7 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
   if (sig->GetDimension() == 2) {
     TString sigTitle = sig->GetTitle(), bkgTitle = bkg->GetTitle();
     sig->SetTitle(sig->GetTitle() + " - Signal"TS);
-    bkg->SetTitle(bkg->GetTitle() + " - Mis-reco'ed"TS);
+    bkg->SetTitle(bkg->GetTitle() + " - Misreco"TS);
 
     m_c->Clear();
     m_c->Divide(2);
@@ -168,18 +209,18 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
     bkg->SetFillStyle(3454);
 
     // Scale down bkg if too high
-    TString bkgLabel = "Mis-reco'ed";
+    TString bkgLabel = "Misreco";
     if (!m_normalizeHistos) {
       if (m_bkgDownScale == 1) {
         const double b2sr = bkg->GetBinContent(bkg->GetMaximumBin()) / sig->GetBinContent(sig->GetMaximumBin());
         if (b2sr > 1.8) {
           const int scale = TMath::CeilNint(b2sr);
           bkg->Scale(1.0 / scale);
-          bkgLabel.Form("Mis-reco'ed#divide%d", scale);
+          bkgLabel.Form("Misreco#divide%d", scale);
         }
       } else if (m_bkgDownScale != 0) {
         bkg->Scale(1.0 / m_bkgDownScale);
-        bkgLabel.Form("Mis-reco'ed#divide%d", m_bkgDownScale);
+        bkgLabel.Form("Misreco#divide%d", m_bkgDownScale);
       }
     }
 
@@ -225,6 +266,43 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
   }
 }
 
+void SigBkgPlotter::DrawEff(TH1* sig, TH1* mc)
+{
+  CHECK(sig);
+  CHECK(mc);
+  TH1* eff = (TH1*)sig->Clone(sig->GetName() + "_clone"TS);
+  eff->Sumw2();
+  eff->Divide(mc);
+
+  m_c->cd();
+  eff->SetMinimum(0);
+  eff->SetMaximum(1);
+  eff->SetLineColor(kBlack);
+  eff->SetLineWidth(2);
+  eff->Draw();
+  eff->GetYaxis()->SetTitle("Signal efficiency");
+
+  TPaveText ouf(0.8, 0.58, 0.95, 0.91, "brNDC");
+  const double ovfSig = sig->GetBinContent(sig->GetNbinsX() + 1);
+  const double unfSig = sig->GetBinContent(0);
+  const double entSig = sig->GetEntries();
+  const double ovfMC = mc->GetBinContent(mc->GetNbinsX() + 1);
+  const double unfMC = mc->GetBinContent(0);
+  const double entMC = mc->GetEntries();
+  ouf.AddText("Overflow");
+  ouf.AddText(TString::Format("Sig. %.3lg (%.0lf%%)", ovfSig, ovfSig * 100.0 / entSig));
+  ouf.AddText(TString::Format("MC %.3lg (%.0lf%%)", ovfMC, ovfMC * 100.0 / entMC));
+  ouf.AddText("Underflow");
+  ouf.AddText(TString::Format("Sig. %.3lg (%.0lf%%)", unfSig, unfSig * 100.0 / entSig));
+  ouf.AddText(TString::Format("MC %.3lg (%.0lf%%)", unfMC, unfMC * 100.0 / entMC));
+  SetPaveStyle(ouf);
+  ouf.Draw();
+
+  m_c->SetGrid();
+  m_c.PrintPage(mc->GetTitle());
+  m_c->SetGrid(0, 0);
+}
+
 void SigBkgPlotter::FitAndPrint(
   TString name, const char* func, std::initializer_list<std::pair<TString,double>> p0,
   bool removeFromList)
@@ -245,10 +323,11 @@ void SigBkgPlotter::FitAndPrint(
     ff.SetParameter(pp0.first, pp0.second);
   ff.SetLineColor(MyRed);
   ff.SetLineWidth(2);
+  ff.SetNpx(500);
 
   m_c->cd();
   h->Draw();
-  h->Fit(&ff, "Q");
+  h->Fit(&ff, "QI");
 
   TLegend leg(0.8, 0.8, 0.95, 0.91);
   leg.AddEntry(h, "Signal", "F");
@@ -342,8 +421,8 @@ void SigBkgPlotter::PrintROC(TString name, bool keepLow, bool excludeOUF, bool r
   gBkg->SetLineWidth(2);
   auto gROC = new TGraph(nb, sigEff.data(), bkgEff.data());
   gROC->SetName(GetUniqueName("gROC_" + name));
-  gROC->SetTitle(sig->GetTitle() + " - ROC;Signal"TS + lEff + ";Mis-reco'ed" + lEff);
-  gLine.SetTitle(sig->GetTitle() + " - ROC;Signal"TS + lEff + ";Mis-reco'ed" + lEff);
+  gROC->SetTitle(sig->GetTitle() + " - ROC;Signal"TS + lEff + ";Misreco" + lEff);
+  gLine.SetTitle(sig->GetTitle() + " - ROC;Signal"TS + lEff + ";Misreco" + lEff);
   gROC->SetLineColor(kBlack);
   gROC->SetLineWidth(2);
 

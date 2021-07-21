@@ -26,23 +26,23 @@ class SigBkgPlotter {
   /** Constructor for a SigBkgPlotter that takes data from df, uses sigCond to
    * tell signal from background and prints plots to c.
    */
-  SigBkgPlotter(DefineDF& df, TString sigCond, PDFCanvas& c,
+  SigBkgPlotter(DefineDF& df, ROOT::RDataFrame& mcdf, TString sigCond, PDFCanvas& c,
                 TString namePrefix = "undefined", TString titlePrefix = "Undefined",
                 bool normalizeHistos = false, bool logScale = false)
   : m_sig(df.Filter((const char*)sigCond, "Signal")),
     m_bkg(df.Filter((const char*)("!(" + sigCond + ")"), "Background")),
-    m_c(c), m_namePrefix(namePrefix), m_titlePrefix(titlePrefix),
+    m_mc(mcdf), m_c(c), m_namePrefix(namePrefix), m_titlePrefix(titlePrefix),
     m_normalizeHistos(normalizeHistos), m_logScale(logScale) {}
 
   /** Constructor for a SigBkgPlotter that takes data from df, uses sigCond to
    * tell signal from background and prints plots to c.
    */
-  SigBkgPlotter(FilterDF& df, TString sigCond, PDFCanvas& c,
+  SigBkgPlotter(FilterDF& df, ROOT::RDataFrame& mcdf, TString sigCond, PDFCanvas& c,
                 TString namePrefix = "undefined", TString titlePrefix = "Undefined",
                 bool normalizeHistos = false, bool logScale = false)
   : m_sig(df.Filter((const char*)sigCond, "Signal")),
     m_bkg(df.Filter((const char*)("!(" + sigCond + ")"), "Background")),
-    m_c(c), m_namePrefix(namePrefix), m_titlePrefix(titlePrefix),
+    m_mc(mcdf), m_c(c), m_namePrefix(namePrefix), m_titlePrefix(titlePrefix),
     m_normalizeHistos(normalizeHistos), m_logScale(logScale) {}
 
   /** Makes a tuple {sig,bkg} of histograms of the given variable.
@@ -74,6 +74,21 @@ class SigBkgPlotter {
                const char* vx, const char* vy, TString title,
                int xBins, double xLow, double xUp,
                int yBins, double yLow, double yUp);
+
+  /** Makes a tuple {sig,mc} of histograms of the given variable.
+   * The tuple is returned and saved in the internal list of plots.
+   * PrintAll() will plot the ratio sig/mc (the efficiency).
+   * @param scale Multiplies variable by this number before filling
+   */
+  TRRes1D EffH1D(const char* variable, TString title,
+                 int nBins, double xLow, double xUp, double scale = 1.0);
+
+  /** Same as EffHisto1D(const char*, ...), but repeated for each of the
+   * given particles. In title, $p is replaced with the
+   * "title" of the particle (see ParticlesTitles in Constants.hh).
+   */
+  void EffH1D(std::initializer_list<TString> particles, const char* variable,
+              TString title, int nBins, double xLow, double xUp, double scale = 1.0);
 
   /** Finds the *signal* histogram called name and fits it with
    * func, then prints it to PDF. Does not remove the histo from the
@@ -124,24 +139,23 @@ class SigBkgPlotter {
  private:
   /** Prints a signal and a background histograms to PDF. */
   void DrawSigBkg(TH1* sig, TH1* bkg);
-
-  /** Prints a signal and a background histograms to PDF. */
   inline void DrawSigBkg(RRes1D sig, RRes1D bkg) { DrawSigBkg(sig.GetPtr(), bkg.GetPtr()); }
-
-  /** Print a {sig,bkg} histograms tuple to PDF. */
   inline void DrawSigBkg(TRRes1D tuple) { DrawSigBkg(std::get<0>(tuple), std::get<1>(tuple)); }
-
-  /** Prints a signal and a background histograms to PDF. */
   inline void DrawSigBkg(RRes2D sig, RRes2D bkg) { DrawSigBkg(sig.GetPtr(), bkg.GetPtr()); }
-
-  /** Print a {sig,bkg} histograms tuple to PDF. */
   inline void DrawSigBkg(TRRes2D tuple) { DrawSigBkg(std::get<0>(tuple), std::get<1>(tuple)); }
+
+  /** Prints an efficiency histogram to PDF. */
+  void DrawEff(TH1* sig, TH1* mc);
+  inline void DrawEff(RRes1D sig, RRes1D mc) { DrawEff(sig.GetPtr(), mc.GetPtr()); }
+  inline void DrawEff(TRRes1D tuple) { DrawEff(std::get<0>(tuple), std::get<1>(tuple)); }
 
   FilterDF m_sig; /**< Signal dataframe. */
   FilterDF m_bkg; /**< Background dataframe. */
+  ROOT::RDataFrame& m_mc; /**< MC dataframe. */
   PDFCanvas& m_c; /**< The output canvas. */
   std::vector<TRRes1D> m_h1s; /**< 1D histograms go here. */
   std::vector<TRRes2D> m_h2s; /**< 1D histograms go here. */
+  std::vector<TRRes1D> m_effh1s; /**< 1D efficiency histograms go here. */
   TString m_namePrefix; /**< Prefix for the name of the histograms. */
   TString m_titlePrefix; /**< Prefix for the title of the histograms. */
   bool m_normalizeHistos; /**< Used by DrawSigBkg to decide wether to normalize histograms. */

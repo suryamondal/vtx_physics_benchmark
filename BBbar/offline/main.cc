@@ -108,6 +108,26 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   plt.Histo1D("massDiff", "#DeltaM;M_{D*} - M_{D^{0}} [GeV/c^{2}]", 110, 0.14, 0.151);
   plt.Histo1D("Dst_p_CMS", "p_{CM,D*};p^{CM}_{D*} [GeV/c]", 120, 0, 3);
 
+  // ==== Efficiency
+  // p
+  plt.EffH1D({"B0"}, "mcP", "Efficiency vs true p_{$p};True p_{$p} [GeV/c]", 20, 1, 2);
+  plt.EffH1D({"Dst", "D0"}, "mcP", "Efficiency vs true p_{$p};True p_{$p} [GeV/c]", 20, 0, 3.5);
+  plt.EffH1D({"pisoft"}, "mcP", "Efficiency vs true p_{$p};True p_{$p} [GeV/c]", 20, 0, 0.5);
+  // pT
+  plt.EffH1D({"B0"}, "mcPT", "Efficiency vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 1);
+  plt.EffH1D({"Dst", "D0"}, "mcPT", "Efficiency vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 3);
+  plt.EffH1D({"pisoft"}, "mcPT", "Efficiency vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 0.5);
+  // pz
+  plt.EffH1D({"B0"}, "mcPZ", "Efficiency vs true p_{Z,$p};True p_{Z,$p} [GeV/c]", 20, 1, 2);
+  plt.EffH1D({"Dst", "D0"}, "mcPZ", "Efficiency vs true p_{Z,$p};True p_{Z,$p} [GeV/c]", 20, -3.5, 3.5);
+  plt.EffH1D({"pisoft"}, "mcPZ", "Efficiency vs true p_{Z,$p};True p_{Z,$p} [GeV/c]", 20, -0.5, 0.5);
+  // Angles
+  plt.EffH1D({"B0"}, "mcTheta", "Efficiency vs true #theta_{$p};True #theta_{$p} [#circ]", 20, 0, 45, 180 / M_PI);
+  plt.EffH1D({"Dst", "D0"}, "mcTheta", "Efficiency vs true #theta_{$p};True #theta_{$p} [#circ]", 20, 0, 180, 180 / M_PI);
+  plt.EffH1D(CompParts, "mcPhi", "Efficiency vs true #phi_{$p};True #phi_{$p} [#circ]", 20, -180, 180, 180 / M_PI);
+  if (!isK3pi)
+    plt.EffH1D("Kpi_MCAngle", "Eff. vs true K-to-#pi angle;True angle between K and #pi [#circ]", 20, 0, 180, 180 / M_PI);
+
   // ==== Vertices
   plt.Histo1D({"D0"}, "flightDistance", "Flight distance of $p;$p flight distance [cm]", 100, -0.2, 0.2);
   // Residuals
@@ -206,6 +226,8 @@ int main(int argc, char* argv[])
 
   RDataFrame dfKpi("Kpi", inFileName.Data());
   RDataFrame dfK3pi("K3pi", inFileName.Data());
+  RDataFrame dfMCKpi("MCKpi", inFileName.Data());
+  RDataFrame dfMCK3pi("MCK3pi", inFileName.Data());
 
   auto dfDefKpi = defineVariables(dfKpi, false);
   auto dfDefK3pi = defineVariables(dfK3pi, true);
@@ -217,10 +239,10 @@ int main(int argc, char* argv[])
   PDFCanvas canvasCuts(outFileNameCuts + ".pdf", "cc");
   PDFCanvas canvasCand(outFileName + "_candidates.pdf", "ccc");
 
-  SigBkgPlotter plotterKpi(dfDefKpi, SignalCondition, canvas, "Kpi", "K#pi");
-  SigBkgPlotter plotterK3pi(dfDefK3pi, SignalCondition, canvas, "K3pi", "K3#pi");
-  SigBkgPlotter plotterKpiCuts(dfCutKpi, SignalCondition, canvasCuts, "KpiCuts", "K#pi");
-  SigBkgPlotter plotterK3piCuts(dfCutK3pi, SignalCondition, canvasCuts, "K3piCuts", "K3#pi");
+  SigBkgPlotter plotterKpi(dfDefKpi, dfMCKpi, SignalCondition, canvas, "Kpi", "K#pi");
+  SigBkgPlotter plotterK3pi(dfDefK3pi, dfMCK3pi, SignalCondition, canvas, "K3pi", "K3#pi");
+  SigBkgPlotter plotterKpiCuts(dfCutKpi, dfMCKpi, SignalCondition, canvasCuts, "KpiCuts", "K#pi");
+  SigBkgPlotter plotterK3piCuts(dfCutK3pi, dfMCK3pi, SignalCondition, canvasCuts, "K3piCuts", "K3#pi");
 
   bookHistos(plotterKpi, false);
   bookHistos(plotterK3pi, true);

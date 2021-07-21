@@ -210,18 +210,19 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
 
     // Scale down bkg if too high
     TString bkgLabel = "Misreco";
+    int scale = 1;
     if (!m_normalizeHistos) {
       if (m_bkgDownScale == 1) {
         const double b2sr = bkg->GetBinContent(bkg->GetMaximumBin()) / sig->GetBinContent(sig->GetMaximumBin());
-        if (b2sr > 1.8) {
-          const int scale = TMath::CeilNint(b2sr);
-          bkg->Scale(1.0 / scale);
-          bkgLabel.Form("Misreco#divide%d", scale);
-        }
+        if (b2sr > 1.8)
+          scale = TMath::CeilNint(b2sr);
       } else if (m_bkgDownScale != 0) {
-        bkg->Scale(1.0 / m_bkgDownScale);
-        bkgLabel.Form("Misreco#divide%d", m_bkgDownScale);
+        scale = m_bkgDownScale;
       }
+    }
+    if (scale != 1) {
+      bkg->Scale(1.0 / scale);
+      bkgLabel.Form("Misreco#divide%d", scale);
     }
 
     s.Add(sig);
@@ -241,17 +242,17 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
       double ovf = sig->GetBinContent(sig->GetNbinsX() + 1);
       double unf = sig->GetBinContent(0);
       double ent = sig->GetEntries();
-      sf.Form("Overflow %.3lg (%.0lf%%)", ovf, ovf * 100.0 / ent);
+      sf.Form("Overflow %.0lf (%.0lf%%)", ovf, ovf * 100.0 / ent);
       oufSig.AddText(sf);
-      sf.Form("Underflow %.3lg (%.0lf%%)", unf, unf * 100.0 / ent);
+      sf.Form("Underflow %.0lf (%.0lf%%)", unf, unf * 100.0 / ent);
       oufSig.AddText(sf);
 
-      ovf = bkg->GetBinContent(bkg->GetNbinsX() + 1);
-      unf = bkg->GetBinContent(0);
-      ent = bkg->GetEntries();
-      sf.Form("Overflow %.3lg (%.0lf%%)", ovf, ovf * 100.0 / ent);
+      ovf = bkg->GetBinContent(bkg->GetNbinsX() + 1) * scale;
+      unf = bkg->GetBinContent(0) * scale;
+      ent = bkg->GetEntries() * scale;
+      sf.Form("Overflow %.0lf (%.0lf%%)", ovf, ovf * 100.0 / ent);
       oufBkg.AddText(sf);
-      sf.Form("Underflow %.3lg (%.0lf%%)", unf, unf * 100.0 / ent);
+      sf.Form("Underflow %.0lf (%.0lf%%)", unf, unf * 100.0 / ent);
       oufBkg.AddText(sf);
 
       SetPaveStyle(oufSig, MyBlue);
@@ -263,6 +264,8 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
     m_c->SetLogy(m_logScale ? 1 : 0);
     m_c->SetLogz(0);
     m_c.PrintPage(sig->GetTitle());
+
+    bkg->Scale(scale); // Restore
   }
 }
 
@@ -290,13 +293,14 @@ void SigBkgPlotter::DrawEff(TH1* sig, TH1* mc)
   const double unfMC = mc->GetBinContent(0);
   const double entMC = mc->GetEntries();
   ouf.AddText("Overflow");
-  ouf.AddText(TString::Format("Sig. %.3lg (%.0lf%%)", ovfSig, ovfSig * 100.0 / entSig));
-  ouf.AddText(TString::Format("MC %.3lg (%.0lf%%)", ovfMC, ovfMC * 100.0 / entMC));
+  ouf.AddText(TString::Format("Sig. %.0lf (%.0lf%%)", ovfSig, ovfSig * 100.0 / entSig));
+  ouf.AddText(TString::Format("MC %.0lf (%.0lf%%)", ovfMC, ovfMC * 100.0 / entMC));
   ouf.AddText("Underflow");
-  ouf.AddText(TString::Format("Sig. %.3lg (%.0lf%%)", unfSig, unfSig * 100.0 / entSig));
-  ouf.AddText(TString::Format("MC %.3lg (%.0lf%%)", unfMC, unfMC * 100.0 / entMC));
+  ouf.AddText(TString::Format("Sig. %.0lf (%.0lf%%)", unfSig, unfSig * 100.0 / entSig));
+  ouf.AddText(TString::Format("MC %.0lf (%.0lf%%)", unfMC, unfMC * 100.0 / entMC));
   SetPaveStyle(ouf);
-  ouf.Draw();
+  if (ovfSig > 0 || unfSig > 0 || ovfMC > 0 || unfMC > 0)
+    ouf.Draw();
 
   m_c->SetGrid();
   m_c.PrintPage(mc->GetTitle());

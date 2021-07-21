@@ -29,7 +29,7 @@ void printNCand(const char* title, ULong64_t nEvts, ULong64_t nSigTot, ULong64_t
 
 bool all(const vector<TTreeReaderValue<Double_t>*>& v) {
   for (const auto& x : v)
-    if (!(**x)) return false;
+    if (!(**x > 0.5)) return false;
   return true;
 }
 
@@ -64,15 +64,16 @@ void showNCand(TTree* tree, bool isKpi) {
 
   while (rdr.Next()) {
     EvtID id = make_tuple(*exp, *run, *evt);
-    if (*isSig) {
+    if (*isSig > 0.5) {
       stats[id].nSig++;
       nSigTot++;
     } else {
       stats[id].nBkg++;
       nBkgTot++;
     }
-    if (*isSig && *isSigMu) nSigMu++; else nBkgMu++;
-    if (*isSig && *isSigMu && *isSigD0 && *isSigDst && *isSigK && *isSigPiSoft && all(isSigPis))
+    if (*isSig > 0.5 && *isSigMu > 0.5) nSigMu++; else nBkgMu++;
+    if (*isSig > 0.5 && *isSigMu > 0.5 && *isSigD0 > 0.5 && *isSigDst > 0.5
+        && *isSigK > 0.5 && *isSigPiSoft > 0.5 && all(isSigPis))
       nSigStrict++; else nBkgStrict++;
   }
 

@@ -108,33 +108,13 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   plt.Histo1D("massDiff", "#DeltaM;M_{D*} - M_{D^{0}} [GeV/c^{2}]", 110, 0.14, 0.151);
   plt.Histo1D("Dst_p_CMS", "p_{CM,D*};p^{CM}_{D*} [GeV/c]", 120, 0, 3);
 
-  // ==== Efficiency
-  // p
-  plt.EffH1D({"B0"}, "mcP", "Efficiency vs true p_{$p};True p_{$p} [GeV/c]", 20, 1, 2);
-  plt.EffH1D({"Dst", "D0"}, "mcP", "Efficiency vs true p_{$p};True p_{$p} [GeV/c]", 20, 0, 3.5);
-  plt.EffH1D({"pisoft"}, "mcP", "Efficiency vs true p_{$p};True p_{$p} [GeV/c]", 20, 0, 0.5);
-  // pT
-  plt.EffH1D({"B0"}, "mcPT", "Efficiency vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 1);
-  plt.EffH1D({"Dst", "D0"}, "mcPT", "Efficiency vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 3);
-  plt.EffH1D({"pisoft"}, "mcPT", "Efficiency vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 0.5);
-  // pz
-  plt.EffH1D({"B0"}, "mcPZ", "Efficiency vs true p_{Z,$p};True p_{Z,$p} [GeV/c]", 20, 1, 2);
-  plt.EffH1D({"Dst", "D0"}, "mcPZ", "Efficiency vs true p_{Z,$p};True p_{Z,$p} [GeV/c]", 20, -3.5, 3.5);
-  plt.EffH1D({"pisoft"}, "mcPZ", "Efficiency vs true p_{Z,$p};True p_{Z,$p} [GeV/c]", 20, -0.5, 0.5);
-  // Angles
-  plt.EffH1D({"B0"}, "mcTheta", "Efficiency vs true #theta_{$p};True #theta_{$p} [#circ]", 20, 0, 45, 180 / M_PI);
-  plt.EffH1D({"Dst", "D0"}, "mcTheta", "Efficiency vs true #theta_{$p};True #theta_{$p} [#circ]", 20, 0, 180, 180 / M_PI);
-  plt.EffH1D(CompParts, "mcPhi", "Efficiency vs true #phi_{$p};True #phi_{$p} [#circ]", 20, -180, 180, 180 / M_PI);
-  if (!isK3pi)
-    plt.EffH1D("Kpi_MCAngle", "Eff. vs true K-to-#pi angle;True angle between K and #pi [#circ]", 20, 0, 180, 180 / M_PI);
-
   // ==== Vertices
-  plt.Histo1D({"D0"}, "flightDistance", "Flight distance of $p;$p flight distance [cm]", 100, -0.2, 0.2);
+  plt.Histo1D({"D0"}, "flightDistance", "Flight distance of $p;$p flight distance [cm]", 100, -0.05, 0.1);
   // Residuals
-  plt.Histo1D(CompParts, "residualDecayX", "x_{decay,$p} residual;MC - meas [#mum]", 100, -500, 500, 1e4);
-  plt.Histo1D(CompParts, "residualDecayY", "y_{decay,$p} residual;MC - meas [#mum]", 100, -500, 500, 1e4);
-  plt.Histo1D(CompParts, "residualDecayZ", "z_{decay,$p} residual;MC - meas [#mum]", 100, -500, 500, 1e4);
-  plt.Histo1D({"D0"}, "residualFlightDistance", "Residual of flight distance of $p;$p MC - meas [#mum]", 100, -2e3, 2e3, 1e4);
+  plt.Histo1D(CompParts, "residualDecayX", "x_{decay,$p} residual;MC - meas [#mum]", 100, -250, 250, 1e4);
+  plt.Histo1D(CompParts, "residualDecayY", "y_{decay,$p} residual;MC - meas [#mum]", 100, -250, 250, 1e4);
+  plt.Histo1D(CompParts, "residualDecayZ", "z_{decay,$p} residual;MC - meas [#mum]", 100, -250, 250, 1e4);
+  plt.Histo1D({"D0"}, "residualFlightDistance", "Residual of flight distance of $p;$p MC - meas [#mum]", 100, -500, 500, 1e4);
   // Pulls
   plt.Histo1D(CompParts, "pullDecayX", "x_{decay,$p} pull;(MC - meas) / #sigma_{meas}", 100, -10, 10);
   plt.Histo1D(CompParts, "pullDecayY", "y_{decay,$p} pull;(MC - meas) / #sigma_{meas}", 100, -10, 10);
@@ -149,11 +129,31 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   // Residuals
   plt.Histo1D(FSHParts, "d0Residual", "d_{0$p} residual;MC - meas [#mum]", 100, -200, 200, 1e4);
   plt.Histo1D({"pisoft"}, "d0Residual", "d_{0$p} residual;MC - meas [mm]", 100, -2, 2, 10);
-  plt.Histo1D(FSHParts, "z0Residual", "z_{0$p} residual;MC - meas [#mum]", 100, -400, 400, 1e4);
+  plt.Histo1D(FSHParts, "z0Residual", "z_{0$p} residual;MC - meas [#mum]", 100, -200, 200, 1e4);
   plt.Histo1D({"pisoft"}, "z0Residual", "z_{0$p} residual;MC - meas [mm]", 100, -4, 4, 10);
   // Pulls
   plt.Histo1D(FSParts, "d0Pull", "d_{0$p} pull;(MC - meas) / #sigma_{meas}", 100, -10, 10);
   plt.Histo1D(FSParts, "z0Pull", "z_{0$p} pull;(MC - meas) / #sigma_{meas}", 100, -10, 10);
+
+  // ==== Efficiency
+  // p
+  plt.EffH1D({"B0"}, "mcP", "Efficiency vs true p_{$p};True p_{$p} [GeV/c]", 20, 1, 2);
+  plt.EffH1D({"Dst", "D0"}, "mcP", "Efficiency vs true p_{$p};True p_{$p} [GeV/c]", 20, 0, 3.5);
+  plt.EffH1D({"pisoft"}, "mcP", "Efficiency vs true p_{$p};True p_{$p} [GeV/c]", 20, 0, 0.35);
+  // pT
+  plt.EffH1D({"B0"}, "mcPT", "Efficiency vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 0.7);
+  plt.EffH1D({"Dst", "D0"}, "mcPT", "Efficiency vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 2.6);
+  plt.EffH1D({"pisoft"}, "mcPT", "Efficiency vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 0.25);
+  // pz
+  plt.EffH1D({"B0"}, "mcPZ", "Efficiency vs true p_{Z,$p};True p_{Z,$p} [GeV/c]", 20, 1, 2);
+  plt.EffH1D({"Dst", "D0"}, "mcPZ", "Efficiency vs true p_{Z,$p};True p_{Z,$p} [GeV/c]", 20, -1.5, 3.5);
+  plt.EffH1D({"pisoft"}, "mcPZ", "Efficiency vs true p_{Z,$p};True p_{Z,$p} [GeV/c]", 20, -0.2, 0.4);
+  // Angles
+  plt.EffH1D({"B0"}, "mcTheta", "Efficiency vs true #theta_{$p};True #theta_{$p} [#circ]", 20, 0, 25, 180 / M_PI);
+  plt.EffH1D({"Dst", "D0"}, "mcTheta", "Efficiency vs true #theta_{$p};True #theta_{$p} [#circ]", 20, 0, 180, 180 / M_PI);
+  plt.EffH1D(CompParts, "mcPhi", "Efficiency vs true #phi_{$p};True #phi_{$p} [#circ]", 20, -180, 180, 180 / M_PI);
+  if (!isK3pi)
+    plt.EffH1D("Kpi_MCAngle", "Eff. vs true K-to-#pi angle;True angle between K and #pi [#circ]", 20, 40, 180, 180 / M_PI);
 }
 
 void DoPlot(SigBkgPlotter& plt, bool isK3pi)
@@ -262,8 +262,8 @@ int main(int argc, char* argv[])
   // Factors determined empirically, use 1 (or comment lines) for auto
   plotterKpi.SetBkgDownScaleFactor(10);
   plotterKpiCuts.SetBkgDownScaleFactor(10);
-  plotterK3pi.SetBkgDownScaleFactor(25);
-  plotterK3piCuts.SetBkgDownScaleFactor(25);
+  plotterK3pi.SetBkgDownScaleFactor(50);
+  plotterK3piCuts.SetBkgDownScaleFactor(50);
 
   DoPlot(plotterKpi, false);
   DoPlot(plotterK3pi, true);

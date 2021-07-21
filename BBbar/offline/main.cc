@@ -182,30 +182,36 @@ void DoPlot(SigBkgPlotter& plt, bool isK3pi)
 }
 
 void DoCandAna(tuple<TH2D*,UInt_t,UInt_t> noCuts, tuple<TH2D*,UInt_t,UInt_t> cuts,
-               PDFCanvas& c, TString title)
+               UInt_t nMC, PDFCanvas& c, TString title)
 {
   auto h = get<0>(noCuts), hCuts = get<0>(cuts);
-  h->SetTitle(title + " - " + h->GetTitle() + " (no cuts)");
-  hCuts->SetTitle(title + " - " + hCuts->GetTitle() + " (with cuts)");
-  c->cd();
-  c->SetRightMargin(0.16);
-  h->Draw("COLZ");
-  c->SetLogy();
-  c.PrintPage(h->GetTitle());
-  hCuts->Draw("COLZ");
-  c->SetLogy();
-  c.PrintPage(hCuts->GetTitle());
+  if (h && hCuts) {
+    h->SetTitle(title + " - " + h->GetTitle() + " (no cuts)");
+    hCuts->SetTitle(title + " - " + hCuts->GetTitle() + " (with cuts)");
+    c->cd();
+    c->SetRightMargin(0.16);
+    h->Draw("COLZ");
+    c->SetLogy();
+    c.PrintPage(h->GetTitle());
+    hCuts->Draw("COLZ");
+    c->SetLogy();
+    c.PrintPage(hCuts->GetTitle());
+  }
 
   double ns = get<1>(noCuts), nb = get<2>(noCuts), nsc = get<1>(cuts), nbc = get<2>(cuts);
   double nt = ns + nb, ntc = nsc + nbc;
   TString fs;
-  cout << "             | w/o cuts | w/ cuts  |Efficiency" << endl;
+  cout << "             | w/o cuts | w/ cuts  | Cut eff." << endl;
   cout << "   ----------+----------+----------+----------" << endl;
   fs.Form("     Total   |%10.0f|%10.0f|%9.4g%%", nt, ntc, 100.0 * ntc / nt);
   cout << fs << endl;
   fs.Form("     Signal  |%10.0f|%10.0f|%9.4g%%", ns, nsc, 100.0 * nsc / ns);
   cout << fs << endl;
   fs.Form("   Background|%10.0f|%10.0f|%9.4g%%", nb, nbc, 100.0 * nbc / nb);
+  cout << fs << endl;
+  fs.Form("      MC     |%10u|%10u|", nMC, nMC);
+  cout << fs << endl;
+  fs.Form("  Efficiency |%9.4g%%|%9.4g%%|", 100.0 * ns / nMC, 100.0 * nsc / nMC);
   cout << fs << endl;
 }
 
@@ -251,14 +257,22 @@ int main(int argc, char* argv[])
   bookHistos(plotterK3piCuts, true);
 
   cout << "Processing Kpi..." << endl;
+  auto nMCKpi = dfMCKpi.Count();
   auto hCandKpi = CutEfficiencyAnalysis(dfDefKpi);
   auto hCandKpiCuts = CutEfficiencyAnalysis(dfCutKpi);
-  DoCandAna(hCandKpi, hCandKpiCuts, canvasCand, "K#pi");
+  DoCandAna(hCandKpi, hCandKpiCuts, *nMCKpi, canvasCand, "K#pi");
 
   cout << "Processing K3pi..." << endl;
+  auto nMCK3pi = dfMCK3pi.Count();
   auto hCandK3pi = CutEfficiencyAnalysis(dfDefK3pi);
   auto hCandK3piCuts = CutEfficiencyAnalysis(dfCutK3pi);
-  DoCandAna(hCandK3pi, hCandK3piCuts, canvasCand, "K3#pi");
+  DoCandAna(hCandK3pi, hCandK3piCuts, *nMCK3pi, canvasCand, "K3#pi");
+
+  cout << "Total" << endl;
+  DoCandAna(
+    make_tuple(nullptr, get<1>(hCandKpi) + get<1>(hCandK3pi), get<2>(hCandKpi) + get<2>(hCandK3pi)),
+    make_tuple(nullptr, get<1>(hCandKpiCuts) + get<1>(hCandK3piCuts), get<2>(hCandKpiCuts) + get<2>(hCandK3piCuts)),
+    *nMCKpi + *nMCK3pi, canvasCand, "");
 
   // Factors determined empirically, use 1 (or comment lines) for auto
   plotterKpi.SetBkgDownScaleFactor(10);

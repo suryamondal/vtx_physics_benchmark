@@ -8,6 +8,7 @@
 #include <TStyle.h>
 #include <TCanvas.h>
 #include <ROOT/RDataFrame.hxx>
+#include <TFile.h>
 #include <iostream>
 using namespace std;
 using namespace ROOT;
@@ -163,7 +164,7 @@ void DoPlot(SigBkgPlotter& plt, bool isK3pi)
   // const auto& Pions = isK3pi ? K3PiPions : KPiPions;
 
   // ==== Histograms
-  plt.PrintAll(false);
+  plt.PrintAll(false, true);
 
   // ==== Fits
   // Vertices
@@ -265,8 +266,14 @@ int main(int argc, char* argv[])
   plotterK3pi.SetBkgDownScaleFactor(50);
   plotterK3piCuts.SetBkgDownScaleFactor(50);
 
+  TFile outRootFile(outFileName + "_efficiency.root", "recreate");
+
+  outRootFile.mkdir("Kpi", "Kpi", true)->cd();
   DoPlot(plotterKpi, false);
+  outRootFile.mkdir("K3pi", "K3pi", true)->cd();
   DoPlot(plotterK3pi, true);
+  outRootFile.mkdir("KpiCuts", "KpiCuts", true)->cd();
   DoPlot(plotterKpiCuts, false);
+  outRootFile.mkdir("K3piCuts", "K3piCuts", true)->cd();
   DoPlot(plotterK3piCuts, true);
 }

@@ -118,7 +118,7 @@ void SigBkgPlotter::EffH1D(
   }
 }
 
-void SigBkgPlotter::PrintAll(bool clearInternalList)
+void SigBkgPlotter::PrintAll(bool clearInternalList, bool saveEff)
 {
   if (m_normalizeHistos != m_histsAlreadyNormalized) {
     if (m_normalizeHistos) {
@@ -140,7 +140,7 @@ void SigBkgPlotter::PrintAll(bool clearInternalList)
   for (const auto& t : m_h2s)
     DrawSigBkg(t);
   for (const auto& t : m_effh1s)
-    DrawEff(t);
+    DrawEff(t, saveEff);
   if (clearInternalList) {
     m_h1s.clear();
     m_h2s.clear();
@@ -269,7 +269,7 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
   }
 }
 
-void SigBkgPlotter::DrawEff(TH1* sig, TH1* mc)
+void SigBkgPlotter::DrawEff(TH1* sig, TH1* mc, bool save)
 {
   CHECK(sig);
   CHECK(mc);
@@ -305,6 +305,8 @@ void SigBkgPlotter::DrawEff(TH1* sig, TH1* mc)
   m_c->SetGrid();
   m_c.PrintPage(mc->GetTitle());
   m_c->SetGrid(0, 0);
+
+  if (save) eff->Write(sig->GetName());
 }
 
 void SigBkgPlotter::FitAndPrint(

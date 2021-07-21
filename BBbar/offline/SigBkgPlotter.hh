@@ -115,8 +115,9 @@ class SigBkgPlotter {
 
   /** Prints all the plots made up to now to the PDF (via the PDFCanvas).
    * The interal list of plots is then cleared unless otherwise specfied.
+   * @param saveEff Saves efficiency histograms to current directory.
    */
-  void PrintAll(bool clearInteralList = true);
+  void PrintAll(bool clearInteralList = true, bool saveEff = false);
 
   TString GetNamePrefix() const { return m_namePrefix; }
   void SetNamePrefix(TString namePrefix) { m_namePrefix = namePrefix; }
@@ -145,9 +146,9 @@ class SigBkgPlotter {
   inline void DrawSigBkg(TRRes2D tuple) { DrawSigBkg(std::get<0>(tuple), std::get<1>(tuple)); }
 
   /** Prints an efficiency histogram to PDF. */
-  void DrawEff(TH1* sig, TH1* mc);
-  inline void DrawEff(RRes1D sig, RRes1D mc) { DrawEff(sig.GetPtr(), mc.GetPtr()); }
-  inline void DrawEff(TRRes1D tuple) { DrawEff(std::get<0>(tuple), std::get<1>(tuple)); }
+  void DrawEff(TH1* sig, TH1* mc, bool save = false);
+  inline void DrawEff(RRes1D sig, RRes1D mc, bool save = false) { DrawEff(sig.GetPtr(), mc.GetPtr(), save); }
+  inline void DrawEff(TRRes1D tuple, bool save = false) { DrawEff(std::get<0>(tuple), std::get<1>(tuple), save); }
 
   FilterDF m_sig; /**< Signal dataframe. */
   FilterDF m_bkg; /**< Background dataframe. */

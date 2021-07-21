@@ -10,3 +10,12 @@ If something doesn't work, use `./clean.sh` and recompile from scratch.
 ## Using
 Simply run `./ana path/to/ntuple.root`. It will produce a lot of PDF files
 named like the ntuple plus suffixes; existing PDFs will be overwritten.
+
+## Efficiency comparison
+After running `./ana`, a rootfile `*_efficiency.root` is generated, with the
+efficiency histograms produced. Histograms from different ntuples can be
+compared with
+```
+./EfficiencyComparison.py TITLE1 file1.root TITLE2 file2.root [...]
+```
+This will output a `effcomp.pdf` file in the same directory as the first file.

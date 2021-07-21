@@ -28,7 +28,7 @@ class CutEfficiencyAccumulator {
   /** Should be called by RDataFrame::ForeachSlot with
    * columns = {"__experiment__", "__run__", "__event__", "isSignal"}
    */
-  void Accumulate(UInt_t iSlot, Int_t exp, Int_t run, Int_t evt, double sig);
+  void Accumulate(UInt_t iSlot, Int_t exp, Int_t run, Int_t evt, bool sig);
 
   /** Returns the nBkg vs nSig histogram and the sig and bkg counts. */
   std::tuple<TH2D*,UInt_t,UInt_t> GetResults() const;
@@ -47,9 +47,11 @@ template <class T>
 std::tuple<TH2D*,UInt_t,UInt_t> CutEfficiencyAnalysis(ROOT::RDF::RInterface<T,void>& df)
 {
   CutEfficiencyAccumulator accu;
-  df.ForeachSlot(
-    [&accu](UInt_t iSlot, Int_t exp, Int_t run, Int_t evt, double sig) { accu.Accumulate(iSlot, exp, run, evt, sig); },
-    {"__experiment__", "__run__", "__event__", "Dst_isSignal"});
+  TString expr = TString::Format("(%s) ? 1.0 : 0.0", SignalCondition.Data());
+  df.Define("cutefftmp", expr.Data()).ForeachSlot(
+    [&accu](UInt_t iSlot, Int_t exp, Int_t run, Int_t evt, double sig) {
+      accu.Accumulate(iSlot, exp, run, evt, sig == 1.0);
+    }, {"__experiment__", "__run__", "__event__", "cutefftmp"});
   return accu.GetResults();
 }
 

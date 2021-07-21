@@ -11,13 +11,13 @@ const Double_t YBins[] = {
 };
 const Int_t NBinsY = sizeof(YBins) / sizeof(Double_t) - 1;
 
-void CutEfficiencyAccumulator::Accumulate(UInt_t iSlot, Int_t exp, Int_t run, Int_t evt, double sig)
+void CutEfficiencyAccumulator::Accumulate(UInt_t iSlot, Int_t exp, Int_t run, Int_t evt, bool sig)
 {
   auto& slot = m_slots[iSlot];
   EvtID id(exp, run, evt);
   auto& cnt = slot[id];
   cnt.nCandidates++;
-  if (sig == 1.0)
+  if (sig)
     cnt.nSigCandidates++;
   else
     cnt.nBkgCandidates++;

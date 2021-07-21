@@ -1,12 +1,8 @@
 #include "Constants.hh" // Own include
 
-// const TString SignalCondition = "Dst_isSignal";
-// The above one seems to be ~ equal to the below one
-// const TString SignalCondition = "B0_isSignalAcceptMissingNeutrino";
-// This one seems to make a difference
-const TString SignalCondition =
-  "B0_isSignalAcceptMissingNeutrino && Dst_isSignal && D0_isSignal"
-  "&& K_isSignal && pisoft_isSignal && mu_isSignal";
+// B0_isSignalAcceptMissingNeutrino is 1.0 only if the whole decay tree is
+// correctly reconstructed. It can be 0.0 or NaN (!!!) otherwise.
+const TString SignalCondition = "B0_isSignalAcceptMissingNeutrino == 1.0";
 
 // From PDG (2021) and in GeV
 // M_D* = 2.01026

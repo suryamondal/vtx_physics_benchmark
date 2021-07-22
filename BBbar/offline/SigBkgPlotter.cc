@@ -273,9 +273,7 @@ void SigBkgPlotter::DrawEff(TH1* sig, TH1* mc, bool save)
 {
   CHECK(sig);
   CHECK(mc);
-  TH1* eff = (TH1*)sig->Clone(sig->GetName() + "_clone"TS);
-  eff->Sumw2();
-  eff->Divide(mc);
+  TH1* eff = ComputeEfficiency(sig, mc);
 
   m_c->cd();
   eff->SetMinimum(0);

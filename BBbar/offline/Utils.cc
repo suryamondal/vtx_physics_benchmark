@@ -1,5 +1,6 @@
 #include "Utils.hh" // Own include
 #include <TH2.h>
+#include <TMath.h>
 #include <map>
 #include <stdexcept>
 using namespace std;
@@ -37,4 +38,19 @@ TH2UO Get2DHistUnderOverFlows(TH1* h)
     h2->Integral(firstX, lastX, 0, firstY - 1),
     h2->Integral(lastX + 1, cellsX, 0, firstY - 1)
   };
+}
+
+TH1* ComputeEfficiency(TH1* passes, TH1* totals)
+{
+  // Clone passes
+  passes = (TH1*)passes->Clone(passes->GetName() + "_clone"TS);
+
+  // Assume histograms are consistent and totals have no uncertainty
+  for (int i = 0; i < passes->GetNcells(); i++) {
+    const double n = passes->GetBinContent(i), d = totals->GetBinContent(i);
+    passes->SetBinContent(i, d == 0.0 ? 0.0 : n / d);
+    passes->SetBinError(i, d == 0.0 ? 0.0 : TMath::Sqrt(n) / d);
+  }
+
+  return passes;
 }

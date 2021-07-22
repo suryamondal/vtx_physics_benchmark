@@ -9,7 +9,7 @@
 #define CHECK(assertion) if(!(assertion)) throw std::runtime_error("At " STRNG2(__FILE__) ":" STRNG2(__LINE__))
 #define CHECKA(assertion,tstring) if(!(assertion)) throw std::runtime_error("At " STRNG2(__FILE__) ":" STRNG2(__LINE__) ". Extra: " + (tstring))
 
-/** Allows TString literals with "string"TS (raises a warning, ignore it) */
+/** Allows TString literals with "string"TS (raises a compiler warning, ignore it) */
 inline TString operator""TS(const char *s, size_t sz) { return TString(s, sz); }
 
 /** Set line, fill and marker colors in one call. */
@@ -64,3 +64,6 @@ typedef struct TH2UO {
 
 /** Returns a 3x3 matrix with the under/over-flows of a 2D histogram. */
 TH2UO Get2DHistUnderOverFlows(TH1* h);
+
+/** Computes an efficiency histogram with correct errors. */
+TH1* ComputeEfficiency(TH1* passes, TH1* totals);

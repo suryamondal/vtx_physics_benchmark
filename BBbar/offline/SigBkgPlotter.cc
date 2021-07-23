@@ -338,26 +338,24 @@ void SigBkgPlotter::FitAndPrint(
   leg.AddEntry(&ff, "Fit function", "L");
   leg.Draw();
 
-  TPaveText fr(0.8, 0.79 - 0.055 * (ff.GetNpar() + 1), 0.95, 0.79, "brNDC");
+  TPaveText fr(0.77, 0.79 - 0.055 * (ff.GetNpar() + 1), 0.98, 0.79, "brNDC");
   TString sf;
   for (int i = 0; i < ff.GetNpar(); i++) {
     double p = ff.GetParameter(i), e = ff.GetParError(i);
     int poom = TMath::Max(TMath::FloorNint(TMath::Log10(TMath::Abs(p))), -10);
     int eoom = TMath::Max(TMath::FloorNint(TMath::Log10(TMath::Abs(e) / 2.0)), -10);
-    int nf = TMath::Min(TMath::Max(poom - eoom, 3) + 1, 2);
-    if (poom > 3 || poom < -3) {
-      int oom = (poom / 3) * 3;
-      p /= TMath::Power(10, oom);
-      e /= TMath::Power(10, oom);
-      int nd = TMath::Max(nf - poom + oom - 1, 0);
-      sf.Form("%s = (%.*lf #pm %.*lf)e%d", ff.GetParName(i), nd, p, nd, e, oom);
+    int exp = TMath::Max(poom, eoom) / 3 * 3; if (exp < 0) exp += 3;
+    int nf = TMath::Min(TMath::Max(exp - eoom, 0), 6);
+    if (exp) {
+      p /= TMath::Power(10, exp);
+      e /= TMath::Power(10, exp);
+      sf.Form("%s = (%.*lf #pm %.*lf)#times10^{%d}", ff.GetParName(i), nf, p, nf, e, exp);
     } else {
-      int nd = TMath::Max(nf - poom - 1, 0);
-      sf.Form("%s = %.*lf#pm%.*lf", ff.GetParName(i), nd, p, nd ,e);
+      sf.Form("%s = %.*lf#pm%.*lf", ff.GetParName(i), nf, p, nf ,e);
     }
     fr.AddText(sf);
   }
-  sf.Form("#chi^{2}/ndf = %.0lf/%d", ff.GetChisquare(), ff.GetNDF());
+  sf.Form("#chi^{2}/NDF = %.0lf/%d", ff.GetChisquare(), ff.GetNDF());
   fr.AddText(sf);
   SetPaveStyle(fr);
   fr.Draw();

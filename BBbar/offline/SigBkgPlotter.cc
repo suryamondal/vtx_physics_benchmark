@@ -304,7 +304,12 @@ void SigBkgPlotter::DrawEff(TH1* sig, TH1* mc, bool save)
   m_c.PrintPage(mc->GetTitle());
   m_c->SetGrid(0, 0);
 
-  if (save) eff->Write(sig->GetName());
+  if (save) {
+    TString name = sig->GetName();
+    eff->Write(name.ReplaceAll("_effSig_", "_eff_"));
+    name = mc->GetName();
+    mc->Write(name.ReplaceAll("_effMC_", "_MC_"));
+  }
 }
 
 void SigBkgPlotter::FitAndPrint(

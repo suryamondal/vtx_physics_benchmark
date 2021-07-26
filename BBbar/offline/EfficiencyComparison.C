@@ -50,6 +50,7 @@ void EfficiencyComparison(TString outPDF, const vector<TString>& filesNames,
 
     // Loop over hist names
     for (const auto& hName : Ls(dirs.front())) {
+      if (!hName.Contains("_eff_")) continue;
       vector<TH1*> hists;
       for (const auto& d : dirs) {
         TH1* h = d->Get<TH1>(hName);

@@ -6,6 +6,7 @@
 #include <TCanvas.h>
 #include <TH1.h>
 #include <TLegend.h>
+#include <TColor.h>
 #include <vector>
 #include <stdexcept>
 using namespace std;
@@ -16,6 +17,7 @@ using namespace std;
 
 const Color_t Palette[] = {kBlack, kRed};
 const Int_t NPalette = sizeof(Palette) / sizeof(Color_t);
+const auto MyBlue = TColor::GetColor("#348ABD");
 
 vector<TString> Ls(TDirectory* d)
 {
@@ -59,13 +61,26 @@ void EfficiencyComparison(TString outPDF, const vector<TString>& filesNames,
       }
 
       // Print
-      TLegend leg(0.86, 0.91 - 0.06 * hists.size(), 0.98, 0.91);
+      TString hNameMC = hName;
+      TH1 *hMC = dirs.front()->Get<TH1>(hNameMC.ReplaceAll("_eff_", "_MC_"));
+      CHECK(hMC);
+
+      hMC->SetLineWidth(0);
+      hMC->SetFillColorAlpha(MyBlue, 0.4);
+      hMC->SetFillStyle(1001);
+      hMC->Scale(0.9 / hMC->GetBinContent(hMC->GetMaximumBin()));
+      hMC->SetMinimum(0); hMC->SetMaximum(1);
+      hMC->Draw("hist");
+
+      TLegend leg(0.86, 0.91 - 0.06 * (hists.size() + 1), 0.98, 0.91);
+      leg.AddEntry(hMC, "MC dist.", "F");
+
       for (int i = 0; i < hists.size(); i++) {
         hists[i]->SetLineColor(Palette[i%NPalette]);
         // hists[i]->SetLineWidth(i == 0 ? 2 : 1);
         hists[i]->SetMarkerColor(Palette[i%NPalette]);
         leg.AddEntry(hists[i], titles.at(i), "LE");
-        hists[i]->Draw(i == 0 ? "" : "same");
+        hists[i]->Draw("same");
       }
       leg.Draw();
       c.SetGrid();

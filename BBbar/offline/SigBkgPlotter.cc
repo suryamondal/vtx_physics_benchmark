@@ -413,6 +413,9 @@ void SigBkgPlotter::SigmaAndPrint(TString name, double N, bool showLowHigh)
   SetPaveStyle(tres);
   tres.Draw();
 
+  cout << h->GetName() << " sigma" << N << " = " << (xUp - xLow) << " +- " << h->GetBinWidth(1)
+       << ", center = " << ((xLow + xUp) / 2) << " +- " << h->GetBinWidth(1) << endl;
+
   if (m_logScale) m_c->SetLogy();
   m_c.PrintPage(h->GetTitle());
 }

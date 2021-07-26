@@ -54,3 +54,25 @@ TH1* ComputeEfficiency(TH1* passes, TH1* totals)
 
   return passes;
 }
+
+TString FormatNumberWithError(double p, double e)
+{
+  TString sf;
+  int poom = TMath::Max(TMath::FloorNint(TMath::Log10(TMath::Abs(p))), -10);
+  int eoom = TMath::Max(TMath::FloorNint(TMath::Log10(TMath::Abs(e) / 2.0)), -10);
+  int exp = TMath::Max(poom, eoom) / 3 * 3; if (exp < 0) exp += 3;
+  int nf = TMath::Min(TMath::Max(exp - eoom, 0), 6);
+  if (exp) {
+    p /= TMath::Power(10, exp);
+    e /= TMath::Power(10, exp);
+    sf.Form("(%.*lf #pm %.*lf)#times10^{%d}", nf, p, nf, e, exp);
+  } else {
+    sf.Form("%.*lf#pm%.*lf", nf, p, nf ,e);
+  }
+  return sf;
+}
+
+TString FormatNumberWithError(TString name, double number, double error)
+{
+  return TString::Format("%s = %s", name.Data(), FormatNumberWithError(number, error).Data());
+}

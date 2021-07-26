@@ -91,33 +91,37 @@ class SigBkgPlotter {
               TString title, int nBins, double xLow, double xUp, double scale = 1.0);
 
   /** Finds the *signal* histogram called name and fits it with
-   * func, then prints it to PDF. Does not remove the histo from the
-   * list of histos to be plotted (unless otherwise specified).
+   * func, then prints it to PDF.
    *
    * @param p0 is a list of {param_name, initial_value} pairs
    */
   void FitAndPrint(TString name, const char* func,
-                   std::initializer_list<std::pair<TString,double>> p0 = {},
-                   bool removeFromList = false);
+                   std::initializer_list<std::pair<TString,double>> p0 = {});
+
+  /** Finds the *signal* histogram called name and finds the sigmaN of
+   * the distribution (the half-width that contains N% of the samples,
+   * with half of the remainder on each side).
+   * @param N The percentage of samples in the half-width (default 68%)
+   * @param showLowHigh Show the % of samples to the left & right
+   */
+  void SigmaAndPrint(TString name, double N = 68.0, bool showLowHigh = false);
 
   /** Finds the signal and backgound histograms called name and produces
    * the ROC curve plot for a cut var < threshold (if keepLow is true)
-   * or var > threshodl (if keepLow is false). Does not remove the histo
-   * from the list of histos to be plotted (unless otherwise specified).
+   * or var > threshodl (if keepLow is false).
    *
    * @param excludeUOF Excludes overflow and underflow (default false)
    */
-  void PrintROC(TString name, bool keepLow, bool excludeOUF = false, bool removeFromList = false);
+  void PrintROC(TString name, bool keepLow, bool excludeOUF = false);
 
   /** Like the other PrintROC, but repeats for each particle. */
   void PrintROC(std::initializer_list<TString> particles,
-                TString name, bool keepLow, bool excludeOUF = false, bool removeFromList = false);
+                TString name, bool keepLow, bool excludeOUF = false);
 
   /** Prints all the plots made up to now to the PDF (via the PDFCanvas).
-   * The interal list of plots is then cleared unless otherwise specfied.
    * @param saveEff Saves efficiency histograms to current directory.
    */
-  void PrintAll(bool clearInteralList = true, bool saveEff = false);
+  void PrintAll(bool saveEff = false);
 
   TString GetNamePrefix() const { return m_namePrefix; }
   void SetNamePrefix(TString namePrefix) { m_namePrefix = namePrefix; }

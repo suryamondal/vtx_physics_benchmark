@@ -8,6 +8,7 @@
 #include <TMath.h>
 #include <TLine.h>
 #include <TPaveText.h>
+#include <TStyle.h>
 #include <TGraph.h>
 using namespace std;
 
@@ -118,7 +119,7 @@ void SigBkgPlotter::EffH1D(
   }
 }
 
-void SigBkgPlotter::PrintAll(bool clearInternalList, bool saveEff)
+void SigBkgPlotter::PrintAll(bool saveEff)
 {
   if (m_normalizeHistos != m_histsAlreadyNormalized) {
     if (m_normalizeHistos) {
@@ -141,11 +142,6 @@ void SigBkgPlotter::PrintAll(bool clearInternalList, bool saveEff)
     DrawSigBkg(t);
   for (const auto& t : m_effh1s)
     DrawEff(t, saveEff);
-  if (clearInternalList) {
-    m_h1s.clear();
-    m_h2s.clear();
-    m_effh1s.clear();
-  }
 }
 
 void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
@@ -308,8 +304,7 @@ void SigBkgPlotter::DrawEff(TH1* sig, TH1* mc, bool save)
 }
 
 void SigBkgPlotter::FitAndPrint(
-  TString name, const char* func, std::initializer_list<std::pair<TString,double>> p0,
-  bool removeFromList)
+  TString name, const char* func, std::initializer_list<std::pair<TString,double>> p0)
 {
   TH1* h = nullptr;
   name = m_namePrefix + "_sig_" + name;
@@ -339,24 +334,9 @@ void SigBkgPlotter::FitAndPrint(
   leg.Draw();
 
   TPaveText fr(0.77, 0.79 - 0.055 * (ff.GetNpar() + 1), 0.98, 0.79, "brNDC");
-  TString sf;
-  for (int i = 0; i < ff.GetNpar(); i++) {
-    double p = ff.GetParameter(i), e = ff.GetParError(i);
-    int poom = TMath::Max(TMath::FloorNint(TMath::Log10(TMath::Abs(p))), -10);
-    int eoom = TMath::Max(TMath::FloorNint(TMath::Log10(TMath::Abs(e) / 2.0)), -10);
-    int exp = TMath::Max(poom, eoom) / 3 * 3; if (exp < 0) exp += 3;
-    int nf = TMath::Min(TMath::Max(exp - eoom, 0), 6);
-    if (exp) {
-      p /= TMath::Power(10, exp);
-      e /= TMath::Power(10, exp);
-      sf.Form("%s = (%.*lf #pm %.*lf)#times10^{%d}", ff.GetParName(i), nf, p, nf, e, exp);
-    } else {
-      sf.Form("%s = %.*lf#pm%.*lf", ff.GetParName(i), nf, p, nf ,e);
-    }
-    fr.AddText(sf);
-  }
-  sf.Form("#chi^{2}/NDF = %.0lf/%d", ff.GetChisquare(), ff.GetNDF());
-  fr.AddText(sf);
+  for (int i = 0; i < ff.GetNpar(); i++)
+    fr.AddText(FormatNumberWithError(ff.GetParName(i), ff.GetParameter(i), ff.GetParError(i)));
+  fr.AddText(TString::Format("#chi^{2}/NDF = %.0lf/%d", ff.GetChisquare(), ff.GetNDF()));
   SetPaveStyle(fr);
   fr.Draw();
 
@@ -364,11 +344,68 @@ void SigBkgPlotter::FitAndPrint(
   m_c.PrintPage(h->GetTitle());
 
   h->GetListOfFunctions()->Delete();
-
-  if (removeFromList) CHECK(false); // Not implemented!
 }
 
-void SigBkgPlotter::PrintROC(TString name, bool keepLow, bool excludeOUF, bool removeFromList)
+void SigBkgPlotter::SigmaAndPrint(TString name, double N, bool showLowHigh)
+{
+  TH1* h = nullptr;
+  name = m_namePrefix + "_sig_" + name;
+  for (auto& t : m_h1s) {
+    if (get<0>(t)->GetName() == name) {
+      h = get<0>(t).GetPtr();
+      break;
+    }
+  }
+  CHECKA(h, name);
+  SetColor(h, kBlack, MyBlue);
+
+  // Find sigmaN interval
+  const double samples = h->GetEntries();
+  const double remainder = (100.0 - N) / 200.0;
+  int binLow, binUp;
+  double accuLow, accuUp;
+  for (accuLow = 0.0, binLow = 0; binLow < h->GetNbinsX() + 1; binLow++)
+    if ((accuLow += h->GetBinContent(binLow)) / samples >= remainder)
+      break;
+  for (accuUp = 0.0, binUp = h->GetNbinsX() + 1; binUp > binLow; binUp--)
+    if ((accuUp += h->GetBinContent(binUp)) / samples >= remainder)
+      break;
+  // Interval -> from up edge of binLow to low edge of binUp
+  const double xLow = h->GetBinLowEdge(binLow + 1);
+  const double xUp = h->GetBinLowEdge(binUp);
+
+  m_c->cd();
+  h->Draw();
+
+  // Fill sigmaN area
+  const double gfx[4] = {xLow, xUp, xUp, xLow};
+  const double yMin = h->GetMinimum(), yMax = h->GetMaximum() * (1.0 + gStyle->GetHistTopMargin());
+  const double gfy[4] = {yMax, yMax, yMin, yMin};
+  TGraph gf(4, gfx, gfy);
+  gf.SetFillColorAlpha(kRed, 0.3);
+  gf.Draw("F");
+
+  TLegend leg(0.8, 0.8, 0.95, 0.91);
+  leg.AddEntry(h, "Signal", "F");
+  leg.AddEntry(&gf, TString::Format("#sigma_{%lg} area", N), "F");
+  leg.Draw();
+
+  TPaveText tres(0.77, 0.79 - 0.055 * (showLowHigh ? 5 : 3), 0.98, 0.79, "brNDC");
+  tres.AddText(FormatNumberWithError(TString::Format("#sigma_{%lg}", N), xUp - xLow, h->GetBinWidth(1)));
+  tres.AddText(FormatNumberWithError("Center", (xLow + xUp) / 2.0, h->GetBinWidth(1)));
+  tres.AddText(FormatNumberWithError("Hist. mean", h->GetMean(), h->GetMeanError()));
+  if (showLowHigh) {
+    tres.AddText(TString::Format("Left = %.1lf%%", accuLow / samples * 100.0));
+    tres.AddText(TString::Format("Right = %.1lf%%", accuUp / samples * 100.0));
+  }
+  SetPaveStyle(tres);
+  tres.Draw();
+
+  if (m_logScale) m_c->SetLogy();
+  m_c.PrintPage(h->GetTitle());
+}
+
+void SigBkgPlotter::PrintROC(TString name, bool keepLow, bool excludeOUF)
 {
   static double linePoints[2] = {0.0, 100.0};
   static TGraph gLine(2, linePoints, linePoints);
@@ -460,14 +497,11 @@ void SigBkgPlotter::PrintROC(TString name, bool keepLow, bool excludeOUF, bool r
 
   m_c.PrintPage(sig->GetTitle() + " ROC"TS);
   m_c->Clear();
-
-  if (removeFromList) CHECK(false); // Not implemented!
 }
 
 void SigBkgPlotter::PrintROC(
-  std::initializer_list<TString> particles, TString name, bool keepLow,
-  bool excludeOUF, bool removeFromList)
+  std::initializer_list<TString> particles, TString name, bool keepLow, bool excludeOUF)
 {
   for (const TString& p : particles)
-    PrintROC(p + "_" + name, keepLow, excludeOUF, removeFromList);
+    PrintROC(p + "_" + name, keepLow, excludeOUF);
 }

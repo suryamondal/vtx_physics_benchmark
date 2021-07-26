@@ -67,3 +67,7 @@ TH2UO Get2DHistUnderOverFlows(TH1* h);
 
 /** Computes an efficiency histogram with correct errors. */
 TH1* ComputeEfficiency(TH1* passes, TH1* totals);
+
+TString FormatNumberWithError(double number, double error);
+
+TString FormatNumberWithError(TString name, double number, double error);

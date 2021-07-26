@@ -164,7 +164,7 @@ void DoPlot(SigBkgPlotter& plt, bool isK3pi)
   // const auto& Pions = isK3pi ? K3PiPions : KPiPions;
 
   // ==== Histograms
-  plt.PrintAll(false, true);
+  plt.PrintAll(true);
 
   // ==== Fits
   // Vertices
@@ -178,6 +178,20 @@ void DoPlot(SigBkgPlotter& plt, bool isK3pi)
   for (const TString &part : FSParts) {
     plt.FitAndPrint(part + "_d0Residual", "gaus");
     plt.FitAndPrint(part + "_z0Residual", "gaus");
+  }
+
+  // ==== sigma68
+  // Vertices
+  for (const TString& part : CompParts) {
+    plt.SigmaAndPrint(part + "_residualDecayX", 68, true);
+    plt.SigmaAndPrint(part + "_residualDecayY", 68, true);
+    plt.SigmaAndPrint(part + "_residualDecayZ", 68, true);
+  }
+  plt.SigmaAndPrint("D0_residualFlightDistance", 68, true);
+  // Impact parameters
+  for (const TString &part : FSParts) {
+    plt.SigmaAndPrint(part + "_d0Residual", 68, true);
+    plt.SigmaAndPrint(part + "_z0Residual", 68, true);
   }
 }
 

@@ -13,7 +13,8 @@
 using namespace std;
 
 SigBkgPlotter::TRRes1D SigBkgPlotter::Histo1D(
-  const char* variable, TString title, int nBins, double xLow, double xUp, double scale)
+  const char* variable, TString title, int nBins, double xLow, double xUp,
+  double scale, bool sigOnly)
 {
   TString nameSig = GetUniqueName(m_namePrefix + "_sig_" + variable);
   TString nameBkg = GetUniqueName(m_namePrefix + "_bkg_" + variable);
@@ -27,12 +28,12 @@ SigBkgPlotter::TRRes1D SigBkgPlotter::Histo1D(
   if (scale == 1.0) {
     res = make_tuple(
       m_sig.Histo1D({nameSig, title, nBins, xLow, xUp}, variable),
-      m_bkg.Histo1D({nameBkg, title, nBins, xLow, xUp}, variable));
+      sigOnly ? RRes1D() : m_bkg.Histo1D({nameBkg, title, nBins, xLow, xUp}, variable));
   } else {
     TString expr = TString::Format("%s*%.18lg", variable, scale);
     res = make_tuple(
       m_sig.Define("h1dtmp", expr.Data()).Histo1D({nameSig, title, nBins, xLow, xUp}, "h1dtmp"),
-      m_bkg.Define("h1dtmp", expr.Data()).Histo1D({nameBkg, title, nBins, xLow, xUp}, "h1dtmp"));
+      sigOnly ? RRes1D() : m_bkg.Define("h1dtmp", expr.Data()).Histo1D({nameBkg, title, nBins, xLow, xUp}, "h1dtmp"));
   }
   m_h1s.push_back(res);
   return res;
@@ -40,12 +41,12 @@ SigBkgPlotter::TRRes1D SigBkgPlotter::Histo1D(
 
 void SigBkgPlotter::Histo1D(
   std::initializer_list<TString> particles, const char* variable,
-  TString title, int nBins, double xLow, double xUp, double scale)
+  TString title, int nBins, double xLow, double xUp, double scale, bool sigOnly)
 {
   for (const TString& p : particles) {
     TString t = title; // Replacement happens in-place :(
     TString v = p + "_" + variable;
-    Histo1D(v, t.ReplaceAll("$p", ParticlesTitles.at(p)), nBins, xLow, xUp, scale);
+    Histo1D(v, t.ReplaceAll("$p", ParticlesTitles.at(p)), nBins, xLow, xUp, scale, sigOnly);
   }
 }
 
@@ -124,11 +125,13 @@ void SigBkgPlotter::PrintAll(bool saveEff)
   if (m_normalizeHistos != m_histsAlreadyNormalized) {
     if (m_normalizeHistos) {
       for (auto &t : m_h1s) {
+        if (!get<1>(t)) continue;
         Normalize(get<0>(t).GetPtr());
         Normalize(get<1>(t).GetPtr());
       }
     } else {
       for (auto &t : m_h1s) {
+        if (!get<1>(t)) continue;
         Unnormalize(get<0>(t).GetPtr());
         Unnormalize(get<1>(t).GetPtr());
       }
@@ -137,7 +140,8 @@ void SigBkgPlotter::PrintAll(bool saveEff)
   m_histsAlreadyNormalized = m_normalizeHistos;
 
   for (const auto& t : m_h1s)
-    DrawSigBkg(t);
+    if (get<1>(t))
+      DrawSigBkg(t);
   for (const auto& t : m_h2s)
     DrawSigBkg(t);
   for (const auto& t : m_effh1s)
@@ -147,7 +151,7 @@ void SigBkgPlotter::PrintAll(bool saveEff)
 void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
 {
   CHECK(sig);
-  CHECK(bkg);
+  if (!bkg) return;
   if (sig->GetDimension() == 2) {
     TString sigTitle = sig->GetTitle(), bkgTitle = bkg->GetTitle();
     sig->SetTitle(sig->GetTitle() + " - Signal"TS);
@@ -201,7 +205,7 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
     THStack s("ths", sig->GetTitle() + ";"TS + sig->GetXaxis()->GetTitle()
               + ";" + sig->GetYaxis()->GetTitle() + ";" + sig->GetZaxis()->GetTitle());
     SetColor(sig, kBlack, MyBlue);
-    SetColor(bkg, MyRed);
+    SetColor(bkg, MyRed, MyRed);
     bkg->SetFillStyle(3454);
 
     // Scale down bkg if too high
@@ -357,7 +361,8 @@ void SigBkgPlotter::SigmaAndPrint(TString name, double N, bool showLowHigh)
     }
   }
   CHECKA(h, name);
-  SetColor(h, kBlack, MyBlue);
+  SetColor(h, MyBlue, MyBlue);
+  h->SetLineWidth(0);
 
   // Find sigmaN interval
   const double samples = h->GetEntries();
@@ -382,7 +387,8 @@ void SigBkgPlotter::SigmaAndPrint(TString name, double N, bool showLowHigh)
   const double yMin = h->GetMinimum(), yMax = h->GetMaximum() * (1.0 + gStyle->GetHistTopMargin());
   const double gfy[4] = {yMax, yMax, yMin, yMin};
   TGraph gf(4, gfx, gfy);
-  gf.SetFillColorAlpha(kRed, 0.3);
+  SetColor(&gf, kRed, kRed, 0.3);
+  gf.SetLineWidth(0);
   gf.Draw("F");
 
   TLegend leg(0.8, 0.8, 0.95, 0.91);
@@ -392,12 +398,13 @@ void SigBkgPlotter::SigmaAndPrint(TString name, double N, bool showLowHigh)
 
   TPaveText tres(0.77, 0.79 - 0.055 * (showLowHigh ? 5 : 3), 0.98, 0.79, "brNDC");
   tres.AddText(FormatNumberWithError(TString::Format("#sigma_{%lg}", N), xUp - xLow, h->GetBinWidth(1)));
-  tres.AddText(FormatNumberWithError("Center", (xLow + xUp) / 2.0, h->GetBinWidth(1)));
-  tres.AddText(FormatNumberWithError("Hist. mean", h->GetMean(), h->GetMeanError()));
   if (showLowHigh) {
     tres.AddText(TString::Format("Left = %.1lf%%", accuLow / samples * 100.0));
     tres.AddText(TString::Format("Right = %.1lf%%", accuUp / samples * 100.0));
   }
+  tres.AddText(FormatNumberWithError(TString::Format("#sigma_{%lg} center", N),
+                                     (xLow + xUp) / 2.0, h->GetBinWidth(1)));
+  tres.AddText(FormatNumberWithError("Mean", h->GetMean(), h->GetMeanError()));
   SetPaveStyle(tres);
   tres.Draw();
 
@@ -416,7 +423,7 @@ void SigBkgPlotter::PrintROC(TString name, bool keepLow, bool excludeOUF)
   for (auto& t : m_h1s) {
     if (get<0>(t)->GetName() == name) {
       sig = get<0>(t).GetPtr();
-      bkg = get<1>(t).GetPtr();
+      bkg = get<1>(t) ? nullptr : get<1>(t).GetPtr();
       break;
     }
   }

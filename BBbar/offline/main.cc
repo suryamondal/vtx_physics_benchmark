@@ -116,6 +116,10 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   plt.Histo1D(CompParts, "residualDecayY", "y_{decay,$p} residual;MC - meas [#mum]", 100, -250, 250, 1e4);
   plt.Histo1D(CompParts, "residualDecayZ", "z_{decay,$p} residual;MC - meas [#mum]", 100, -250, 250, 1e4);
   plt.Histo1D({"D0"}, "residualFlightDistance", "Residual of flight distance of $p;$p MC - meas [#mum]", 100, -500, 500, 1e4);
+  plt.Histo1D(CompParts, "residualDecayX", "x_{decay,$p} residual;MC - meas [#mum]", 500, -250, 250, 1e4, true);
+  plt.Histo1D(CompParts, "residualDecayY", "y_{decay,$p} residual;MC - meas [#mum]", 500, -250, 250, 1e4, true);
+  plt.Histo1D(CompParts, "residualDecayZ", "z_{decay,$p} residual;MC - meas [#mum]", 500, -250, 250, 1e4, true);
+  plt.Histo1D({"D0"}, "residualFlightDistance", "Residual of flight distance of $p;$p MC - meas [#mum]", 500, -500, 500, 1e4, true);
   // Pulls
   plt.Histo1D(CompParts, "pullDecayX", "x_{decay,$p} pull;(MC - meas) / #sigma_{meas}", 100, -10, 10);
   plt.Histo1D(CompParts, "pullDecayY", "y_{decay,$p} pull;(MC - meas) / #sigma_{meas}", 100, -10, 10);
@@ -129,9 +133,13 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   plt.Histo1D({"pisoft"}, "z0", "z_{0$p};z_{0,$p} [mm]", 100, -4, 4, 10);
   // Residuals
   plt.Histo1D(FSHParts, "d0Residual", "d_{0$p} residual;MC - meas [#mum]", 100, -200, 200, 1e4);
-  plt.Histo1D({"pisoft"}, "d0Residual", "d_{0$p} residual;MC - meas [mm]", 100, -2, 2, 10);
+  plt.Histo1D({"pisoft"}, "d0Residual", "d_{0$p} residual;MC - meas [#mum]", 100, -2000, 2000, 1e4);
   plt.Histo1D(FSHParts, "z0Residual", "z_{0$p} residual;MC - meas [#mum]", 100, -200, 200, 1e4);
-  plt.Histo1D({"pisoft"}, "z0Residual", "z_{0$p} residual;MC - meas [mm]", 100, -4, 4, 10);
+  plt.Histo1D({"pisoft"}, "z0Residual", "z_{0$p} residual;MC - meas [#mum]", 100, -4000, 4000, 1e4);
+  plt.Histo1D(FSHParts, "d0Residual", "d_{0$p} residual;MC - meas [#mum]", 500, -250, 250, 1e4, true);
+  plt.Histo1D({"pisoft"}, "d0Residual", "d_{0$p} residual;MC - meas [#mum]", 500, -2500, 2500, 1e4, true);
+  plt.Histo1D(FSHParts, "z0Residual", "z_{0$p} residual;MC - meas [#mum]", 500, -250, 250, 1e4, true);
+  plt.Histo1D({"pisoft"}, "z0Residual", "z_{0$p} residual;MC - meas [#mum]", 500, -5000, 5000, 1e4, true);
   // Pulls
   plt.Histo1D(FSParts, "d0Pull", "d_{0$p} pull;(MC - meas) / #sigma_{meas}", 100, -10, 10);
   plt.Histo1D(FSParts, "z0Pull", "z_{0$p} pull;(MC - meas) / #sigma_{meas}", 100, -10, 10);
@@ -166,32 +174,18 @@ void DoPlot(SigBkgPlotter& plt, bool isK3pi)
   // ==== Histograms
   plt.PrintAll(true);
 
-  // ==== Fits
-  // Vertices
-  for (const TString& part : CompParts) {
-    plt.FitAndPrint(part + "_residualDecayX", "gaus");
-    plt.FitAndPrint(part + "_residualDecayY", "gaus");
-    plt.FitAndPrint(part + "_residualDecayZ", "gaus");
-  }
-  plt.FitAndPrint("D0_residualFlightDistance", "gaus");
-  // Impact parameters
-  for (const TString &part : FSParts) {
-    plt.FitAndPrint(part + "_d0Residual", "gaus");
-    plt.FitAndPrint(part + "_z0Residual", "gaus");
-  }
-
   // ==== sigma68
   // Vertices
   for (const TString& part : CompParts) {
-    plt.SigmaAndPrint(part + "_residualDecayX", 68, true);
-    plt.SigmaAndPrint(part + "_residualDecayY", 68, true);
-    plt.SigmaAndPrint(part + "_residualDecayZ", 68, true);
+    plt.SigmaAndPrint(part + "_residualDecayX_2", 68);
+    plt.SigmaAndPrint(part + "_residualDecayY_2", 68);
+    plt.SigmaAndPrint(part + "_residualDecayZ_2", 68);
   }
-  plt.SigmaAndPrint("D0_residualFlightDistance", 68, true);
+  plt.SigmaAndPrint("D0_residualFlightDistance_2", 68);
   // Impact parameters
   for (const TString &part : FSParts) {
-    plt.SigmaAndPrint(part + "_d0Residual", 68, true);
-    plt.SigmaAndPrint(part + "_z0Residual", 68, true);
+    plt.SigmaAndPrint(part + "_d0Residual_2", 68);
+    plt.SigmaAndPrint(part + "_z0Residual_2", 68);
   }
 }
 

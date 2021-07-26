@@ -13,11 +13,12 @@
 inline TString operator""TS(const char *s, size_t sz) { return TString(s, sz); }
 
 /** Set line, fill and marker colors in one call. */
-inline void SetColor(TH1* h, Color_t cLineMarker, Color_t cFill)
+template <class T>
+inline void SetColor(T* h, Color_t cLineMarker, Color_t cFill, double alpha = 1.0)
 {
-  h->SetLineColor(cLineMarker);
-  h->SetMarkerColor(cLineMarker);
-  h->SetFillColor(cFill);
+  h->SetLineColorAlpha(cLineMarker, alpha);
+  h->SetMarkerColorAlpha(cLineMarker, alpha);
+  h->SetFillColorAlpha(cFill, alpha);
 }
 
 /** Default TPave style setter. */
@@ -30,14 +31,11 @@ inline void SetPaveStyle(TPaveText& p, Color_t c = kBlack)
   p.SetTextColor(c);
 }
 
-/** Set line, fill and marker colors in one call. */
-inline void SetColor(TH1* h, Color_t c) { SetColor(h, c, c); }
-
 /** Normalize an histogram. */
-inline void Normalize(TH1* h) { h->Scale(1.0 / h->GetEntries()); }
+inline void Normalize(TH1* h) { if (h) h->Scale(1.0 / h->GetEntries()); }
 
 /** Restores a previously normalized histogram. */
-inline void Unnormalize(TH1* h) { h->Scale(h->GetEntries()); }
+inline void Unnormalize(TH1* h) { if (h) h->Scale(h->GetEntries()); }
 
 /** This function shall be called with the name you want to give to sth.
  *  - The first time a name is used, the function returns the name.

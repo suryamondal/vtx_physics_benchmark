@@ -177,15 +177,15 @@ void DoPlot(SigBkgPlotter& plt, bool isK3pi)
   // ==== sigma68
   // Vertices
   for (const TString& part : CompParts) {
-    plt.SigmaAndPrint(part + "_residualDecayX_2", 68);
-    plt.SigmaAndPrint(part + "_residualDecayY_2", 68);
-    plt.SigmaAndPrint(part + "_residualDecayZ_2", 68);
+    plt.SigmaAndPrint(part + "_residualDecayX_2", 68, 5);
+    plt.SigmaAndPrint(part + "_residualDecayY_2", 68, 5);
+    plt.SigmaAndPrint(part + "_residualDecayZ_2", 68, 5);
   }
-  plt.SigmaAndPrint("D0_residualFlightDistance_2", 68);
+  plt.SigmaAndPrint("D0_residualFlightDistance_2", 68, 5);
   // Impact parameters
   for (const TString &part : FSParts) {
-    plt.SigmaAndPrint(part + "_d0Residual_2", 68);
-    plt.SigmaAndPrint(part + "_z0Residual_2", 68);
+    plt.SigmaAndPrint(part + "_d0Residual_2", 68, 5);
+    plt.SigmaAndPrint(part + "_z0Residual_2", 68, 5);
   }
 }
 

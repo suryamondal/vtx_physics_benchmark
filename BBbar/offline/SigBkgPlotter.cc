@@ -355,7 +355,7 @@ void SigBkgPlotter::FitAndPrint(
   h->GetListOfFunctions()->Delete();
 }
 
-void SigBkgPlotter::SigmaAndPrint(TString name, double N, bool showLowHigh)
+void SigBkgPlotter::SigmaAndPrint(TString name, double N, int rebin, bool showLowHigh)
 {
   TH1* h = nullptr;
   name = m_namePrefix + "_sig_" + name;
@@ -366,8 +366,6 @@ void SigBkgPlotter::SigmaAndPrint(TString name, double N, bool showLowHigh)
     }
   }
   CHECKA(h, name);
-  SetColor(h, MyBlue, MyBlue);
-  h->SetLineWidth(0);
 
   // Find sigmaN interval
   const double samples = h->GetEntries();
@@ -388,11 +386,19 @@ void SigBkgPlotter::SigmaAndPrint(TString name, double N, bool showLowHigh)
   const double xErr = h->GetBinWidth(1);
 
   m_c->cd();
-  h->Draw();
+  TH1* hc = h;
+  if (rebin > 1) {
+    hc = h->Rebin(rebin, h->GetName() + "_rebinned"TS);
+    SetColor(hc, kBlack, MyBlue);
+  } else {
+    SetColor(h, MyBlue, MyBlue);
+    h->SetLineWidth(0);
+  }
+  hc->Draw();
 
   // Fill sigmaN area
   const double gfx[4] = {xLow, xUp, xUp, xLow};
-  const double yMin = h->GetMinimum(), yMax = h->GetMaximum() * (1.0 + gStyle->GetHistTopMargin());
+  const double yMin = hc->GetMinimum(), yMax = hc->GetMaximum() * (1.0 + gStyle->GetHistTopMargin());
   const double gfy[4] = {yMax, yMax, yMin, yMin};
   TGraph gf(4, gfx, gfy);
   SetColor(&gf, kRed, kRed, 0.3);
@@ -400,7 +406,7 @@ void SigBkgPlotter::SigmaAndPrint(TString name, double N, bool showLowHigh)
   gf.Draw("F");
 
   TLegend leg(0.8, 0.8, 0.95, 0.91);
-  leg.AddEntry(h, "Signal", "F");
+  leg.AddEntry(hc, "Signal", "F");
   leg.AddEntry(&gf, TString::Format("#sigma_{%lg} area", N), "F");
   leg.Draw();
 
@@ -420,6 +426,7 @@ void SigBkgPlotter::SigmaAndPrint(TString name, double N, bool showLowHigh)
 
   if (m_logScale) m_c->SetLogy();
   m_c.PrintPage(h->GetTitle());
+  if (rebin > 1) delete hc;
 }
 
 void SigBkgPlotter::PrintROC(TString name, bool keepLow, bool excludeOUF)

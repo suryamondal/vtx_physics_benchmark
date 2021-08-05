@@ -105,9 +105,10 @@ class SigBkgPlotter {
    * the distribution (the half-width that contains N% of the samples,
    * with half of the remainder on each side).
    * @param N The percentage of samples in the half-width (default 68%)
+   * @param rebin Rebins the histogram by this amount before drawing it
    * @param showLowHigh Show the % of samples to the left & right
    */
-  void SigmaAndPrint(TString name, double N = 68.0, bool showLowHigh = false);
+  void SigmaAndPrint(TString name, double N = 68.0, int rebin = 1, bool showLowHigh = false);
 
   /** Finds the signal and backgound histograms called name and produces
    * the ROC curve plot for a cut var < threshold (if keepLow is true)

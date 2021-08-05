@@ -383,6 +383,9 @@ void SigBkgPlotter::SigmaAndPrint(TString name, double N, bool showLowHigh)
   // Interval -> from up edge of binLow to low edge of binUp
   const double xLow = h->GetBinLowEdge(binLow + 1);
   const double xUp = h->GetBinLowEdge(binUp);
+  const double xWidth = (xUp - xLow) / 2.0;
+  const double xCenter = (xUp + xLow) / 2.0;
+  const double xErr = h->GetBinWidth(1);
 
   m_c->cd();
   h->Draw();
@@ -402,19 +405,18 @@ void SigBkgPlotter::SigmaAndPrint(TString name, double N, bool showLowHigh)
   leg.Draw();
 
   TPaveText tres(0.77, 0.79 - 0.055 * (showLowHigh ? 5 : 3), 0.98, 0.79, "brNDC");
-  tres.AddText(FormatNumberWithError(TString::Format("#sigma_{%lg}", N), xUp - xLow, h->GetBinWidth(1)));
+  tres.AddText(FormatNumberWithError(TString::Format("#sigma_{%lg}", N), xWidth, xErr));
   if (showLowHigh) {
     tres.AddText(TString::Format("Left = %.1lf%%", accuLow / samples * 100.0));
     tres.AddText(TString::Format("Right = %.1lf%%", accuUp / samples * 100.0));
   }
-  tres.AddText(FormatNumberWithError(TString::Format("#sigma_{%lg} center", N),
-                                     (xLow + xUp) / 2.0, h->GetBinWidth(1)));
+  tres.AddText(FormatNumberWithError(TString::Format("#sigma_{%lg} center", N), xCenter, xErr));
   tres.AddText(FormatNumberWithError("Mean", h->GetMean(), h->GetMeanError()));
   SetPaveStyle(tres);
   tres.Draw();
 
-  cout << h->GetName() << " sigma" << N << " = " << (xUp - xLow) << " +- " << h->GetBinWidth(1)
-       << ", center = " << ((xLow + xUp) / 2) << " +- " << h->GetBinWidth(1) << endl;
+  cout << h->GetName() << " sigma" << N << " = " << xWidth << " +- " << xErr
+       << ", center = " << xCenter << " +- " << xErr << endl;
 
   if (m_logScale) m_c->SetLogy();
   m_c.PrintPage(h->GetTitle());

@@ -336,6 +336,13 @@ varsMCK3pi = [x for x in varsK3pi if RE_MC_VARS.match(x)]
 ma.variablesToNtuple('B0:MCKpi', varsMCKpi, filename=args.output, treename='MCKpi', path=main)
 ma.variablesToNtuple('B0:MCK3pi', varsMCK3pi, filename=args.output, treename='MCK3pi', path=main)
 
+# FS-particles lists for tracks study
+varsFS = ["isCloneTrack", "mcE", "mcP", "mcPT", "mcPX", "mcPY", "mcPZ",
+          "mcPDG", "isSignal", "nTracks"]
+varsFS += vc.track_hits
+if HAS_VTX: varsFS.append('nVTXHits')
+ma.variablesToNtuple('pi+:soft', varsFS, filename=args.output, treename='Tracks', path=main)
+
 # Process the events
 main.add_module('ProgressBar')
 b2.process(main)

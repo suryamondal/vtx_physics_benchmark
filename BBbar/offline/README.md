@@ -19,3 +19,8 @@ compared with
 ./EfficiencyComparison.py TITLE1 file1.root TITLE2 file2.root [...]
 ```
 This will output a `effcomp.pdf` file in the same directory as the first file.
+
+## Study of tracks
+Run `./TracksStudy.sh path/to/ntuple.root` to produce track-related plots,
+hopefully useful to understand issues with VTX tracking. Here are also some
+best-candidate selection study plots.

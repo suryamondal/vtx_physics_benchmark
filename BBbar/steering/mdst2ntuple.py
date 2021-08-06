@@ -338,7 +338,7 @@ ma.variablesToNtuple('B0:MCK3pi', varsMCK3pi, filename=args.output, treename='MC
 
 # FS-particles lists for tracks study
 varsFS = ["isCloneTrack", "mcE", "mcP", "mcPT", "mcPX", "mcPY", "mcPZ",
-          "mcPDG", "isSignal", "nTracks"]
+          "mcPDG", "isSignal", "isSignalAcceptWrongFSPs", "nTracks"]
 varsFS += vc.track_hits
 if HAS_VTX: varsFS.append('nVTXHits')
 ma.variablesToNtuple('pi+:soft', varsFS, filename=args.output, treename='Tracks', path=main)

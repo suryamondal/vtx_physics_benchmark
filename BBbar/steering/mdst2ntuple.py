@@ -218,6 +218,11 @@ vx.treeFit(list_name='B0:good', conf_level=conf_level_cut,
 ma.applyCuts('B0:good', cuts["fit"], path=main)
 ma.matchMCTruth(list_name='B0:good', path=main)
 
+# Best-candidate selection (does not cut, only adds the rank variable)
+ma.rankByHighest("B0:good", "M", allowMultiRank=True, path=main)
+ma.rankByHighest("B0:good", "daughter(0,abs(dM))", allowMultiRank=True, outputVariable="Dst_dM_rank", path=main)
+ma.rankByHighest("B0:good", "daughter(0,daughter(0,abs(dM)))", allowMultiRank=True, outputVariable="D0_dM_rank", path=main)
+
 # Variables of the event
 eventWiseVariables = ['IPX', 'IPY', 'IPZ', 'genIPX', 'genIPY', 'genIPZ',
                       'nTracks', 'beamE', 'beamPx', 'beamPy', 'beamPz']
@@ -289,10 +294,13 @@ for v in ['px', 'py', 'pz', 'p']:
 
 # Angle between pi and K
 vm.addAlias('Kpi_MCAngle', 'daughter(0,daughter(0,mcDaughterAngle(0,1)))')
+vm.addAlias("B0_M_rank", "extraInfo(M_rank)")
+vm.addAlias("Dst_M_rank", "extraInfo(Dst_dM_rank)")
+vm.addAlias("D0_M_rank", "extraInfo(D0_dM_rank)")
 
 # Final output variables
-varsKpi += cms_variables + eventWiseVariables + ['Kpi_MCAngle']
-varsK3pi += cms_variables + eventWiseVariables
+varsKpi += cms_variables + eventWiseVariables + ['Kpi_MCAngle', "B0_M_rank", "Dst_M_rank", "D0_M_rank"]
+varsK3pi += cms_variables + eventWiseVariables + ["B0_M_rank", "Dst_M_rank", "D0_M_rank"]
 varsKpi.sort()  # I want to be able to find what I need quickly
 varsK3pi.sort()
 if args.printVars:

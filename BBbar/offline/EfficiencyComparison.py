@@ -18,8 +18,7 @@ if __name__ == "__main__":
         os.chdir(SCRIPT_DIR)
         for x, y in zip(args[::2], args[1::2]):
             print(f"{x} -> {y}")
-        output = os.path.relpath(os.path.join(
-            os.path.dirname(os.path.abspath(args[1])), "effcomp.pdf"))
+        output = os.path.join(os.path.dirname(os.path.abspath(args[1])), "effcomp.pdf")
         print(f"Output = {output}")
         titles = ",".join(f'"{x}"' for x in args[::2])
         files = ",".join(f'"{x}"' for x in args[1::2])

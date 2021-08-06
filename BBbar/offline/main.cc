@@ -190,7 +190,7 @@ void DoPlot(SigBkgPlotter& plt, bool isK3pi)
 }
 
 void DoCandAna(tuple<TH2D*,UInt_t,UInt_t> noCuts, tuple<TH2D*,UInt_t,UInt_t> cuts,
-               UInt_t nMC, PDFCanvas& c, TString title)
+               tuple<TH2D*,UInt_t,UInt_t> bc, UInt_t nMC, PDFCanvas& c, TString title)
 {
   auto h = get<0>(noCuts), hCuts = get<0>(cuts);
   if (h && hCuts) {
@@ -206,20 +206,22 @@ void DoCandAna(tuple<TH2D*,UInt_t,UInt_t> noCuts, tuple<TH2D*,UInt_t,UInt_t> cut
     c.PrintPage(hCuts->GetTitle());
   }
 
-  double ns = get<1>(noCuts), nb = get<2>(noCuts), nsc = get<1>(cuts), nbc = get<2>(cuts);
-  double nt = ns + nb, ntc = nsc + nbc;
+  double ns = get<1>(noCuts), nb = get<2>(noCuts);
+  double nsc = get<1>(cuts), nbc = get<2>(cuts);
+  double nsb = get<1>(bc), nbb = get<2>(bc);
+  double nt = ns + nb, ntc = nsc + nbc, ntb = nsb + nbb;
   TString fs;
-  cout << "             | w/o cuts | w/ cuts  | Cut eff." << endl;
-  cout << "   ----------+----------+----------+----------" << endl;
-  fs.Form("     Total   |%10.0f|%10.0f|%9.4g%%", nt, ntc, 100.0 * ntc / nt);
+  cout << "             | w/o cuts | w/ cuts  | Cut eff. | w/ b.c.  | b.c. eff." << endl;
+  cout << "   ----------+----------+----------+----------+----------+----------" << endl;
+  fs.Form("     Total   |%10.0f|%10.0f|%9.4g%%|%10.0f|%9.4g%%", nt, ntc, 100.0 * ntc / nt, ntb, 100.0 * ntb / ntc);
   cout << fs << endl;
-  fs.Form("     Signal  |%10.0f|%10.0f|%9.4g%%", ns, nsc, 100.0 * nsc / ns);
+  fs.Form("     Signal  |%10.0f|%10.0f|%9.4g%%|%10.0f|%9.4g%%", ns, nsc, 100.0 * nsc / ns, nsb, 100.0 * nsb / nsc);
   cout << fs << endl;
-  fs.Form("   Background|%10.0f|%10.0f|%9.4g%%", nb, nbc, 100.0 * nbc / nb);
+  fs.Form("   Background|%10.0f|%10.0f|%9.4g%%|%10.0f|%9.4g%%", nb, nbc, 100.0 * nbc / nb, nbb, 100.0 * nbb / nbc);
   cout << fs << endl;
-  fs.Form("      MC     |%10u|%10u|", nMC, nMC);
+  fs.Form("      MC     |%10u|%10u|          |%10u|", nMC, nMC, nMC);
   cout << fs << endl;
-  fs.Form("  Efficiency |%9.4g%%|%9.4g%%|", 100.0 * ns / nMC, 100.0 * nsc / nMC);
+  fs.Form("  Efficiency |%9.4g%%|%9.4g%%|          |%9.4g%%|", 100.0 * ns / nMC, 100.0 * nsc / nMC, 100.0 * nsb / nMC);
   cout << fs << endl;
 }
 
@@ -238,6 +240,7 @@ int main(int argc, char* argv[])
   }
   TString outFileName = inFileName(0, inFileName.Length() - 5);
   TString outFileNameCuts = inFileName(0, inFileName.Length() - 5) + "_offline_cuts";
+  TString outFileNameBC = inFileName(0, inFileName.Length() - 5) + "_best_candidate";
 
   RDataFrame dfKpi("Kpi", inFileName.Data());
   RDataFrame dfK3pi("K3pi", inFileName.Data());
@@ -248,38 +251,48 @@ int main(int argc, char* argv[])
   auto dfDefK3pi = defineVariables(dfK3pi, true);
   auto dfCutKpi = applyOfflineCuts(dfDefKpi, false);
   auto dfCutK3pi = applyOfflineCuts(dfDefK3pi, true);
+  auto dfBCKpi = dfCutKpi.Filter("B0_M_rank == 1", "Best Candidate");
+  auto dfBCK3pi = dfCutK3pi.Filter("B0_M_rank == 1", "Best Candidate");
 
   gStyle->SetOptStat(0); // TODO If more style lines appear, make a function
   PDFCanvas canvas(outFileName + ".pdf", "c"); // Default size is fine (I wrote it!)
   PDFCanvas canvasCuts(outFileNameCuts + ".pdf", "cc");
+  PDFCanvas canvasBC(outFileNameBC + ".pdf", "ccb");
   PDFCanvas canvasCand(outFileName + "_candidates.pdf", "ccc");
 
   SigBkgPlotter plotterKpi(dfDefKpi, dfMCKpi, SignalCondition, canvas, "Kpi", "K#pi");
   SigBkgPlotter plotterK3pi(dfDefK3pi, dfMCK3pi, SignalCondition, canvas, "K3pi", "K3#pi");
   SigBkgPlotter plotterKpiCuts(dfCutKpi, dfMCKpi, SignalCondition, canvasCuts, "KpiCuts", "K#pi");
   SigBkgPlotter plotterK3piCuts(dfCutK3pi, dfMCK3pi, SignalCondition, canvasCuts, "K3piCuts", "K3#pi");
+  SigBkgPlotter plotterKpiBC(dfBCKpi, dfMCKpi, SignalCondition, canvasBC, "KpiBC", "K#pi");
+  SigBkgPlotter plotterK3piBC(dfBCK3pi, dfMCK3pi, SignalCondition, canvasBC, "K3piBC", "K3#pi");
 
   bookHistos(plotterKpi, false);
   bookHistos(plotterK3pi, true);
   bookHistos(plotterKpiCuts, false);
   bookHistos(plotterK3piCuts, true);
+  bookHistos(plotterKpiBC, false);
+  bookHistos(plotterK3piBC, true);
 
   cout << "Processing Kpi..." << endl;
   auto nMCKpi = dfMCKpi.Count();
   auto hCandKpi = CutEfficiencyAnalysis(dfDefKpi);
   auto hCandKpiCuts = CutEfficiencyAnalysis(dfCutKpi);
-  DoCandAna(hCandKpi, hCandKpiCuts, *nMCKpi, canvasCand, "K#pi");
+  auto hCandKpiBC = CutEfficiencyAnalysis(dfBCKpi);
+  DoCandAna(hCandKpi, hCandKpiCuts, hCandKpiBC, *nMCKpi, canvasCand, "K#pi");
 
   cout << "Processing K3pi..." << endl;
   auto nMCK3pi = dfMCK3pi.Count();
   auto hCandK3pi = CutEfficiencyAnalysis(dfDefK3pi);
   auto hCandK3piCuts = CutEfficiencyAnalysis(dfCutK3pi);
-  DoCandAna(hCandK3pi, hCandK3piCuts, *nMCK3pi, canvasCand, "K3#pi");
+  auto hCandK3piBC = CutEfficiencyAnalysis(dfBCK3pi);
+  DoCandAna(hCandK3pi, hCandK3piCuts, hCandK3piBC, *nMCK3pi, canvasCand, "K3#pi");
 
   cout << "Total" << endl;
   DoCandAna(
     make_tuple(nullptr, get<1>(hCandKpi) + get<1>(hCandK3pi), get<2>(hCandKpi) + get<2>(hCandK3pi)),
     make_tuple(nullptr, get<1>(hCandKpiCuts) + get<1>(hCandK3piCuts), get<2>(hCandKpiCuts) + get<2>(hCandK3piCuts)),
+    make_tuple(nullptr, get<1>(hCandKpiBC) + get<1>(hCandK3piBC), get<2>(hCandKpiBC) + get<2>(hCandK3piBC)),
     *nMCKpi + *nMCK3pi, canvasCand, "");
 
   // Factors determined empirically, use 1 (or comment lines) for auto
@@ -298,4 +311,8 @@ int main(int argc, char* argv[])
   DoPlot(plotterKpiCuts, false);
   outRootFile.mkdir("K3piCuts", "K3piCuts", true)->cd();
   DoPlot(plotterK3piCuts, true);
+  outRootFile.mkdir("KpiBC", "KpiBC", true)->cd();
+  DoPlot(plotterKpiBC, false);
+  outRootFile.mkdir("K3piBC", "K3piBC", true)->cd();
+  DoPlot(plotterK3piBC, true);
 }

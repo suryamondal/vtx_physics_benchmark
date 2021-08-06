@@ -77,7 +77,7 @@ void EfficiencyComparison(TString outPDF, const vector<TString>& filesNames,
   }
 
   // Loop over (known) directories
-  for (const TString& dirName : {"KpiCuts", "K3piCuts"}) {
+  for (const TString& dirName : {"KpiBC", "K3piBC"}) {
     vector<TDirectory*> dirs;
     for (const auto& f : files) {
       TDirectory* dir = f->GetDirectory(dirName);

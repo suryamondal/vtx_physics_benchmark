@@ -68,6 +68,9 @@ SigBkgPlotter::DefineDF defineVariables(RDataFrame& df, bool isK3pi)
     {"d0Pull",     "z0Pull"},
     {"d0Residual", "z0Residual"},
     "$a * $b"); // Residuals from pulls, not straightforward but works
+  ddf = ddf.Define("B0_M_rank_percent", "(B0_M_rank - 1) * 100 / (__ncandidates__ == 1 ? 1 : __ncandidates__ - 1)")
+           .Define("Dst_dM_rank_percent", "(Dst_dM_rank - 1) * 100 / (__ncandidates__ == 1 ? 1 : __ncandidates__ - 1)")
+           .Define("D0_dM_rank_percent", "(D0_dM_rank - 1) * 100 / (__ncandidates__ == 1 ? 1 : __ncandidates__ - 1)");
   for (const TString& p : FSParts)
     ddf = ddf.Alias(
       (p + "_firstVXDLayer").Data(),
@@ -145,6 +148,11 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   plt.Histo1D(FSParts, "z0Pull", "z_{0$p} pull;(MC - meas) / #sigma_{meas}", 100, -10, 10);
 
   // ==== Efficiency
+  // Best-candidates selection/ranking
+  plt.Histo1D({"B0"}, "M_rank", "Rank by max M_{$p};Rank", 30, 0.5, 30.5);
+  plt.Histo1D({"B0"}, "M_rank_percent", "Rank by max M_{$p};Rank [%]", 101, -0.5, 100.5);
+  plt.Histo1D({"Dst", "D0"}, "dM_rank", "Rank by min |#deltaM_{$p}|;Rank", 30, 0.5, 30.5);
+  plt.Histo1D({"Dst", "D0"}, "dM_rank_percent", "Rank by min |#deltaM_{$p}|;Rank [%]", 101, -0.5, 100.5);
   // p
   plt.EffH1D({"B0"}, "mcP", "Efficiency vs true p_{$p};True p_{$p} [GeV/c]", 20, 1, 2);
   plt.EffH1D({"Dst", "D0"}, "mcP", "Efficiency vs true p_{$p};True p_{$p} [GeV/c]", 20, 0, 3.5);

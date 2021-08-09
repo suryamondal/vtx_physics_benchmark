@@ -208,7 +208,7 @@ ma.reconstructDecay('D*+:good -> D0:merged pi+:soft', cut=cuts["D*"], path=main)
 ma.variablesToExtraInfo("D*+:good", variables={'M': 'M_preFit'}, path=main)
 
 # B0 reconstruction
-ma.reconstructDecay('B0:good -> D*-:good mu+:myTrk', cut=cuts["B0"], path=main)
+ma.reconstructDecay('B0:good -> D*-:good mu+:myTrk ?nu', cut=cuts["B0"], path=main)
 ma.variablesToExtraInfo("B0:good", variables={"M": "M_preFit"}, path=main)
 
 # Tree fitting and final ajustments
@@ -220,6 +220,7 @@ ma.matchMCTruth(list_name='B0:good', path=main)
 
 # Best-candidate selection (does not cut, only adds the rank variable)
 ma.rankByHighest("B0:good", "M", allowMultiRank=True, path=main)
+ma.rankByHighest("B0:good", "chiProb", allowMultiRank=True, path=main)
 ma.rankByLowest("B0:good", "daughter(0,abs(dM))", allowMultiRank=True, outputVariable="Dst_dM_rank", path=main)
 ma.rankByLowest("B0:good", "daughter(0,daughter(0,abs(dM)))", allowMultiRank=True, outputVariable="D0_dM_rank", path=main)
 
@@ -295,12 +296,13 @@ for v in ['px', 'py', 'pz', 'p']:
 # Angle between pi and K
 vm.addAlias('Kpi_MCAngle', 'daughter(0,daughter(0,mcDaughterAngle(0,1)))')
 vm.addAlias("B0_M_rank", "extraInfo(M_rank)")
+vm.addAlias("B0_chiProb_rank", "extraInfo(chiProb_rank)")
 vm.addAlias("Dst_dM_rank", "extraInfo(Dst_dM_rank)")
 vm.addAlias("D0_dM_rank", "extraInfo(D0_dM_rank)")
 
 # Final output variables
-varsKpi += cms_variables + eventWiseVariables + ['Kpi_MCAngle', "B0_M_rank", "Dst_dM_rank", "D0_dM_rank"]
-varsK3pi += cms_variables + eventWiseVariables + ["B0_M_rank", "Dst_dM_rank", "D0_dM_rank"]
+varsKpi += cms_variables + eventWiseVariables + ['Kpi_MCAngle', "B0_M_rank", "B0_chiProb_rank", "Dst_dM_rank", "D0_dM_rank"]
+varsK3pi += cms_variables + eventWiseVariables + ["B0_M_rank", "B0_chiProb_rank", "Dst_dM_rank", "D0_dM_rank"]
 varsKpi.sort()  # I want to be able to find what I need quickly
 varsK3pi.sort()
 if args.printVars:

@@ -69,6 +69,7 @@ SigBkgPlotter::DefineDF defineVariables(RDataFrame& df, bool isK3pi)
     {"d0Residual", "z0Residual"},
     "$a * $b"); // Residuals from pulls, not straightforward but works
   ddf = ddf.Define("B0_M_rank_percent", "(B0_M_rank - 1) * 100 / (__ncandidates__ == 1 ? 1 : __ncandidates__ - 1)")
+           .Define("B0_chiProb_rank_percent", "(B0_chiProb_rank - 1) * 100 / (__ncandidates__ == 1 ? 1 : __ncandidates__ - 1)")
            .Define("Dst_dM_rank_percent", "(Dst_dM_rank - 1) * 100 / (__ncandidates__ == 1 ? 1 : __ncandidates__ - 1)")
            .Define("D0_dM_rank_percent", "(D0_dM_rank - 1) * 100 / (__ncandidates__ == 1 ? 1 : __ncandidates__ - 1)");
   for (const TString& p : FSParts)
@@ -151,6 +152,8 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   // Best-candidates selection/ranking
   plt.Histo1D({"B0"}, "M_rank", "Rank by max M_{$p};Rank", 30, 0.5, 30.5);
   plt.Histo1D({"B0"}, "M_rank_percent", "Rank by max M_{$p};Rank [%]", 101, -0.5, 100.5);
+  plt.Histo1D({"B0"}, "chiProb_rank", "Rank by max #chi^{2}_{$p};Rank", 30, 0.5, 30.5);
+  plt.Histo1D({"B0"}, "chiProb_rank_percent", "Rank by max #chi^{2}_{$p};Rank [%]", 101, -0.5, 100.5);
   plt.Histo1D({"Dst", "D0"}, "dM_rank", "Rank by min |#deltaM_{$p}|;Rank", 30, 0.5, 30.5);
   plt.Histo1D({"Dst", "D0"}, "dM_rank_percent", "Rank by min |#deltaM_{$p}|;Rank [%]", 101, -0.5, 100.5);
   // p

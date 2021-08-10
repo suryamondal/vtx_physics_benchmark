@@ -174,6 +174,12 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   plt.EffH1D(CompParts, "mcPhi", "Efficiency vs true #phi_{$p};True #phi_{$p} [#circ]", 20, -180, 180, 180 / M_PI);
   if (!isK3pi)
     plt.EffH1D("Kpi_MCAngle", "Eff. vs true K-to-#pi angle;True angle between K and #pi [#circ]", 20, 40, 180, 180 / M_PI);
+
+  // pi1 strange feature (worse VTX resolution)
+  if (isK3pi) {
+    plt.Histo2D(FSHParts, "mcPT", "d0Residual", "d_{0$p} residual vs p_{T$p};p_{T} [GeV];MC - meas [cm]", 25, 0, 1.5, 25, -0.1, 0.1);
+    plt.Histo2D(FSHParts, "mcPT", "z0Residual", "z_{0$p} residual vs p_{T$p};p_{T} [GeV];MC - meas [cm]", 25, 0, 1.5, 25, -0.1, 0.1);
+  }
 }
 
 void DoPlot(SigBkgPlotter& plt, bool isK3pi)
@@ -309,8 +315,10 @@ int main(int argc, char* argv[])
   // Factors determined empirically, use 1 (or comment lines) for auto
   plotterKpi.SetBkgDownScaleFactor(10);
   plotterKpiCuts.SetBkgDownScaleFactor(10);
+  plotterKpiBC.SetBkgDownScaleFactor(10);
   plotterK3pi.SetBkgDownScaleFactor(50);
   plotterK3piCuts.SetBkgDownScaleFactor(50);
+  plotterK3piBC.SetBkgDownScaleFactor(50);
 
   TFile outRootFile(outFileName + "_efficiency.root", "recreate");
 

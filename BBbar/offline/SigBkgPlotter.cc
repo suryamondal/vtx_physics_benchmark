@@ -155,7 +155,7 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
   if (sig->GetDimension() == 2) {
     TString sigTitle = sig->GetTitle(), bkgTitle = bkg->GetTitle();
     sig->SetTitle(sig->GetTitle() + " - Signal"TS);
-    bkg->SetTitle(bkg->GetTitle() + " - Misreco"TS);
+    bkg->SetTitle(bkg->GetTitle() + " - Bad cand."TS);
 
     m_c->Clear();
     m_c->Divide(2);
@@ -193,9 +193,9 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
     SetPaveStyle(oufBkg);
     oufBkg.Draw();
 
-    double hmax = TMath::Max(sig->GetMaximum(), bkg->GetMaximum());
-    sig->SetMaximum(hmax);
-    bkg->SetMaximum(hmax);
+    // double hmax = TMath::Max(sig->GetMaximum(), bkg->GetMaximum());
+    // sig->SetMaximum(hmax);
+    // bkg->SetMaximum(hmax);
 
     m_c.PrintPage(sigTitle);
     m_c->Clear();
@@ -209,7 +209,7 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
     bkg->SetFillStyle(3454);
 
     // Scale down bkg if too high
-    TString bkgLabel = "Misreco";
+    TString bkgLabel = "Bad cand.";
     int scale = 1;
     if (!m_normalizeHistos) {
       if (m_bkgDownScale == 1) {
@@ -222,7 +222,7 @@ void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
     }
     if (scale != 1) {
       bkg->Scale(1.0 / scale);
-      bkgLabel.Form("Misreco#divide%d", scale);
+      bkgLabel.Form("Bad #divide%d", scale);
     }
 
     s.Add(sig);

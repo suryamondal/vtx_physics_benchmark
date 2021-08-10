@@ -77,7 +77,7 @@ void EfficiencyComparison(TString outPDF, const vector<TString>& filesNames,
   }
 
   // Loop over (known) directories
-  for (const TString& dirName : {"KpiBC", "K3piBC"}) {
+  for (const TString& dirName : {"KpiCuts", "K3piBC"}) {
     vector<TDirectory*> dirs;
     for (const auto& f : files) {
       TDirectory* dir = f->GetDirectory(dirName);
@@ -109,6 +109,7 @@ void EfficiencyComparison(TString outPDF, const vector<TString>& filesNames,
       hMC->SetMinimum(0.0001); hMC->SetMaximum(1);
       hMC->Draw("hist");
       setFont(hMC);
+      hMC->GetYaxis()->SetTitle("Efficiency");
 
       TLegend leg(0.86, 0.91 - 0.06 * (hists.size() + 1), 0.98, 0.91);
       leg.AddEntry(hMC, "MC", "F");

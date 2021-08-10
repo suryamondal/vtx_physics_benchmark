@@ -149,7 +149,7 @@ public:
   TCanvas* operator->() { return &c; }
   TCanvas* operator*() { return &c; }
 
-  void PrintHistos(TString title, initializer_list<tuple<TH1*,TString,Color_t>> histos) {
+  void PrintHistos(TString title, initializer_list<tuple<TH1*,TString,Color_t>> histos, double max = 0.0) {
     TH1* h0 = get<0>(*histos.begin());
     THStack hs("hs", title + ";" + h0->GetXaxis()->GetTitle() + ";" + h0->GetYaxis()->GetTitle());
     TLegend leg(0.8, 0.91 - 0.05 * histos.size(), 0.98, 0.91);
@@ -160,16 +160,20 @@ public:
       hs.Add(h, "hist");
       leg.AddEntry(h, label, "L");
     }
+    if (max > 0.0)
+      hs.SetMaximum(max);
     c.cd();
     hs.Draw("nostack");
     leg.Draw();
     Print(title);
   }
 
-  void PrintHisto(TH1* h, bool line = false) {
+  void PrintHisto(TH1* h, bool line = false, double max = 0.0) {
     c.cd();
     h->SetFillColor(MyBlue);
     h->SetLineColor(kBlack);
+    if (max > 0.0)
+      h->SetMaximum(max);
     h->Draw("hist");
     if (line) {
       TLine ln(0, h->GetMinimum(), 0, h->GetMaximum() * (1 + gStyle->GetHistTopMargin()));
@@ -204,16 +208,17 @@ void TracksStudy(TString filePath)
 
   const TString outFileName = filePath(0, filePath.Length() - 5) + "_tracks.pdf";
   gStyle->SetOptStat(0);
+  gStyle->SetHistLineWidth(2);
   PDFCanvas c("c", outFileName);
 
   { // Tracks stuff
     PerParticleStat<TH1F> tracksVsPT("vsPT", "Tracks vs p_{T};p_{T} [GeV/c];Tracks / bin", 100, 0, 3),
                           clonesVsPT("clonesVsPT", "Clone tracks vs p_{T};p_{T} [GeV/c];Tracks / bin", 100, 0, 3),
                           badsVsPT("badsVsPT", "Bad tracks vs p_{T};p_{T} [GeV/c];Tracks / bin", 100, 0, 3),
-                          nTracks("nTracks", "Tracks per event;Number of tracks;Events / bin", 25, -0.5, 24.5),
+                          nTracks("nGood", "Good tracks per event;Number of tracks;Events / bin", 25, -0.5, 24.5),
                           nClones("nClones", "Clone tracks per event;Number of tracks;Events / bin", 25, -0.5, 24.5),
                           nBad("nBad", "Bad tracks per event;Number of tracks;Events / bin", 25, -0.5, 24.5);
-    TH1F totalTracks("nTracks", "Tracks per event;Number of tracks;Events / bin", 25, -0.5, 24.5),
+    TH1F totalTracks("nGood", "Good tracks per event;Number of tracks;Events / bin", 25, -0.5, 24.5),
          totalClones("nClones", "Clone tracks per event;Number of tracks;Events / bin", 25, -0.5, 24.5),
          totalBad("nBad", "Bad tracks per event;Number of tracks;Events / bin", 25, -0.5, 24.5);
     { // Loop over ntuple and gather data in histograms
@@ -233,7 +238,8 @@ void TracksStudy(TString filePath)
         EvtID evtid = make_tuple(*exp, *run, *evt);
         int pdg = (-10000 < *mcPDG && *mcPDG < 10000) ? *mcPDG : 0.0;
         perEventData[evtid].nTracks[pdg]++;
-        tracksVsPT[pdg].Fill(*mcPT);
+        if (*isSignal > 0.5 && *isCloneTrack < 0.5)
+          tracksVsPT[pdg].Fill(*mcPT);
         if (!(*isSignal > 0.5)) { // Badly reconstructed + completely fake tracks
           perEventData[evtid].nBadTracks[pdg]++;
           badsVsPT[pdg].Fill(*mcPT);
@@ -247,11 +253,11 @@ void TracksStudy(TString filePath)
       for (const auto& t : perEventData) {
         const auto& data = t.second;
         for (int pdg : PDGIDs) {
-          nTracks[pdg].Fill(data.nTracks[pdg]);
+          nTracks[pdg].Fill(data.nTracks[pdg] - data.nBadTracks[pdg] - data.nCloneTracks[pdg]);
           nClones[pdg].Fill(data.nCloneTracks[pdg]);
           nBad[pdg].Fill(data.nBadTracks[pdg]);
         }
-        totalTracks.Fill(data.nTracks.total());
+        totalTracks.Fill(data.nTracks.total() - data.nBadTracks.total() - data.nCloneTracks.total());
         totalClones.Fill(data.nCloneTracks.total());
         totalBad.Fill(data.nBadTracks.total());
       }
@@ -260,30 +266,31 @@ void TracksStudy(TString filePath)
     for (int pdg: PDGIDs) {
       const TString& pTitle = PDGTitles.at(pdg);
       c.PrintHistos(pTitle + " tracks per event", {
-        {&nTracks[pdg], "Total", kBlack},
+        {&nTracks[pdg], "Good", kBlack},
         {&nClones[pdg], "Clones", MyBlue},
         {&nBad[pdg], "Bad/fake", MyRed}});
       c.PrintHistos(pTitle + " tracks vs p_{T}", {
-        {&tracksVsPT[pdg], "Total", kBlack},
+        {&tracksVsPT[pdg], "Good", kBlack},
         {&clonesVsPT[pdg], "Clones", MyBlue},
         {&badsVsPT[pdg], "Bad/fake", MyRed}});
     }
-    c.PrintHistos("Total tracks per event", {
-      {&totalTracks, "Total", kBlack},
+    c.PrintHistos("Tracks per event", {
+      {&totalTracks, "Good", kBlack},
       {&totalClones, "Clones", MyBlue},
-      {&totalBad, "Bad/fake", MyRed}});
+      {&totalBad, "Bad/fake", MyRed}}, 8500);
     TH1F* totalTracksVsPT = tracksVsPT.total();
     TH1F* totalClonesVsPT = clonesVsPT.total();
     TH1F* totalBadVsPT = badsVsPT.total();
-    c.PrintHistos("All tracks vs p_{T}", {
-      {totalTracksVsPT, "Total", kBlack},
+    c.PrintHistos("Tracks vs p_{T}", {
+      {totalTracksVsPT, "Good", kBlack},
       {totalClonesVsPT, "Clones", MyBlue},
-      {totalBadVsPT, "Bad/fake", MyRed}});
+      {totalBadVsPT, "Bad/fake", MyRed}}, 5300);
     delete totalTracksVsPT; delete totalClonesVsPT; delete totalBadVsPT;
   }
 
   // Best candidate selection stuff
   gStyle->SetOptStat(110000);
+  gStyle->SetHistLineWidth(1);
   for (const TString channel : {"Kpi", "K3pi"}) {
     const TString chn = channel + "_", cht = (channel + " - ").ReplaceAll("pi", "#pi");
     TH1F hSigCand(chn + "nSigCand", cht + "Signal candidates;Number of signal candidates;Events / bin", 10, -0.5, 9.5),

@@ -7,7 +7,7 @@ from collections import namedtuple
 RE_NTUPLE = re.compile(r"Info in <TCanvas::Print>: pdf file (.*?) has been created")
 RE_CHANNEL = re.compile(r"Processing (\w+)\.\.\.")
 RE_TR = re.compile(r" *([^\s\|]+) *\|(?: *[^ \|]+ *\|){3} *([^\s\|]+)")
-RE_SIGMA68 = re.compile(r"(\w+)BC_sig_(\w+) sigma68 = ([0-9\.-]+) \+- ([0-9\.-]+), center = ([0-9\.-]+) \+- ([0-9\.-]+)")
+RE_SIGMA68 = re.compile(r"(\w+)Cuts_sig_(\w+) sigma68 = ([0-9\.-]+) \+- ([0-9\.-]+), center = ([0-9\.-]+) \+- ([0-9\.-]+)")
 RE_COUNT = re.compile(r"_\d+$")
 
 

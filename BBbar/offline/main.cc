@@ -147,6 +147,8 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   // Pulls
   plt.Histo1D(FSParts, "d0Pull", "d_{0$p} pull;(MC - meas) / #sigma_{meas}", 100, -10, 10);
   plt.Histo1D(FSParts, "z0Pull", "z_{0$p} pull;(MC - meas) / #sigma_{meas}", 100, -10, 10);
+  plt.Histo1D(FSParts, "d0Pull", "d_{0$p} pull;(MC - meas) / #sigma_{meas}", 500, -10, 10, 1, true);
+  plt.Histo1D(FSParts, "z0Pull", "z_{0$p} pull;(MC - meas) / #sigma_{meas}", 500, -10, 10, 1, true);
 
   // ==== Efficiency
   // Best-candidates selection/ranking
@@ -174,12 +176,6 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   plt.EffH1D(CompParts, "mcPhi", "Efficiency vs true #phi_{$p};True #phi_{$p} [#circ]", 20, -180, 180, 180 / M_PI);
   if (!isK3pi)
     plt.EffH1D("Kpi_MCAngle", "Eff. vs true K-to-#pi angle;True angle between K and #pi [#circ]", 20, 40, 180, 180 / M_PI);
-
-  // pi1 strange feature (worse VTX resolution)
-  if (isK3pi) {
-    plt.Histo2D(FSHParts, "mcPT", "d0Residual", "d_{0$p} residual vs p_{T$p};p_{T} [GeV];MC - meas [cm]", 25, 0, 1.5, 25, -0.1, 0.1);
-    plt.Histo2D(FSHParts, "mcPT", "z0Residual", "z_{0$p} residual vs p_{T$p};p_{T} [GeV];MC - meas [cm]", 25, 0, 1.5, 25, -0.1, 0.1);
-  }
 }
 
 void DoPlot(SigBkgPlotter& plt, bool isK3pi)
@@ -203,6 +199,10 @@ void DoPlot(SigBkgPlotter& plt, bool isK3pi)
   for (const TString &part : FSParts) {
     plt.SigmaAndPrint(part + "_d0Residual_2", 68, 5);
     plt.SigmaAndPrint(part + "_z0Residual_2", 68, 5);
+  }
+  for (const TString &part : FSParts) {
+    plt.SigmaAndPrint(part + "_d0Pull_2", 68, 5);
+    plt.SigmaAndPrint(part + "_z0Pull_2", 68, 5);
   }
 }
 

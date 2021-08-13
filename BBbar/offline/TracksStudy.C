@@ -301,10 +301,10 @@ void TracksStudy(TString filePath)
          hDst_massDiff(chn + "Dst_massDiff", cht + "#DeltaM = M_{D*} - M_{D^{0}};#DeltaM - #DeltaM_{sig} [GeV/c^{2}];Candidates / bin", 100, -0.02, 0.02),
          hDst_pCM(chn + "Dst_pCM", cht + "p_{CM,D*};p_{CM} - p_{CM,sig} [GeV/c];Candidates / bin", 100, -0.2, 0.2),
          hD0_M(chn + "D0_M", cht + "M_{D^{0}};M - M_{sig} [GeV/c^{2}];Candidates / bin", 100, -0.05, 0.05),
-         hB0_dM(chn + "B0_dM", cht + "|#deltaM_{B^{0}}| = |M_{B^{0}} - M_{B^{0},PDG}|;|#deltaM| - |#deltaM_{sig}| [GeV/c^{2}];Candidates / bin", 100, -2, 3.5),
-         hDst_dM(chn + "Dst_dM", cht + "|#deltaM_{D*}| = |M_{D*} - M_{D*,PDG}|;|#deltaM| - |#deltaM_{sig}| [GeV/c^{2}];Candidates / bin", 100, -0.05, 0.1),
-         hDst_dMassDiff(chn + "Dst_dMassDiff", cht + "|#delta#DeltaM| = |#DeltaM - #DeltaM_{PDG}|;|#delta#DeltaM| - |#delta#DeltaM_{sig}| [GeV/c^{2}];Candidates / bin", 100, -0.1, 0.05),
-         hD0_dM(chn + "D0_dM", cht + "|#deltaM_{D^{0}}| = |M_{D^{0}} - M_{D^{0},PDG}|;|#deltaM| - |#deltaM_{sig}| [GeV/c^{2}];Candidates / bin", 100, -0.05, 0.1);
+         hB0_dM(chn + "B0_dM", cht + "|#deltaM_{B^{0}}| = |M_{B^{0}} - M_{B^{0},PDG}|;|#deltaM| - |#deltaM_{sig}| [GeV/c^{2}];Candidates / bin", 110, -2, 3.5),
+         hDst_dM(chn + "Dst_dM", cht + "|#deltaM_{D*}| = |M_{D*} - M_{D*,PDG}|;|#deltaM| - |#deltaM_{sig}| [GeV/c^{2}];Candidates / bin", 90, -0.05, 0.1),
+         hDst_dMassDiff(chn + "Dst_dMassDiff", cht + "|#delta#DeltaM| = |#DeltaM - #DeltaM_{PDG}|;|#delta#DeltaM| - |#delta#DeltaM_{sig}| [GeV/c^{2}];Candidates / bin", 90, -0.1, 0.05),
+         hD0_dM(chn + "D0_dM", cht + "|#deltaM_{D^{0}}| = |M_{D^{0}} - M_{D^{0},PDG}|;|#deltaM| - |#deltaM_{sig}| [GeV/c^{2}];Candidates / bin", 90, -0.05, 0.1);
     { // Loop over ntuple and gather data in histograms
       map<EvtID,EvtCandidatesData> perEventData;
 

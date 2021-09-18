@@ -6,7 +6,15 @@
 output/
 outputs/
 outputs.*/
+output
+outputs
+outputs.*
 *.root
 *.pdf
 kkmc_*.txt*
 *.log
+ana
+
+# C++ output
+*.o
+build/

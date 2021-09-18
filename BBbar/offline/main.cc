@@ -78,6 +78,30 @@ SigBkgPlotter::DefineDF defineVariables(RDataFrame& df, bool isK3pi)
       ddf.HasColumn((p + "_firstVTXLayer").Data()) ? (p + "_firstVTXLayer").Data()
                                                    : (p + "_firstPXDLayer").Data()
     );
+
+  // Define variables for piH and piL, which are pi1 and pi2 sorted by pT
+  if (isK3pi) {
+    for (const auto& sCol : df.GetColumnNames()) {
+      TString col = sCol;
+      if (!col.BeginsWith("pi1_")) continue;
+      col = col(4, col.Length() - 4);
+      TString newName, newExpr;
+      newName.Form("piH_%s", col.Data());
+      newExpr.Form("pi1_pt < pi2_pt ? pi2_%s : pi1_%s", col.Data(), col.Data());
+      // cout << newName << " = " << newExpr << endl;
+      ddf = ddf.Define(newName.Data(), newExpr.Data());
+      newName.Form("piL_%s", col.Data());
+      newExpr.Form("pi1_pt < pi2_pt ? pi1_%s : pi2_%s", col.Data(), col.Data());
+      // cout << newName << " = " << newExpr << endl;
+      ddf = ddf.Define(newName.Data(), newExpr.Data());
+    }
+    ddf = defineVarsForParticles(ddf, {"piH", "piL"},
+      {"d0Err",      "z0Err"},
+      {"d0Pull",     "z0Pull"},
+      {"d0Residual", "z0Residual"},
+      "$a * $b"); // Residuals from pulls, not straightforward but works
+  }
+
   return ddf.Alias("Dst_M_preFit", "Dst_extraInfo_M_preFit")
             .Alias("D0_M_preFit", "D0_extraInfo_M_preFit")
             .Alias("B0_M_preFit", "B0_extraInfo_M_preFit")
@@ -95,10 +119,10 @@ SigBkgPlotter::FilterDF applyOfflineCuts(SigBkgPlotter::DefineDF& df, bool isK3p
 void bookHistos(SigBkgPlotter& plt, bool isK3pi)
 {
   const auto& CompParts = CompositeParticles;
-  const auto& FSParts = isK3pi ? K3PiFSParticles : KPiFSParticles;
-  const auto& FSHParts = isK3pi ? K3PiFSHParticles : KPiFSHParticles;
-  // const auto& AllParts = isK3pi ? K3PiAllParticles : KPiAllParticles;
-  // const auto& Pions = isK3pi ? K3PiPions : KPiPions;
+  const auto& FSParts = isK3pi ? K3PiFSParticlesSorted : KPiFSParticles;
+  const auto& FSHParts = isK3pi ? K3PiFSHParticlesSorted : KPiFSHParticles;
+  // const auto& AllParts = isK3pi ? K3PiAllParticlesSorted : KPiAllParticles;
+  // const auto& Pions = isK3pi ? K3PiPionsSorted : KPiPions;
 
   // ==== Masses (and cuts variables)
   // Pre-fit
@@ -181,8 +205,8 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
 void DoPlot(SigBkgPlotter& plt, bool isK3pi)
 {
   const auto& CompParts = CompositeParticles;
-  const auto& FSParts = isK3pi ? K3PiFSParticles : KPiFSParticles;
-  // const auto& Pions = isK3pi ? K3PiPions : KPiPions;
+  const auto& FSParts = isK3pi ? K3PiFSParticlesSorted : KPiFSParticles;
+  // const auto& Pions = isK3pi ? K3PiPionsSorted : KPiPions;
 
   // ==== Histograms
   plt.PrintAll(true);

@@ -75,8 +75,8 @@ if __name__ == "__main__":
     with open(outfile, "w") as ofs:
         variables = list(set(k for x in ntuples.values() for k in x.keys()))
         # Sort by channel, then operation, then particle, then variable
-        variables.sort(key=lambda x: (x[0], x[3], x[1], x[2]))
+        variables.sort(key=lambda x: (x[0], x[3], x[2], x[1]))
 
         print("Channel,Particle,Variable,Operation," + ",".join(ntuples.keys()), file=ofs)
         for v in variables:
-            print(",".join(v) + "," + ",".join(x[v] for x in ntuples.values()), file=ofs)
+            print(",".join(v) + "," + ",".join(x.get(v, "") for x in ntuples.values()), file=ofs)

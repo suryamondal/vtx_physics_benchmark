@@ -36,6 +36,7 @@ import sys
 import re
 import basf2 as b2
 import modularAnalysis as ma
+import flavorTagger as ft
 import vertex as vx
 import variables.collections as vc
 import variables.utils as vu
@@ -179,6 +180,7 @@ parser.add_argument("-o", '--output', default='test.root',
 args = parser.parse_args()
 b2.B2INFO(f"Steering file args = {args}")
 cuts = CUTS[args.cuts]
+print(cuts)
 
 # Set basf2 to check the input files' globaltags and the version used
 b2.conditions.set_globaltag_callback(check_globaltags)
@@ -217,6 +219,12 @@ vx.treeFit(list_name='B0:good', conf_level=conf_level_cut,
            ipConstraint=(not args.noIpConstraint), updateAllDaughters=True, path=main)
 ma.applyCuts('B0:good', cuts["fit"], path=main)
 ma.matchMCTruth(list_name='B0:good', path=main)
+
+# # build the rest of the event
+# ma.buildRestOfEvent("B0:good", fillWithMostLikely=True, path=main)
+
+# # call flavor tagging
+# ft.flavorTagger(["B0:good"], path=main)
 
 # Best-candidate selection (does not cut, only adds the rank variable)
 ma.rankByHighest("B0:good", "M", allowMultiRank=True, path=main)
@@ -293,6 +301,12 @@ for v in ['px', 'py', 'pz', 'p']:
     vm.addAlias(f'D0_{v}_CMS', f'daughter(0,daughter(0,useCMSFrame({v})))')
     cms_variables.append(f'D0_{v}_CMS')
 
+# FT variables of the composites
+ft_variables = []
+# for v in ft.flavor_tagging:
+#     vm.addAlias(f'B0_{v}', f'{v}')
+#     ft_variables.append(f'B0_{v}')
+
 # Angle between pi and K
 vm.addAlias('Kpi_MCAngle', 'daughter(0,daughter(0,mcDaughterAngle(0,1)))')
 vm.addAlias("B0_M_rank", "extraInfo(M_rank)")
@@ -301,8 +315,8 @@ vm.addAlias("Dst_dM_rank", "extraInfo(Dst_dM_rank)")
 vm.addAlias("D0_dM_rank", "extraInfo(D0_dM_rank)")
 
 # Final output variables
-varsKpi += cms_variables + eventWiseVariables + ['Kpi_MCAngle', "B0_M_rank", "B0_chiProb_rank", "Dst_dM_rank", "D0_dM_rank"]
-varsK3pi += cms_variables + eventWiseVariables + ["B0_M_rank", "B0_chiProb_rank", "Dst_dM_rank", "D0_dM_rank"]
+varsKpi += cms_variables + eventWiseVariables + ft_variables + ['Kpi_MCAngle', "B0_M_rank", "B0_chiProb_rank", "Dst_dM_rank", "D0_dM_rank"]
+varsK3pi += cms_variables + eventWiseVariables + ft_variables + ["B0_M_rank", "B0_chiProb_rank", "Dst_dM_rank", "D0_dM_rank"]
 varsKpi.sort()  # I want to be able to find what I need quickly
 varsK3pi.sort()
 if args.printVars:
@@ -310,6 +324,7 @@ if args.printVars:
     for x in varsKpi: print(x)
     print(" =============== K3pi ===============")
     for x in varsK3pi: print(x)
+    vm.printAliases()
     sys.exit()
 
 # Create one ntuple per channel in the same output file

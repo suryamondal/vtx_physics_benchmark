@@ -5,9 +5,9 @@
 ############################################################
 # Author: The Belle II Colaboration
 # Contributors: Ludovico Massaccesi (June 2021)
-# Software Version: release-05-02-06 / upgrade / master
+# Software Version: release-06-00-03 / upgrade / master
 #
-# Must use release-05-02-06 or master without --vtx
+# Must use release-06-00-03 or master without --vtx
 # Must use upgrade branch with --vtx
 # The script will terminate if used with the wrong version.
 ############################################################
@@ -32,6 +32,8 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
 DECAY_FILE = os.path.join(SCRIPT_DIR, "decays.dec")
 
 parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--evt", type=int, default=10,
+                    help="Number of Event to be generated")
 parser.add_argument("--exp", type=int, default=0,
                     help="Experiment, default 0 (nominal geometry/luminosity)")
 parser.add_argument("--run", type=int, default=0, help="Run, default 0")
@@ -80,7 +82,7 @@ if args.debug_gen:
 main = b2.create_path()
 
 # setup event + progress
-main.add_module('EventInfoSetter', expList=[args.exp], runList=[args.run])
+main.add_module('EventInfoSetter', expList=[args.exp], runList=[args.run], evtNumList=[args.evt])
 main.add_module('ProgressBar')
 
 # generate signal

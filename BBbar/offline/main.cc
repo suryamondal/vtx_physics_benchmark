@@ -264,6 +264,8 @@ void DoCandAna(tuple<TH2D*,UInt_t,UInt_t> noCuts, tuple<TH2D*,UInt_t,UInt_t> cut
   cout << fs << endl;
   fs.Form("  Efficiency |%9.4g%%|%9.4g%%|          |%9.4g%%|", 100.0 * ns / nMC, 100.0 * nsc / nMC, 100.0 * nsb / nMC);
   cout << fs << endl;
+  fs.Form("    Purity   |%9.4g%%|%9.4g%%|          |%9.4g%%|", 100.0 * ns / nt, 100.0 * nsc / ntc, 100.0 * nsb / ntb);
+  cout << fs << endl;
 }
 
 int main(int argc, char* argv[])
@@ -337,12 +339,12 @@ int main(int argc, char* argv[])
     *nMCKpi + *nMCK3pi, canvasCand, "");
 
   // Factors determined empirically, use 1 (or comment lines) for auto
-  plotterKpi.SetBkgDownScaleFactor(10);
-  plotterKpiCuts.SetBkgDownScaleFactor(10);
-  plotterKpiBC.SetBkgDownScaleFactor(10);
-  plotterK3pi.SetBkgDownScaleFactor(50);
-  plotterK3piCuts.SetBkgDownScaleFactor(50);
-  plotterK3piBC.SetBkgDownScaleFactor(50);
+  plotterKpi.SetBkgDownScaleFactor(1);
+  plotterKpiCuts.SetBkgDownScaleFactor(1);
+  plotterKpiBC.SetBkgDownScaleFactor(1);
+  plotterK3pi.SetBkgDownScaleFactor(1);
+  plotterK3piCuts.SetBkgDownScaleFactor(1);
+  plotterK3piBC.SetBkgDownScaleFactor(1);
 
   TFile outRootFile(outFileName + "_efficiency.root", "recreate");
 

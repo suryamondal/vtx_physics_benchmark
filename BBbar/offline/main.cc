@@ -102,10 +102,7 @@ SigBkgPlotter::DefineDF defineVariables(RDataFrame& df, bool isK3pi)
       "$a * $b"); // Residuals from pulls, not straightforward but works
   }
 
-  return ddf.Alias("Dst_M_preFit", "Dst_extraInfo_M_preFit")
-            .Alias("D0_M_preFit", "D0_extraInfo_M_preFit")
-            .Alias("B0_M_preFit", "B0_extraInfo_M_preFit")
-            .Define("massDiffPreFit", "Dst_M_preFit-D0_M_preFit")
+  return ddf.Define("massDiffPreFit", "Dst_M_preFit-D0_M_preFit")
             .Define("massDiff", "Dst_M-D0_M");
 }
 

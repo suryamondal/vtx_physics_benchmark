@@ -70,7 +70,7 @@ CUTS = {
         "D0": "abs(dM) < 0.45",  # M_D0 = 1.8648 GeV, M_D* = 2.0103, diff = 0.1455
         "D*": "[abs(dM) < 0.4] and [massDifference(0) < 0.2]",
         "B0": "",  # Missing neutrino
-        "fit": "[daughter(0, useCMSFrame(p)) < 2.5]"
+        "fit": "[Dst_p_CMS < 2.5]" # "[daughter(0, useCMSFrame(p)) < 2.5]"
     },
     "tight": {  # These are mostly identical to those of the offline analysis
         "pisoft": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
@@ -80,7 +80,7 @@ CUTS = {
         "D0": "abs(dM) < 0.1",
         "D*": "[abs(dM) < 0.1] and [massDifference(0) < 0.151]",
         "B0": "",  # Missing neutrino
-        "fit": "[daughter(0, useCMSFrame(p)) < 2.5]"
+        "fit": "[Dst_p_CMS < 2.5]"
     }
 }
 
@@ -229,12 +229,13 @@ ma.matchMCTruth(list_name='B0:good', path=main)
 # Best-candidate selection (does not cut, only adds the rank variable)
 ma.rankByHighest("B0:good", "M", allowMultiRank=True, path=main)
 ma.rankByHighest("B0:good", "chiProb", allowMultiRank=True, path=main)
-ma.rankByLowest("B0:good", "daughter(0,abs(dM))", allowMultiRank=True, outputVariable="Dst_dM_rank", path=main)
-ma.rankByLowest("B0:good", "daughter(0,daughter(0,abs(dM)))", allowMultiRank=True, outputVariable="D0_dM_rank", path=main)
+ma.rankByLowest("B0:good", "abs(Dst_dM)", allowMultiRank=True, outputVariable="Dst_dM_rank", path=main)
+ma.rankByLowest("B0:good", "abs(D0_dM)", allowMultiRank=True, outputVariable="D0_dM_rank", path=main)
 
 # Variables of the event
 eventWiseVariables = ['IPX', 'IPY', 'IPZ', 'genIPX', 'genIPY', 'genIPZ',
                       'nTracks', 'beamE', 'beamPx', 'beamPy', 'beamPz']
+eventWiseVariables += ['nMCParticles']
 for i, a in enumerate('XYZ'): # IPCovXX -> IPCov(0,0), etc
     for j, b in enumerate('XYZ'[i:]):
         vm.addAlias(f'IPCov{a}{b}', f'IPCov({i},{j})')
@@ -242,27 +243,42 @@ for i, a in enumerate('XYZ'): # IPCovXX -> IPCov(0,0), etc
 if args.addTopoAna:  # TopoAna variables
     eventWiseVariables += mc_gen_topo(200)
 
+# cmskinematics = []
+# for v in commonVariables:
+#     vm.addAlias(f'{v}_CMS', f'useCMSFrame({v})')
+#     cmskinematics.append(f'{v}_CMS')
+
 # Variables of all the particles
-commonVariables = vc.kinematics + vc.mc_variables
-commonVariables += ['pErr', 'ptErr', 'pxErr', 'pyErr', 'pzErr', 'isSignal',
-                    'isSignalAcceptMissingGamma', 'isPrimarySignal',
-                    'isSignalAcceptMissingNeutrino',
-                    'theta', 'thetaErr', 'mcTheta', 'phi', 'phiErr', 'mcPhi']
+commonVariables = vc.kinematics
+commonVariables += vc.mc_kinematics
+cmskinematics = []
+for v in commonVariables:
+    vm.addAlias(f'{v}_CMS', f'useCMSFrame({v})')
+    cmskinematics.append(f'{v}_CMS')
+commonVariables += cmskinematics
+commonVariables += vc.mc_truth
+commonVariables += ['pErr', 'ptErr', 'pxErr', 'pyErr', 'pzErr']
+commonVariables += vc.mc_variables + ['isSignalAcceptMissingGamma', 'isPrimarySignal',
+                                      'isSignalAcceptMissingNeutrino',
+                                      'theta', 'thetaErr', 'mcTheta', 'phi', 'phiErr', 'mcPhi']
 
 # Variables of the final-state particles (K, pi, mu)
-tracksVariables = vc.track + vc.track_hits
-if HAS_VTX: tracksVariables.append('nVTXHits')
-tracksVariables += ['pionID', 'kaonID', 'protonID', 'muonID', 'electronID',
-                    'charge', 'omegaErr', 'phi0Err', 'z0Err', 'd0Err', 'tanLambdaErr',
-                    'omegaPull', 'phi0Pull', 'z0Pull', 'd0Pull', 'tanLambdaPull']
+tracksVariables = vc.pid + vc.track + ['nCDCHits', 'nVXDHits']
+tracksVariables += ['nVTXHits'] if HAS_VTX else  ['nPXDHits', 'nSVDHits']
 tracksVariables += ['firstVTXLayer'] if HAS_VTX else ['firstPXDLayer', 'firstSVDLayer']
+tracksVariables += ['trackNECLClusters', 'nMatchedKLMClusters', 'klmClusterLayers']
+tracksVariables += ['charge', 'omega', 'phi0', 'z0', 'd0',
+                    'omegaPull', 'phi0Pull', 'z0Pull', 'd0Pull', 'tanLambdaPull']
+tracksVariables += ['omegaErr', 'phi0Err', 'z0Err', 'd0Err', 'tanLambdaErr', 'chi2']
 
 # Variables of the composite particles (D0, D*, B0)
-compositeVariables = vc.vertex + ['M', 'ErrM']
-compositeVariables += ['mcProductionVertexX', 'mcProductionVertexY',
-                       'mcProductionVertexZ', 'extraInfo(M_preFit)']
-# Flight variables for the D0 only
-flightVariables = vc.flight_info + vc.mc_flight_info
+compositeVariables = vc.vertex + vc.inv_mass + ['M_preFit', 'dM']
+compositeVariables += vc.mc_vertex
+
+flightVariables = vc.flight_info
+flightVariables += vc.mc_flight_info
+
+decaymodeVariable = ['decayModeID']
 
 # Create aliases for the two decay modes
 varsKpi = vu.create_aliases_for_selected(
@@ -275,7 +291,10 @@ varsKpi += vu.create_aliases_for_selected(
     compositeVariables, '^B0 -> [^D*- -> [^anti-D0 -> pi- K+] pi-] mu+',
     ['B0', 'Dst', 'D0'])
 varsKpi += vu.create_aliases_for_selected(
-    flightVariables, 'B0 -> [D*- -> [^anti-D0 -> pi- K+] pi-] mu+',
+    flightVariables, '^B0 -> [^D*- -> [^anti-D0 -> pi- K+] pi-] mu+',
+    ['B0', 'Dst', 'D0'])
+varsKpi += vu.create_aliases_for_selected(
+    decaymodeVariable, 'B0 -> [D*- -> [^anti-D0 -> pi- K+] pi-] mu+',
     ['D0'])
 
 varsK3pi = vu.create_aliases_for_selected(
@@ -288,18 +307,11 @@ varsK3pi += vu.create_aliases_for_selected(
     compositeVariables, '^B0 -> [^D*- -> [^anti-D0 -> pi- K+ pi- pi+] pi-] mu+',
     ['B0', 'Dst', 'D0'])
 varsK3pi += vu.create_aliases_for_selected(
-    flightVariables, 'B0 -> [D*- -> [^anti-D0 -> pi- K+ pi- pi+] pi-] mu+',
+    flightVariables, '^B0 -> [^D*- -> [^anti-D0 -> pi- K+ pi- pi+] pi-] mu+',
+    ['B0', 'Dst', 'D0'])
+varsK3pi += vu.create_aliases_for_selected(
+    decaymodeVariable, 'B0 -> [D*- -> [^anti-D0 -> pi- K+ pi- pi+] pi-] mu+',
     ['D0'])
-
-# CMS variables of the composites
-cms_variables = []
-for v in ['px', 'py', 'pz', 'p']:
-    vm.addAlias(f'B0_{v}_CMS', f'useCMSFrame({v})')
-    cms_variables.append(f'B0_{v}_CMS')
-    vm.addAlias(f'Dst_{v}_CMS', f'daughter(0,useCMSFrame({v}))')
-    cms_variables.append(f'Dst_{v}_CMS')
-    vm.addAlias(f'D0_{v}_CMS', f'daughter(0,daughter(0,useCMSFrame({v})))')
-    cms_variables.append(f'D0_{v}_CMS')
 
 # FT variables of the composites
 ft_variables = []
@@ -314,9 +326,12 @@ vm.addAlias("B0_chiProb_rank", "extraInfo(chiProb_rank)")
 vm.addAlias("Dst_dM_rank", "extraInfo(Dst_dM_rank)")
 vm.addAlias("D0_dM_rank", "extraInfo(D0_dM_rank)")
 
+vm.addAlias('M_preFit', 'extraInfo(M_preFit)')
+vm.addAlias('decayModeID', 'extraInfo(decayModeID)')
+
 # Final output variables
-varsKpi += cms_variables + eventWiseVariables + ft_variables + ['Kpi_MCAngle', "B0_M_rank", "B0_chiProb_rank", "Dst_dM_rank", "D0_dM_rank"]
-varsK3pi += cms_variables + eventWiseVariables + ft_variables + ["B0_M_rank", "B0_chiProb_rank", "Dst_dM_rank", "D0_dM_rank"]
+varsKpi  += eventWiseVariables + ft_variables + ['Kpi_MCAngle', "B0_M_rank", "B0_chiProb_rank", "Dst_dM_rank", "D0_dM_rank"]
+varsK3pi += eventWiseVariables + ft_variables + ["B0_M_rank", "B0_chiProb_rank", "Dst_dM_rank", "D0_dM_rank"]
 varsKpi.sort()  # I want to be able to find what I need quickly
 varsK3pi.sort()
 if args.printVars:
@@ -328,8 +343,8 @@ if args.printVars:
     sys.exit()
 
 # Create one ntuple per channel in the same output file
-ma.cutAndCopyList('B0:Kpi', 'B0:good', 'daughter(0,daughter(0,extraInfo(decayModeID)))==0', path=main)
-ma.cutAndCopyList('B0:K3pi', 'B0:good', 'daughter(0,daughter(0,extraInfo(decayModeID)))==1', path=main)
+ma.cutAndCopyList('B0:Kpi',  'B0:good', 'D0_decayModeID==0', path=main)
+ma.cutAndCopyList('B0:K3pi', 'B0:good', 'D0_decayModeID==1', path=main)
 
 ma.variablesToNtuple('B0:Kpi', varsKpi, filename=args.output, treename='Kpi', path=main)
 ma.variablesToNtuple('B0:K3pi', varsK3pi, filename=args.output, treename='K3pi', path=main)

@@ -109,22 +109,8 @@ CUTS = {
         "chargeViolation": False,
         "ipConstraint": True,
         "conf": 0.001,
-        "fit": "[Dst_p_CMS<2.5] and [mu_E>0.4] and [Dst_E>formula(-3.0*mu_E+3.0)]"
-    }# ,
-    # "tight": {  # These are mostly identical to those of the offline analysis
-    #     "pisoft": "[dr<2] and [abs(dz)<2] and [nVXDHits>0] and [ndf>0]",
-    #     "pi": "[dr<2] and [abs(dz)<2] and [nVXDHits>0] and [ndf>0]",
-    #     "K": "[dr<2] and [abs(dz)<2] and [nVXDHits>0] and [ndf>0]",
-    #     "mu": "[dr<2] and [abs(dz)<2] and [nVXDHits>0] and [ndf>0]",
-    #     "D0": "abs(dM)<0.1",
-    #     "D*": "[abs(dM)<0.1] and [massDifference(0)<0.151]",
-    #     "B0": "",  # Missing neutrino
-    #     "candidateLimit": 1000,
-    #     "chargeViolation": False,
-    #     "ipConstraint": True,
-    #     "conf": 0.001,
-    #     "fit": "[Dst_p_CMS<2.5] and [mu_E>0.4] and [Dst_E>formula(-3.0*mu_E+3.0)]"
-    # }
+        "fit": "[Dst_p_CMS<2.5]"
+    }
 }
 
 cuts = CUTS[args.cuts]
@@ -305,7 +291,7 @@ tracksVariables += ['firstVTXLayer'] if HAS_VTX else ['firstPXDLayer', 'firstSVD
 tracksVariables += ['trackNECLClusters', 'nMatchedKLMClusters', 'klmClusterLayers']
 tracksVariables += ['charge', 'omega', 'phi0', 'z0', 'd0',
                     'omegaPull', 'phi0Pull', 'z0Pull', 'd0Pull', 'tanLambdaPull']
-tracksVariables += ['omegaErr', 'phi0Err', 'z0Err', 'd0Err', 'tanLambdaErr']
+tracksVariables += ['omegaErr', 'phi0Err', 'z0Err', 'd0Err', 'tanLambdaErr', 'chi2']
 
 # Variables of the composite particles (D0, D*, B0)
 compositeVariables = vc.vertex + vc.inv_mass + ['M_preFit', 'dM']
@@ -320,9 +306,6 @@ decaymodeVariable = ['decayModeID']
 varsKpi = vu.create_aliases_for_selected(
     commonVariables, '^B0 -> [^D*- -> [^anti-D0 -> ^pi- ^K+] ^pi-] ^mu+',
     ['B0', 'Dst', 'D0', 'pi', 'K', 'pisoft', 'mu'])
-# varsKpi += vu.create_aliases_for_selected(
-#     tracksVariables, 'B0 -> [D*- -> [anti-D0 -> pi- ^K+] pi-] mu+',
-#     ['K'])
 varsKpi += vu.create_aliases_for_selected(
     tracksVariables, 'B0 -> [D*- -> [anti-D0 -> ^pi- ^K+] ^pi-] ^mu+',
     ['pi', 'K', 'pisoft', 'mu'])
@@ -339,9 +322,6 @@ varsKpi += vu.create_aliases_for_selected(
 varsK3pi = vu.create_aliases_for_selected(
     commonVariables, '^B0 -> [^D*- -> [^anti-D0 -> ^pi- ^K+ ^pi- ^pi+] ^pi-] ^mu+',
     ['B0', 'Dst', 'D0', 'pi1', 'K', 'pi2', 'pi3', 'pisoft', 'mu'])
-# varsK3pi += vu.create_aliases_for_selected(
-#     tracksVariables, 'B0 -> [D*- -> [anti-D0 -> pi- ^K+ pi- pi+] pi-] mu+',
-#     ['K'])
 varsK3pi += vu.create_aliases_for_selected(
     tracksVariables, 'B0 -> [D*- -> [anti-D0 -> ^pi- ^K+ ^pi- ^pi+] ^pi-] ^mu+',
     ['pi1', 'K', 'pi2', 'pi3', 'pisoft', 'mu'])

@@ -98,10 +98,10 @@ CUTS = {
         "fit": "[Dst_p_CMS<2.5]"
     },
     "tight": {  # These are mostly identical to those of the offline analysis
-        "pisoft": "[dr<2] and [abs(dz)<2] and [nVXDHits>0]",
-        "pi": "[dr<2] and [abs(dz)<2] and [nVXDHits>0]",
-        "K": "[dr<2] and [abs(dz)<2] and [nVXDHits>0]",
-        "mu": "[dr<2] and [abs(dz)<2] and [nVXDHits>0]",
+        "pisoft": "[dr<2] and [abs(dz)<2] and [nVXDHits>0] and [ndf>0]",
+        "pi": "[dr<2] and [abs(dz)<2] and [nVXDHits>0] and [ndf>0]",
+        "K": "[dr<2] and [abs(dz)<2] and [nVXDHits>0] and [ndf>0]",
+        "mu": "[dr<2] and [abs(dz)<2] and [nVXDHits>0] and [ndf>0]",
         "D0": "abs(dM)<0.1",
         "D*": "[abs(dM)<0.1] and [massDifference(0)<0.151]",
         "B0": "",  # Missing neutrino

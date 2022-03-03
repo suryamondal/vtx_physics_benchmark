@@ -36,6 +36,7 @@ import os
 import sys
 import re
 import basf2 as b2
+import udst
 import modularAnalysis as ma
 import flavorTagger as ft
 import vertex as vx
@@ -103,13 +104,13 @@ CUTS = {
         "K": "[dr<2] and [abs(dz)<2] and [nVXDHits>0] and [ndf>0]",
         "mu": "[dr<2] and [abs(dz)<2] and [nVXDHits>0] and [ndf>0]",
         "D0": "abs(dM)<0.1",
-        "D*": "[abs(dM)<0.1] and [massDifference(0)<0.151]",
+        "D*": "[abs(dM)<0.1] and [useCMSFrame(p)<2.5] and [massDifference(0)<0.151]",
         "B0": "",  # Missing neutrino
         "candidateLimit": 1000,
         "chargeViolation": False,
         "ipConstraint": True,
         "conf": 0.001,
-        "fit": "[Dst_p_CMS<2.5]"
+        "fit": "[Dst_p_CMS<2.5] and [abs(D0_dM)<0.1] and [abs(Dst_dM)<0.1] and [formula(Dst_M-D0_M)<0.151]"
     }
 }
 
@@ -139,7 +140,7 @@ class Particle:
 
     def __lt__(self, other):
         return self.pdg < other.pdg
-
+        
     def __eq__(self, other):
         return self.pdg == other.pdg and self.daughters == other.daughters
 
@@ -230,7 +231,7 @@ ma.reconstructDecay('D*+:good -> D0:merged pi+:soft', cut=cuts["D*"], path=main)
 ma.variablesToExtraInfo("D*+:good", variables={'M': 'M_preFit'}, path=main)
 
 # vx.treeFit(list_name='D*+:good', conf_level=cuts["conf"],
-#            # ipConstraint=cuts["ipConstraint"], 
+#            ipConstraint=cuts["ipConstraint"], 
 #            updateAllDaughters=True, path=main)
 
 # B0 reconstruction
@@ -242,7 +243,9 @@ ma.variablesToExtraInfo("B0:good", variables={"M": "M_preFit"}, path=main)
 # Tree fitting and final ajustments
 vx.treeFit(list_name='B0:good', conf_level=cuts["conf"],
            ipConstraint=cuts["ipConstraint"], updateAllDaughters=True, path=main)
+
 ma.applyCuts('B0:good', cuts["fit"], path=main)
+
 ma.matchMCTruth(list_name='B0:good', path=main)
 
 # # build the rest of the event
@@ -254,8 +257,7 @@ ma.matchMCTruth(list_name='B0:good', path=main)
 # Best-candidate selection (does not cut, only adds the rank variable)
 ma.rankByHighest("B0:good", "M", allowMultiRank=True, path=main)
 ma.rankByHighest("B0:good", "chiProb", allowMultiRank=True, path=main)
-ma.rankByHighest("B0:good", "formula(B0_chiProb*Dst_chiProb*D0_chiProb)",
-                 allowMultiRank=True, outputVariable="B0DstD0_chiProb_rank", path=main)
+ma.rankByHighest("B0:good", "mu_p", outputVariable="mu_p_rank", allowMultiRank=True, path=main)
 ma.rankByLowest("B0:good", "abs(Dst_dM)", allowMultiRank=True, outputVariable="Dst_dM_rank", path=main)
 ma.rankByLowest("B0:good", "abs(D0_dM)", allowMultiRank=True, outputVariable="D0_dM_rank", path=main)
 
@@ -345,7 +347,7 @@ ft_variables = []
 vm.addAlias('Kpi_MCAngle', 'daughter(0,daughter(0,mcDaughterAngle(0,1)))')
 vm.addAlias("B0_M_rank", "extraInfo(M_rank)")
 vm.addAlias("B0_chiProb_rank", "extraInfo(chiProb_rank)")
-vm.addAlias("B0DstD0_chiProb_rank", "extraInfo(B0DstD0_chiProb_rank)")
+vm.addAlias("mu_p_rank", "extraInfo(mu_p_rank)")
 vm.addAlias("Dst_dM_rank", "extraInfo(Dst_dM_rank)")
 vm.addAlias("D0_dM_rank", "extraInfo(D0_dM_rank)")
 
@@ -353,7 +355,7 @@ vm.addAlias('M_preFit', 'extraInfo(M_preFit)')
 vm.addAlias('decayModeID', 'extraInfo(decayModeID)')
 
 rankVariables = ["B0_M_rank", "B0_chiProb_rank", "Dst_dM_rank", "D0_dM_rank",
-                 "B0DstD0_chiProb_rank"]
+                 "mu_p_rank"]
 
 customVariables = []
 
@@ -410,6 +412,11 @@ varsFS = ["isCloneTrack", "mcE", "mcP", "mcPT", "mcPX", "mcPY", "mcPZ",
 varsFS += vc.track_hits
 if HAS_VTX: varsFS.append('nVTXHits')
 ma.variablesToNtuple('pi+:soft', varsFS, filename=args.output, treename='Tracks', path=main)
+
+# main.add_module('RootOutput', outputFileName=args.output)
+# mdst.add_mdst_output(main, mc=True, filename=args.output)
+# udst.add_udst_output(main,filename=args.output.replace(".root","_udst.root"),
+#                      particleLists=['B0:good','D*+:good','D0:merged'])
 
 # Process the events
 main.add_module('ProgressBar')

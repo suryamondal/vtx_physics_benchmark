@@ -37,6 +37,7 @@ import sys
 import re
 import basf2 as b2
 import udst
+import mdst
 import modularAnalysis as ma
 import flavorTagger as ft
 import vertex as vx
@@ -284,7 +285,8 @@ commonVariables += vc.mc_truth
 commonVariables += ['pErr', 'ptErr', 'pxErr', 'pyErr', 'pzErr']
 commonVariables += vc.mc_variables + ['isSignalAcceptMissingGamma', 'isPrimarySignal',
                                       'isSignalAcceptMissingNeutrino',
-                                      'theta', 'thetaErr', 'mcTheta', 'phi', 'phiErr', 'mcPhi']
+                                      'theta', 'thetaErr', 'mcTheta', 'phi', 'phiErr', 'mcPhi',
+                                      'mdstIndex', 'particleSource', 'uniqueParticleIdentifier']
 
 # Variables of the final-state particles (K, pi, mu)
 tracksVariables = vc.pid + ['particleID'] + vc.track + ['nCDCHits', 'nVXDHits']

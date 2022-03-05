@@ -40,6 +40,8 @@ parser.add_argument("--run", type=int, default=0, help="Run, default 0")
 parser.add_argument("--bkg", action="store_true", help="Enable background")
 parser.add_argument("--vtx", action="store_true",
                     help="Use new VTX instead of PXD+SVD")
+parser.add_argument("--seed", default='',
+                    help="Random Seed")
 parser.add_argument("-o", "--output", default="mc.root",
                     help="Output file, default mc.root")
 parser.add_argument("--debug-gen", action="store_true",
@@ -79,7 +81,9 @@ if args.debug_gen:
     b2.logging.package('simulation').debug_level = 199
 
 # set random seed
-b2.set_random_seed('94887e3828c78b3bd0b761678bd255317f110e183c2ed59ebdcd027e7610b9d6');
+if args.seed:
+    b2.set_random_seed(args.seed);
+# b2.set_random_seed('94887e3828c78b3bd0b761678bd255317f110e183c2ed59ebdcd027e7610b9d6');
 
 # create path
 main = b2.create_path()
@@ -103,9 +107,8 @@ if args.print_mc_particles and args.debug_gen:
 # reconstruct
 vtx_kwa = {'useVTX': True,
            "vtx_bg_cut": None,
-           # "vtx_ckf_mode": "VXDTF2_after",
-           # "vtx_ckf_mode": "VXDTF2_before",
-           "vtx_ckf_mode": "VXDTF2_before_with_second_ckf",
+           "vtx_ckf_mode": "VXDTF2_after",
+           # "vtx_ckf_mode": "VXDTF2_before_with_second_ckf",
            "use_vtx_to_cdc_ckf": False,
            "use_ckf_based_cdc_vtx_merger": False} if args.vtx else {}
 reco.add_reconstruction(main, **vtx_kwa)

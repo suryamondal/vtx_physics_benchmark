@@ -7,6 +7,8 @@ Compile with `./compile.py`. ROOT is required, and it must be a version
 If something doesn't work, use `./clean.sh` and recompile from scratch.
 
 ## Using
-Simply run `./ana path/to/ntuple.root`. It will produce a PDF/ROOT files
-named like the ntuple plus suffixes; existing PDFs will be overwritten.
+Simply run `./ana path/to/ntuple.root pisoft mu ...[]`.
+B0 is calculated by default, no need to add.
+It will produce a PDF/ROOT files named like the ntuple plus suffixes;
+existing PDFs will be overwritten.
 

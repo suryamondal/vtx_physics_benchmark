@@ -29,14 +29,16 @@ Long64_t Utils::countTracks(TTree *tr, TString trk) {
   for(Long64_t ij=0;ij<entries;ij++) {
     tr->GetEntry(ij);
     // cout<<ij<<" "<<runn<<" "<<evtn<<" "<<indexn<<" "<<endl;
-
+    
     int passORinsertORpush = -1;
     if(source<0) {source = sourcen; passORinsertORpush = 1;}
 
     Long64_t tsz = expt.size();
     if(tsz && (expt.back()!=exptn || run.back()!=runn)) {
       sum += tsz; tsz = 0; passORinsertORpush = 1;
-      expt.clear(); run.clear(); evt.clear(); index.clear();}
+      expt.clear(); run.clear(); evt.clear(); index.clear();
+      // cout<<" sum: "<<sum<<endl;
+    }
 
     if(source==sourcen) {
       for(int jk=tsz-1;jk>=0;jk--) {
@@ -56,12 +58,16 @@ Long64_t Utils::countTracks(TTree *tr, TString trk) {
     if(passORinsertORpush<0) {
       continue;
     } else if(passORinsertORpush<tsz) {
+      // cout<<ij<<" "<<runn<<" "<<evtn<<" "<<indexn<<" "<<endl;
+      // cout<<"\t"<<tsz<<" "<<passORinsertORpush<<endl;
       // cout<<"\t\tinsert"<<endl;
       expt.insert(expt.begin()+passORinsertORpush,exptn);
       run.insert(run.begin()+passORinsertORpush,runn);
       evt.insert(evt.begin()+passORinsertORpush,evtn);
       index.insert(index.begin()+passORinsertORpush,indexn);
     } else {
+      // cout<<ij<<" "<<runn<<" "<<evtn<<" "<<indexn<<" "<<endl;
+      // cout<<"\t"<<tsz<<" "<<passORinsertORpush<<endl;
       // cout<<"\t\tpush"<<endl;
       expt.push_back(exptn);
       run.push_back(runn);
@@ -95,22 +101,17 @@ int Utils::printEffi(TTree *tr, TTree *MCtr, TString common,
   if(trk=="") {
     nt  = tr->GetEntries(common);			// 
     ns  = tr->GetEntries(common+"&&"+signal);		// 
-    nsb = tr->GetEntries(common+"&&"+signal+"&&"+rank); // 
-    ntb = tr->GetEntries(common+"&&"+rank);		// 
   } else {
     TTree *t_nt  = (TTree*)tr->CopyTree(common);
+    cout<<" total copied entry: "<<(t_nt->GetEntries())<<endl;
     nt  = countTracks(t_nt,trk);  // 
-    t_nt->Delete("all");
     TTree *t_ns  = (TTree*)tr->CopyTree(common+"&&"+signal);
+    cout<<" signal copied entry: "<<(t_ns->GetEntries())<<endl;
     ns  = countTracks(t_ns,trk);  // 
-    t_ns->Delete("all");
-    TTree *t_nsb = (TTree*)tr->CopyTree(common+"&&"+signal+"&&"+rank);
-    nsb = countTracks(t_nsb,trk); // 
-    t_nsb->Delete("all");
-    TTree *t_ntb = (TTree*)tr->CopyTree(common+"&&"+rank);
-    ntb = countTracks(t_ntb,trk); // 
-    t_ntb->Delete("all");
   }
+
+  nsb = tr->GetEntries(common+"&&"+signal+"&&"+rank); // 
+  ntb = tr->GetEntries(common+"&&"+rank);	      // 
   
   if(nt<=0 || nMC<=0) {return -1;}
   

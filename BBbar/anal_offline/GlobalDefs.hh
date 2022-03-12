@@ -1,31 +1,13 @@
 #ifndef GLOBALDEFS_H
 #define GLOBALDEFS_H
 
+#include "GlobalLibs.hh"
 
-#include <iostream>
-#include <fstream>
-#include <iomanip>
-#include <vector>
-#include <ctime>
-#include <bitset>
-
-#include "TTimeStamp.h"
-#include "TH1.h"
-#include "TH1F.h"
-#include "TH2F.h"
-#include "TProfile.h"
-#include "TTree.h"
-#include "TFile.h"
-#include "TStyle.h"
-#include "TCanvas.h"
-#include "TMath.h"
-#include "TObject.h"
-#include "TRandom.h"
-#include "TVector2.h"
-#include "TVector3.h"
-#include "TGraph.h"
-#include "TF1.h"
-#include "TMinuit.h"
+std::map<TString, TString> motherMap = {
+  {"pisoft", "413"},
+  {"K", "421"},
+  {"mu", "511"}
+};
 
 const TString CommonCuts =
   "TMath::Abs(Dst_M_preFit-2.01026) < 0.1"
@@ -45,6 +27,5 @@ const TString K3piCuts =
   "pi1_dr < 2 && TMath::Abs(pi1_dz) < 2 && pi1_nVXDHits > 0"
   "&& pi2_dr < 2 && TMath::Abs(pi2_dz) < 2 && pi2_nVXDHits > 0"
   "&& pi3_dr < 2 && TMath::Abs(pi3_dz) < 2 && pi3_nVXDHits > 0";
-
 
 #endif

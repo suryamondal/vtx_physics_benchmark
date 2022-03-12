@@ -1,15 +1,15 @@
 
 #include "GlobalDefs.hh"
-
 #include "Utils.hh"
 
 using namespace std;
 
-
 int main(int argc, char **argv) {
 
   if(argc==1) {return -1;}
-  
+
+  // cout << motherMap["pisoft"] << endl;
+
   cout<<endl<<" particles: ";
   for(int ij=0;ij<(argc-1);ij++) {
     TString particleName = (ij==0)?"B0":argv[ij+1];
@@ -39,9 +39,13 @@ int main(int argc, char **argv) {
     TString particleName = (ij==0)?"B0":argv[ij+1];
     TString rank   = "B0_M_rank==1";
     TString signal = particleName+"_isSignal==1";
+    if(ij) {signal += " && TMath::Abs(" + particleName + "_genMotherPDG)==" + motherMap[particleName];}
     TString trk    = (ij==0)?"":particleName;
-    cout<<endl<<" "<<particleName<<" efficiency and purity "<<endl;
-
+    cout<<endl<<" "<<particleName<<" efficiency and purity : signal cut "<<signal<<endl;
+    
+    // TString motherCheck = "TMath::Abs(" + trk + "_genMotherPDG)==" + motherMap["pisoft"];
+    // cout<<motherMap["pisoft"]<<endl;
+    
     cout<<" Kpi branch "<<endl;
     testUtils.printEffi(Kpi,MCKpi,cutsKpi,rank,signal,trk);
     cout<<" K3pi branch "<<endl;

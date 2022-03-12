@@ -1,5 +1,5 @@
 
-#include "GlobalDefs.hh"
+#include "GlobalLibs.hh"
 
 class Utils {
 public :
@@ -8,7 +8,7 @@ public :
   
   int printEffi(TTree *tr, TTree *MCtr, TString common,
 		TString rank, TString signal, TString trk);
-  Long64_t countTracks(TTree *tr, TString trk);
+  Long64_t countTracks(TTree *tr, TTree *MCtr, TString trk);
   
 private :
   int test;

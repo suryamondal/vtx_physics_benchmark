@@ -4,10 +4,65 @@
 using namespace std;
 
 Utils::Utils() {
+
+  /* mcPT : signal */
+  B0mcPTKpi_sig = new TH1D("B0mcPTKpi_sig","B0mcPTKpi_sig",binN,0.,0.7);
+  B0mcPTK3pi_sig = new TH1D("B0mcPTK3pi_sig","B0mcPTK3pi_sig",binN,0.,0.7);
+  
+  mumcPTKpi_sig = new TH1D("mumcPTKpi_sig","mumcPTKpi_sig",binN,0.,2.5);
+  mumcPTK3pi_sig = new TH1D("mumcPTK3pi_sig","mumcPTK3pi_sig",binN,0.,2.5);
+
+  pisoftmcPTKpi_sig = new TH1D("pisoftmcPTKpi_sig","pisoftmcPTKpi_sig",binN,0.,0.25);
+  pisoftmcPTK3pi_sig = new TH1D("pisoftmcPTK3pi_sig","pisoftmcPTK3pi_sig",binN,0.,0.25);
+
+  KmcPTKpi_sig = new TH1D("KmcPTKpi_sig","KmcPTKpi_sig",binN,0.,2.5);
+  KmcPTK3pi_sig = new TH1D("KmcPTK3pi_sig","KmcPTK3pi_sig",binN,0.,2.5);
+  
+  /* mcTheta : signal */
+  B0mcThetaKpi_sig = new TH1D("B0mcThetaKpi_sig","B0mcThetaKpi_sig",binN,0.,TMath::Pi());
+  B0mcThetaK3pi_sig = new TH1D("B0mcThetaK3pi_sig","B0mcThetaK3pi_sig",binN,0.,TMath::Pi());
+
+  mumcThetaKpi_sig = new TH1D("mumcThetaKpi_sig","mumcThetaKpi_sig",binN,0.,TMath::Pi());
+  mumcThetaK3pi_sig = new TH1D("mumcThetaK3pi_sig","mumcThetaK3pi_sig",binN,0.,TMath::Pi());
+
+  pisoftmcThetaKpi_sig = new TH1D("pisoftmcThetaKpi_sig","pisoftmcThetaKpi_sig",binN,0.,TMath::Pi());
+  pisoftmcThetaK3pi_sig = new TH1D("pisoftmcThetaK3pi_sig","pisoftmcThetaK3pi_sig",binN,0.,TMath::Pi());
+
+  KmcThetaKpi_sig = new TH1D("KmcThetaKpi_sig","KmcThetaKpi_sig",binN,0.,TMath::Pi());
+  KmcThetaK3pi_sig = new TH1D("KmcThetaK3pi_sig","KmcThetaK3pi_sig",binN,0.,TMath::Pi());
+
+  /* mcPT : signal + best candidate */
+  B0mcPTKpi_sig_bc = new TH1D("B0mcPTKpi_sig_bc","B0mcPTKpi_sig_bc",binN,0.,0.7);
+  B0mcPTK3pi_sig_bc = new TH1D("B0mcPTK3pi_sig_bc","B0mcPTK3pi_sig_bc",binN,0.,0.7);
+  
+  mumcPTKpi_sig_bc = new TH1D("mumcPTKpi_sig_bc","mumcPTKpi_sig_bc",binN,0.,2.5);
+  mumcPTK3pi_sig_bc = new TH1D("mumcPTK3pi_sig_bc","mumcPTK3pi_sig_bc",binN,0.,2.5);
+
+  pisoftmcPTKpi_sig_bc = new TH1D("pisoftmcPTKpi_sig_bc","pisoftmcPTKpi_sig_bc",binN,0.,0.25);
+  pisoftmcPTK3pi_sig_bc = new TH1D("pisoftmcPTK3pi_sig_bc","pisoftmcPTK3pi_sig_bc",binN,0.,0.25);
+
+  KmcPTKpi_sig_bc = new TH1D("KmcPTKpi_sig_bc","KmcPTKpi_sig_bc",binN,0.,2.5);
+  KmcPTK3pi_sig_bc = new TH1D("KmcPTK3pi_sig_bc","KmcPTK3pi_sig_bc",binN,0.,2.5);
+  
+  /* mcTheta : signal + best candidate */
+  B0mcThetaKpi_sig_bc = new TH1D("B0mcThetaKpi_sig_bc","B0mcThetaKpi_sig_bc",binN,0.,TMath::Pi());
+  B0mcThetaK3pi_sig_bc = new TH1D("B0mcThetaK3pi_sig_bc","B0mcThetaK3pi_sig_bc",binN,0.,TMath::Pi());
+
+  mumcThetaKpi_sig_bc = new TH1D("mumcThetaKpi_sig_bc","mumcThetaKpi_sig_bc",binN,0.,TMath::Pi());
+  mumcThetaK3pi_sig_bc = new TH1D("mumcThetaK3pi_sig_bc","mumcThetaK3pi_sig_bc",binN,0.,TMath::Pi());
+
+  pisoftmcThetaKpi_sig_bc = new TH1D("pisoftmcThetaKpi_sig_bc","pisoftmcThetaKpi_sig_bc",binN,0.,TMath::Pi());
+  pisoftmcThetaK3pi_sig_bc = new TH1D("pisoftmcThetaK3pi_sig_bc","pisoftmcThetaK3pi_sig_bc",binN,0.,TMath::Pi());
+
+  KmcThetaKpi_sig_bc = new TH1D("KmcThetaKpi_sig_bc","KmcThetaKpi_sig_bc",binN,0.,TMath::Pi());
+  KmcThetaK3pi_sig_bc = new TH1D("KmcThetaK3pi_sig_bc","KmcThetaK3pi_sig_bc",binN,0.,TMath::Pi());
+  
   cout<<endl<<" Utils ready "<<endl;
+  
 }
 
-Long64_t Utils::countTracks(ROOT::RDataFrame &tr, ROOT::RDataFrame &MCtr, TString trk, TString cuts) {
+Long64_t Utils::countTracks(ROOT::RDataFrame &tr, ROOT::RDataFrame &MCtr, TString trk,
+			    TString cuts, bool isK3pi, int isEffi) {
   
   /*
     function counts the number of unique tracks in all events
@@ -26,11 +81,11 @@ Long64_t Utils::countTracks(ROOT::RDataFrame &tr, ROOT::RDataFrame &MCtr, TStrin
   auto expvecMC = MCtr.Take<Int_t>("__experiment__");
   auto runvecMC = MCtr.Take<Int_t>("__run__");
   auto evtvecMC = MCtr.Take<Int_t>("__event__");
-
+  
   vector<bool> isThisBranch((*maxexp +1)*(*maxrun +1)*(*maxevt +1),0);
   // for(Long64_t ij=0;ij<int(isThisBranch.size());ij++) {
   //   cout<<ij<<" isThisBranch "<<isThisBranch[ij]<<endl;}
-
+  
   for(Long64_t ij=0;ij<Long64_t(*nMC);ij++) {
     // cout<<ij<<" "<<vector(*runvecMC)[ij]<<" "<<vector(*evtvecMC)[ij]<<" "<<endl;
     Long64_t tpos = ( vector(*evtvecMC)[ij] +
@@ -46,6 +101,8 @@ Long64_t Utils::countTracks(ROOT::RDataFrame &tr, ROOT::RDataFrame &MCtr, TStrin
   auto evtvec = tr.Filter(cuts.Data()).Take<Int_t>("__event__");
   auto indvec = tr.Filter(cuts.Data()).Take<Double_t>((trk+"_mdstIndex").Data());
   auto srcvec = tr.Filter(cuts.Data()).Take<Double_t>((trk+"_particleSource").Data());
+  auto thevec = tr.Filter(cuts.Data()).Take<Double_t>((trk+"_mcTheta").Data());
+  auto mcpvec = tr.Filter(cuts.Data()).Take<Double_t>((trk+"_mcPT").Data());
   
   vector<int> expt, run, evt, index;
   expt.clear(); run.clear(); evt.clear(); index.clear();
@@ -109,6 +166,73 @@ Long64_t Utils::countTracks(ROOT::RDataFrame &tr, ROOT::RDataFrame &MCtr, TStrin
       index.push_back(vector(*indvec)[ij]);
     }
     
+    /* fill histo */
+    if(isK3pi) {
+      if(isEffi==1) {
+	// if(trk=="B0") {
+	//   B0mcThetaK3pi_sig->Fill(vector(*thevec)[ij]);
+	//   B0mcPTK3pi_sig->Fill(vector(*mcpvec)[ij]);
+	// } else 
+	if(trk=="mu") {
+	  mumcThetaK3pi_sig->Fill(vector(*thevec)[ij]);
+	  mumcPTK3pi_sig->Fill(vector(*mcpvec)[ij]);
+	} else if (trk=="pisoft") {
+	  pisoftmcThetaK3pi_sig->Fill(vector(*thevec)[ij]);
+	  pisoftmcPTK3pi_sig->Fill(vector(*mcpvec)[ij]);
+	} else if (trk=="K") {
+	  KmcThetaK3pi_sig->Fill(vector(*thevec)[ij]);
+	  KmcPTK3pi_sig->Fill(vector(*mcpvec)[ij]);
+	}
+      } else if(isEffi==2) {
+	// if(trk=="B0") {
+	//   B0mcThetaK3pi_sig_bc->Fill(vector(*thevec)[ij]);
+	//   B0mcPTK3pi_sig_bc->Fill(vector(*mcpvec)[ij]);
+	// } else 
+	if(trk=="mu") {
+	  mumcThetaK3pi_sig_bc->Fill(vector(*thevec)[ij]);
+	  mumcPTK3pi_sig_bc->Fill(vector(*mcpvec)[ij]);
+	} else if (trk=="pisoft") {
+	  pisoftmcThetaK3pi_sig_bc->Fill(vector(*thevec)[ij]);
+	  pisoftmcPTK3pi_sig_bc->Fill(vector(*mcpvec)[ij]);
+	} else if (trk=="K") {
+	  KmcThetaK3pi_sig_bc->Fill(vector(*thevec)[ij]);
+	  KmcPTK3pi_sig_bc->Fill(vector(*mcpvec)[ij]);
+	}
+      }
+    } else {
+      if(isEffi==1) {
+	// if(trk=="B0") {
+	//   B0mcThetaKpi_sig->Fill(vector(*thevec)[ij]);
+	//   B0mcPTKpi_sig->Fill(vector(*mcpvec)[ij]);
+	// } else 
+	if(trk=="mu") {
+	  mumcThetaKpi_sig->Fill(vector(*thevec)[ij]);
+	  mumcPTKpi_sig->Fill(vector(*mcpvec)[ij]);
+	} else if (trk=="pisoft") {
+	  pisoftmcThetaKpi_sig->Fill(vector(*thevec)[ij]);
+	  pisoftmcPTKpi_sig->Fill(vector(*mcpvec)[ij]);
+	} else if (trk=="K") {
+	  KmcThetaKpi_sig->Fill(vector(*thevec)[ij]);
+	  KmcPTKpi_sig->Fill(vector(*mcpvec)[ij]);
+	}
+      } else if(isEffi==2) {
+	// if(trk=="B0") {
+	//   B0mcThetaKpi_sig_bc->Fill(vector(*thevec)[ij]);
+	//   B0mcPTKpi_sig_bc->Fill(vector(*mcpvec)[ij]);
+	// } else 
+	if(trk=="mu") {
+	  mumcThetaKpi_sig_bc->Fill(vector(*thevec)[ij]);
+	  mumcPTKpi_sig_bc->Fill(vector(*mcpvec)[ij]);
+	} else if (trk=="pisoft") {
+	  pisoftmcThetaKpi_sig_bc->Fill(vector(*thevec)[ij]);
+	  pisoftmcPTKpi_sig_bc->Fill(vector(*mcpvec)[ij]);
+	} else if (trk=="K") {
+	  KmcThetaKpi_sig_bc->Fill(vector(*thevec)[ij]);
+	  KmcPTKpi_sig_bc->Fill(vector(*mcpvec)[ij]);
+	}
+      }
+    } // if(isK3pi) {
+    
   } // for(Long64_t ij=0;ij<entries;ij++) {
   
   sum += expt.size();
@@ -120,7 +244,7 @@ Long64_t Utils::countTracks(ROOT::RDataFrame &tr, ROOT::RDataFrame &MCtr, TStrin
 
 
 int Utils::printEffi(ROOT::RDataFrame &tr, ROOT::RDataFrame &MCtr, TString common,
-		     TString rank, TString signal, TString trk) {
+		     TString rank, TString signal, TString trk, bool isK3pi) {
   
   /*
     tr    : input tree to calculate efficiency
@@ -140,14 +264,45 @@ int Utils::printEffi(ROOT::RDataFrame &tr, ROOT::RDataFrame &MCtr, TString commo
     auto ns1  = tr.Filter((common+" && "+signal).Data()).Count();
     auto nsb1 = tr.Filter((common+" && "+signal+" && "+rank).Data()).Count();
     auto ntb1 = tr.Filter((common+" && "+rank).Data()).Count();
+    
+    if(isK3pi) {
+      auto tB0mcPTK3pi_sig = tr.Filter((common+" && "+signal).Data())
+	.Histo1D({"B0mcPTK3pi_sig","B0mcPTK3pi_sig",binN,0.,0.7},"B0_mcPT");
+      B0mcPTK3pi_sig = (TH1D*)tB0mcPTK3pi_sig->Clone("B0mcPTK3pi_sig");
+      auto tB0mcThetaK3pi_sig = tr.Filter((common+" && "+signal).Data())
+	.Histo1D({"B0mcThetaK3pi_sig","B0mcThetaK3pi_sig",binN,0.,TMath::Pi()},"B0_mcTheta");
+      B0mcThetaK3pi_sig = (TH1D*)tB0mcThetaK3pi_sig->Clone("B0mcThetaK3pi_sig");
+
+      auto tB0mcPTK3pi_sig_bc = tr.Filter((common+" && "+signal+" && "+rank).Data())
+	.Histo1D({"B0mcPTK3pi_sig_bc","B0mcPTK3pi_sig_bc",binN,0.,0.7},"B0_mcPT");
+      B0mcPTK3pi_sig_bc = (TH1D*)tB0mcPTK3pi_sig_bc->Clone("B0mcPTK3pi_sig_bc");
+      auto tB0mcThetaK3pi_sig_bc = tr.Filter((common+" && "+signal+" && "+rank).Data())
+	.Histo1D({"B0mcThetaK3pi_sig_bc","B0mcThetaK3pi_sig_bc",binN,0.,TMath::Pi()},"B0_mcTheta");
+      B0mcThetaK3pi_sig_bc = (TH1D*)tB0mcThetaK3pi_sig_bc->Clone("B0mcThetaK3pi_sig_bc");
+    } else {
+      auto tB0mcPTKpi_sig = tr.Filter((common+" && "+signal).Data())
+	.Histo1D({"B0mcPTKpi_sig","B0mcPTKpi_sig",binN,0.,0.7},"B0_mcPT");
+      B0mcPTKpi_sig = (TH1D*)tB0mcPTKpi_sig->Clone("B0mcPTKpi_sig");
+      auto tB0mcThetaKpi_sig = tr.Filter((common+" && "+signal).Data())
+	.Histo1D({"B0mcThetaKpi_sig","B0mcThetaKpi_sig",binN,0.,TMath::Pi()},"B0_mcTheta");
+      B0mcThetaKpi_sig = (TH1D*)tB0mcThetaKpi_sig->Clone("B0mcThetaKpi_sig");
+
+      auto tB0mcPTKpi_sig_bc = tr.Filter((common+" && "+signal+" && "+rank).Data())
+	.Histo1D({"B0mcPTKpi_sig_bc","B0mcPTKpi_sig_bc",binN,0.,0.7},"B0_mcPT");
+      B0mcPTKpi_sig_bc = (TH1D*)tB0mcPTKpi_sig_bc->Clone("B0mcPTKpi_sig_bc");
+      auto tB0mcThetaKpi_sig_bc = tr.Filter((common+" && "+signal+" && "+rank).Data())
+	.Histo1D({"B0mcThetaKpi_sig_bc","B0mcThetaKpi_sig_bc",binN,0.,TMath::Pi()},"B0_mcTheta");
+      B0mcThetaKpi_sig_bc = (TH1D*)tB0mcThetaKpi_sig_bc->Clone("B0mcThetaKpi_sig_bc");
+    }
+    
     nt = *nt1; ns = *ns1; nsb = *nsb1; ntb = *ntb1;
   } else {
-    nt  = countTracks(tr,MCtr,trk,common);
-    ns  = countTracks(tr,MCtr,trk,common+" && "+signal);
-    nsb = countTracks(tr,MCtr,trk,common+" && "+signal+" && "+rank);
-    ntb = countTracks(tr,MCtr,trk,common+" && "+rank);
+    nt  = countTracks(tr,MCtr,trk,common, isK3pi, 0);
+    ns  = countTracks(tr,MCtr,trk,common+" && "+signal, isK3pi, 1);
+    nsb = countTracks(tr,MCtr,trk,common+" && "+signal+" && "+rank, isK3pi, 2);
+    ntb = countTracks(tr,MCtr,trk,common+" && "+rank, isK3pi, 0);
   }
-    
+  
   if(nt<=0 || *nMC<=0) {return -1;}
   
   TString fs;

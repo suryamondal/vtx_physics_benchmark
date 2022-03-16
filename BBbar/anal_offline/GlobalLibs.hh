@@ -9,6 +9,8 @@
 #include <ctime>
 #include <bitset>
 #include <map>
+#include <algorithm>
+#include <string>
 
 #include "TTimeStamp.h"
 #include "TH1.h"
@@ -28,5 +30,8 @@
 #include "TF1.h"
 #include "TMinuit.h"
 #include "TString.h"
+#include <ROOT/RDataFrame.hxx>
+
+const int binN = 20;
 
 #endif

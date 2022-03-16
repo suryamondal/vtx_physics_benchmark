@@ -4,10 +4,26 @@
 #include "GlobalLibs.hh"
 
 std::map<TString, TString> motherMap = {
+  {"B0", "300553"},
   {"pisoft", "413"},
   {"K", "421"},
   {"mu", "511"}
 };
+
+std::vector<TString> commonMCBranch {"__experiment__", "__run__",
+    "__event__"};
+
+std::vector<TString> commonBranch {"__experiment__", "__run__",
+    "__event__", "B0_M_rank",
+    "Dst_M_preFit", "D0_M_preFit", "Dst_M_preFit",
+    "mu_dr", "mu_dz", "K_dr", "K_dz", "pisoft_dr", "pisoft_dz",
+    "mu_nVXDHits", "K_nVXDHits", "pisoft_nVXDHits", "Dst_p_CMS"};
+std::vector<TString> KpiBranch {"pi_dr", "pi_dz", "pi_nVXDHits"};
+std::vector<TString> K3piBranch {"pi1_dr", "pi1_dz",
+    "pi1_nVXDHits", "pi2_dr", "pi2_dz", "pi2_nVXDHits",
+    "pi3_dr", "pi3_dz", "pi3_nVXDHits"};
+std::vector<TString> extraBranch {"isSignal", "mdstIndex",
+    "particleSource"};
 
 const TString CommonCuts =
   "TMath::Abs(Dst_M_preFit-2.01026) < 0.1"

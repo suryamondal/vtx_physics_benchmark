@@ -214,10 +214,10 @@ ma.fillParticleList('K+:myTrk', cuts["K"], path=main)
 ma.fillParticleList('mu+:myTrk', cuts["mu"], path=main)
 
 # D0 reconstruction
-ma.reconstructDecay('D0:Kpi -> pi+:myTrk K-:myTrk',
+ma.reconstructDecay('D0:Kpi -> K-:myTrk pi+:myTrk ',
                     cut=cuts["D0"], dmID=0, allowChargeViolation=cuts["chargeViolation"],
                     path=main)
-ma.reconstructDecay('D0:K3pi -> pi+:myTrk K-:myTrk pi+:myTrk pi-:myTrk',
+ma.reconstructDecay('D0:K3pi -> K-:myTrk pi+:myTrk pi+:myTrk pi-:myTrk',
                     cut=cuts["D0"], dmID=1, allowChargeViolation=cuts["chargeViolation"],
                     path=main)
 ma.copyLists('D0:merged', ['D0:Kpi', 'D0:K3pi'], True, path=main)
@@ -308,35 +308,35 @@ decaymodeVariable = ['decayModeID']
 
 # Create aliases for the two decay modes
 varsKpi = vu.create_aliases_for_selected(
-    commonVariables, '^B0 -> [^D*- -> [^anti-D0 -> ^pi- ^K+] ^pi-] ^mu+',
-    ['B0', 'Dst', 'D0', 'pi', 'K', 'pisoft', 'mu'])
+    commonVariables, '^B0 -> [^D*- -> [^anti-D0 -> ^K+ ^pi-] ^pi-] ^mu+',
+    ['B0', 'Dst', 'D0', 'K', 'pi', 'pisoft', 'mu'])
 varsKpi += vu.create_aliases_for_selected(
-    tracksVariables, 'B0 -> [D*- -> [anti-D0 -> ^pi- ^K+] ^pi-] ^mu+',
-    ['pi', 'K', 'pisoft', 'mu'])
+    tracksVariables, 'B0 -> [D*- -> [anti-D0 -> ^K+ ^pi-] ^pi-] ^mu+',
+    ['K', 'pi', 'pisoft', 'mu'])
 varsKpi += vu.create_aliases_for_selected(
-    compositeVariables, '^B0 -> [^D*- -> [^anti-D0 -> pi- K+] pi-] mu+',
+    compositeVariables, '^B0 -> [^D*- -> [^anti-D0 -> K+ pi-] pi-] mu+',
     ['B0', 'Dst', 'D0'])
 varsKpi += vu.create_aliases_for_selected(
-    flightVariables, '^B0 -> [^D*- -> [^anti-D0 -> pi- K+] pi-] mu+',
+    flightVariables, '^B0 -> [^D*- -> [^anti-D0 -> K+ pi-] pi-] mu+',
     ['B0', 'Dst', 'D0'])
 varsKpi += vu.create_aliases_for_selected(
-    decaymodeVariable, 'B0 -> [D*- -> [^anti-D0 -> pi- K+] pi-] mu+',
+    decaymodeVariable, 'B0 -> [D*- -> [^anti-D0 -> K+ pi-] pi-] mu+',
     ['D0'])
 
 varsK3pi = vu.create_aliases_for_selected(
-    commonVariables, '^B0 -> [^D*- -> [^anti-D0 -> ^pi- ^K+ ^pi- ^pi+] ^pi-] ^mu+',
-    ['B0', 'Dst', 'D0', 'pi1', 'K', 'pi2', 'pi3', 'pisoft', 'mu'])
+    commonVariables, '^B0 -> [^D*- -> [^anti-D0 -> ^K+ ^pi- ^pi- ^pi+] ^pi-] ^mu+',
+    ['B0', 'Dst', 'D0', 'K', 'pi1', 'pi2', 'pi3', 'pisoft', 'mu'])
 varsK3pi += vu.create_aliases_for_selected(
-    tracksVariables, 'B0 -> [D*- -> [anti-D0 -> ^pi- ^K+ ^pi- ^pi+] ^pi-] ^mu+',
-    ['pi1', 'K', 'pi2', 'pi3', 'pisoft', 'mu'])
+    tracksVariables, 'B0 -> [D*- -> [anti-D0 -> ^K+ ^pi- ^pi- ^pi+] ^pi-] ^mu+',
+    ['K', 'pi1', 'pi2', 'pi3', 'pisoft', 'mu'])
 varsK3pi += vu.create_aliases_for_selected(
-    compositeVariables, '^B0 -> [^D*- -> [^anti-D0 -> pi- K+ pi- pi+] pi-] mu+',
+    compositeVariables, '^B0 -> [^D*- -> [^anti-D0 -> K+ pi- pi- pi+] pi-] mu+',
     ['B0', 'Dst', 'D0'])
 varsK3pi += vu.create_aliases_for_selected(
-    flightVariables, '^B0 -> [^D*- -> [^anti-D0 -> pi- K+ pi- pi+] pi-] mu+',
+    flightVariables, '^B0 -> [^D*- -> [^anti-D0 -> K+ pi- pi- pi+] pi-] mu+',
     ['B0', 'Dst', 'D0'])
 varsK3pi += vu.create_aliases_for_selected(
-    decaymodeVariable, 'B0 -> [D*- -> [^anti-D0 -> pi- K+ pi- pi+] pi-] mu+',
+    decaymodeVariable, 'B0 -> [D*- -> [^anti-D0 -> K+ pi- pi- pi+] pi-] mu+',
     ['D0'])
 
 # FT variables of the composites
@@ -387,16 +387,16 @@ ma.fillParticleListFromMC("B0:MCK3pi", "", addDaughters=True, path=main)
 main.add_module(FilterByDecay("B0:MCKpi", Particle("B0", [
     Particle("D*+", [
         Particle("D0", [
-            Particle("pi+"),
-            Particle("K+")]),
+            Particle("K+"),
+            Particle("pi+")]),
         Particle("pi+")]),
     Particle("mu+"),
     Particle("nu_mu")])))
 main.add_module(FilterByDecay("B0:MCK3pi", Particle("B0", [
     Particle("D*+", [
         Particle("D0", [
-            Particle("pi+"),
             Particle("K+"),
+            Particle("pi+"),
             Particle("pi+"),
             Particle("pi+")]),
         Particle("pi+")]),

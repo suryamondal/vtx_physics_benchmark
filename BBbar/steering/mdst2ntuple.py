@@ -387,16 +387,16 @@ ma.fillParticleListFromMC("B0:MCK3pi", "", addDaughters=True, path=main)
 main.add_module(FilterByDecay("B0:MCKpi", Particle("B0", [
     Particle("D*+", [
         Particle("D0", [
-            Particle("K+"),
-            Particle("pi+")]),
+            Particle("pi+"),
+            Particle("K+")]),
         Particle("pi+")]),
     Particle("mu+"),
     Particle("nu_mu")])))
 main.add_module(FilterByDecay("B0:MCK3pi", Particle("B0", [
     Particle("D*+", [
         Particle("D0", [
-            Particle("K+"),
             Particle("pi+"),
+            Particle("K+"),
             Particle("pi+"),
             Particle("pi+")]),
         Particle("pi+")]),

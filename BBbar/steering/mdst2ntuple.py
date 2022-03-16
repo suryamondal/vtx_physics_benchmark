@@ -86,12 +86,12 @@ CUTS = {
         "fit": "[daughter(0, useCMSFrame(p))<3]"
     },
     "normal": {
-        "pisoft": "[dr<2] and [abs(dz)<2] and [nVXDHits>0]",  # VXD=PXD+SVD+VTX
-        "pi": "[dr<2] and [abs(dz)<2] and [nVXDHits>0]",
-        "K": "[dr<2] and [abs(dz)<2] and [nVXDHits>0]",
-        "mu": "[dr<2] and [abs(dz)<2] and [nVXDHits>0]",
+        "pisoft": "[dr<2] and [abs(dz)<2] and [nVXDHits>0] and [ndf>0]",  # VXD=PXD+SVD+VTX
+        "pi": "[dr<2] and [abs(dz)<2] and [nVXDHits>0] and [ndf>0]",
+        "K": "[dr<2] and [abs(dz)<2] and [nVXDHits>0] and [ndf>0]",
+        "mu": "[dr<2] and [abs(dz)<2] and [nVXDHits>0] and [ndf>0]",
         "D0": "abs(dM)<0.45",  # M_D0 = 1.8648 GeV, M_D* = 2.0103, diff = 0.1455
-        "D*": "[abs(dM)<0.4] and [massDifference(0)<0.2]",
+        "D*": "[abs(dM)<0.45] and [massDifference(0)<0.2]",
         "B0": "",  # Missing neutrino
         "candidateLimit": 1000,
         "chargeViolation": False,

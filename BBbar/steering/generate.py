@@ -109,7 +109,7 @@ vtx_kwa = {'useVTX': True,
            "vtx_bg_cut": None,
            "vtx_ckf_mode": "VXDTF2_after",
            # "vtx_ckf_mode": "VXDTF2_before_with_second_ckf",
-           "use_vtx_to_cdc_ckf": False,
+           "use_vtx_to_cdc_ckf": True,
            "use_ckf_based_cdc_vtx_merger": False} if args.vtx else {}
 reco.add_reconstruction(main, **vtx_kwa)
 

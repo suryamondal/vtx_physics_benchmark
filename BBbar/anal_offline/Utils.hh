@@ -7,47 +7,51 @@ public :
   Utils();
   ~Utils(){;};
   
-  int printEffi(ROOT::RDataFrame &tr, ROOT::RDataFrame &MCtr, TString common,
-		TString rank, TString signal, TString trk, bool isK3pi);
-  Long64_t countTracks(ROOT::RDataFrame &tr, ROOT::RDataFrame &MCtr, TString trk,
-		       TString cuts, bool isK3pi, int isEffi);
+  void Setup(std::map<TString, TString> motherMap,
+	     std::vector<TString> &particleNames,
+	     std::vector<TString> &histoNames,
+	     std::vector<std::vector<Int_t>> &histoBins,
+	     std::vector<std::vector<Double_t>> &histoXmin,
+	     std::vector<std::vector<Double_t>> &histoXmax,
+	     TString chnl);
+  
+  int printEffi(ROOT::RDataFrame &tr,
+		ROOT::RDataFrame &MCtr,
+		TString common,
+		TString rank);
+  Long64_t countTracks(ROOT::RDataFrame &tr,
+		       ROOT::RDataFrame &MCtr,
+		       TString trk,
+		       TString cuts,
+		       int isBC);
+
+  void DivideHisto();
   
 public:
-  TH1D *B0mcPTKpi_sig;
-  TH1D *B0mcPTK3pi_sig;
-  TH1D *mumcPTKpi_sig;
-  TH1D *mumcPTK3pi_sig;
-  TH1D *pisoftmcPTKpi_sig; 
-  TH1D *pisoftmcPTK3pi_sig; 
-  TH1D *KmcPTKpi_sig; 
-  TH1D *KmcPTK3pi_sig; 
 
-  TH1D *B0mcThetaKpi_sig;
-  TH1D *B0mcThetaK3pi_sig;
-  TH1D *mumcThetaKpi_sig;
-  TH1D *mumcThetaK3pi_sig;
-  TH1D *pisoftmcThetaKpi_sig; 
-  TH1D *pisoftmcThetaK3pi_sig; 
-  TH1D *KmcThetaKpi_sig; 
-  TH1D *KmcThetaK3pi_sig; 
+  std::map<TString, TString> parMotherMap;
+  
+  std::vector<TString> particleList;
+  std::map<TString, Int_t> particleMap;
+  
+  // std::vector<TString> channelList;
+  // std::map<TString, Int_t> channelMap;
 
-  TH1D *B0mcPTKpi_sig_bc;
-  TH1D *B0mcPTK3pi_sig_bc;
-  TH1D *mumcPTKpi_sig_bc;
-  TH1D *mumcPTK3pi_sig_bc;
-  TH1D *pisoftmcPTKpi_sig_bc; 
-  TH1D *pisoftmcPTK3pi_sig_bc; 
-  TH1D *KmcPTKpi_sig_bc; 
-  TH1D *KmcPTK3pi_sig_bc; 
-
-  TH1D *B0mcThetaKpi_sig_bc;
-  TH1D *B0mcThetaK3pi_sig_bc;
-  TH1D *mumcThetaKpi_sig_bc;
-  TH1D *mumcThetaK3pi_sig_bc;
-  TH1D *pisoftmcThetaKpi_sig_bc; 
-  TH1D *pisoftmcThetaK3pi_sig_bc; 
-  TH1D *KmcThetaKpi_sig_bc; 
-  TH1D *KmcThetaK3pi_sig_bc; 
+  std::vector<TString> histoList;
+  std::map<TString, Int_t> histoMap;
+  std::vector<std::vector<Int_t>> histoBn;
+  std::vector<std::vector<Double_t>> histoXmn;
+  std::vector<std::vector<Double_t>> histoXmx;
+  
+  TString channelName;
+  
+  TH1D *histo_mc[20][20];	 // [nparticle][histo]
+  TH1D *histo_sig[20][20][2]; // [nparticles][histo][bc]
+  
+  TH1D *histo_effi[20][20][2]; // [nparticles][histo][bc]
+  
+  ROOT::RDF::RResultPtr<std::vector<Double_t>> parVecList[20];
+  
   
 private :
   int test;

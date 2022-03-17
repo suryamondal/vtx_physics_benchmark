@@ -3,66 +3,62 @@
 
 using namespace std;
 
-Utils::Utils() {
+Utils::Utils() {}
 
-  /* mcPT : signal */
-  B0mcPTKpi_sig = new TH1D("B0mcPTKpi_sig","B0mcPTKpi_sig",binN,0.,0.7);
-  B0mcPTK3pi_sig = new TH1D("B0mcPTK3pi_sig","B0mcPTK3pi_sig",binN,0.,0.7);
+void Utils::Setup(std::map<TString, TString> motherMap,
+		  std::vector<TString> &particleNames,
+		  std::vector<TString> &histoNames,
+		  std::vector<std::vector<Int_t>> &histoBins,
+		  std::vector<std::vector<Double_t>> &histoXmin,
+		  std::vector<std::vector<Double_t>> &histoXmax,
+		  TString chnl) {
   
-  mumcPTKpi_sig = new TH1D("mumcPTKpi_sig","mumcPTKpi_sig",binN,0.,2.5);
-  mumcPTK3pi_sig = new TH1D("mumcPTK3pi_sig","mumcPTK3pi_sig",binN,0.,2.5);
-
-  pisoftmcPTKpi_sig = new TH1D("pisoftmcPTKpi_sig","pisoftmcPTKpi_sig",binN,0.,0.25);
-  pisoftmcPTK3pi_sig = new TH1D("pisoftmcPTK3pi_sig","pisoftmcPTK3pi_sig",binN,0.,0.25);
-
-  KmcPTKpi_sig = new TH1D("KmcPTKpi_sig","KmcPTKpi_sig",binN,0.,2.5);
-  KmcPTK3pi_sig = new TH1D("KmcPTK3pi_sig","KmcPTK3pi_sig",binN,0.,2.5);
+  parMotherMap = motherMap;
   
-  /* mcTheta : signal */
-  B0mcThetaKpi_sig = new TH1D("B0mcThetaKpi_sig","B0mcThetaKpi_sig",binN,0.,TMath::Pi());
-  B0mcThetaK3pi_sig = new TH1D("B0mcThetaK3pi_sig","B0mcThetaK3pi_sig",binN,0.,TMath::Pi());
-
-  mumcThetaKpi_sig = new TH1D("mumcThetaKpi_sig","mumcThetaKpi_sig",binN,0.,TMath::Pi());
-  mumcThetaK3pi_sig = new TH1D("mumcThetaK3pi_sig","mumcThetaK3pi_sig",binN,0.,TMath::Pi());
-
-  pisoftmcThetaKpi_sig = new TH1D("pisoftmcThetaKpi_sig","pisoftmcThetaKpi_sig",binN,0.,TMath::Pi());
-  pisoftmcThetaK3pi_sig = new TH1D("pisoftmcThetaK3pi_sig","pisoftmcThetaK3pi_sig",binN,0.,TMath::Pi());
-
-  KmcThetaKpi_sig = new TH1D("KmcThetaKpi_sig","KmcThetaKpi_sig",binN,0.,TMath::Pi());
-  KmcThetaK3pi_sig = new TH1D("KmcThetaK3pi_sig","KmcThetaK3pi_sig",binN,0.,TMath::Pi());
-
-  /* mcPT : signal + best candidate */
-  B0mcPTKpi_sig_bc = new TH1D("B0mcPTKpi_sig_bc","B0mcPTKpi_sig_bc",binN,0.,0.7);
-  B0mcPTK3pi_sig_bc = new TH1D("B0mcPTK3pi_sig_bc","B0mcPTK3pi_sig_bc",binN,0.,0.7);
+  particleList.clear(); particleMap.clear();
+  histoBn.clear(); histoXmn.clear(); histoXmx.clear();
+  for(int ij=0;ij<int(particleNames.size());ij++) {
+    particleList.push_back(particleNames[ij]);
+    // cout<<particleList.back()<<endl;
+    particleMap.insert(pair<TString, Int_t>(particleNames[ij], ij));
+    histoBn.push_back(histoBins[ij]);
+    histoXmn.push_back(histoXmin[ij]);
+    histoXmx.push_back(histoXmax[ij]);}
   
-  mumcPTKpi_sig_bc = new TH1D("mumcPTKpi_sig_bc","mumcPTKpi_sig_bc",binN,0.,2.5);
-  mumcPTK3pi_sig_bc = new TH1D("mumcPTK3pi_sig_bc","mumcPTK3pi_sig_bc",binN,0.,2.5);
-
-  pisoftmcPTKpi_sig_bc = new TH1D("pisoftmcPTKpi_sig_bc","pisoftmcPTKpi_sig_bc",binN,0.,0.25);
-  pisoftmcPTK3pi_sig_bc = new TH1D("pisoftmcPTK3pi_sig_bc","pisoftmcPTK3pi_sig_bc",binN,0.,0.25);
-
-  KmcPTKpi_sig_bc = new TH1D("KmcPTKpi_sig_bc","KmcPTKpi_sig_bc",binN,0.,2.5);
-  KmcPTK3pi_sig_bc = new TH1D("KmcPTK3pi_sig_bc","KmcPTK3pi_sig_bc",binN,0.,2.5);
+  histoList.clear(); histoMap.clear();
+  for(int ij=0;ij<int(histoNames.size());ij++) {
+    histoList.push_back(histoNames[ij]);
+    histoMap.insert(pair<TString, Int_t>(histoNames[ij], ij));}
   
-  /* mcTheta : signal + best candidate */
-  B0mcThetaKpi_sig_bc = new TH1D("B0mcThetaKpi_sig_bc","B0mcThetaKpi_sig_bc",binN,0.,TMath::Pi());
-  B0mcThetaK3pi_sig_bc = new TH1D("B0mcThetaK3pi_sig_bc","B0mcThetaK3pi_sig_bc",binN,0.,TMath::Pi());
-
-  mumcThetaKpi_sig_bc = new TH1D("mumcThetaKpi_sig_bc","mumcThetaKpi_sig_bc",binN,0.,TMath::Pi());
-  mumcThetaK3pi_sig_bc = new TH1D("mumcThetaK3pi_sig_bc","mumcThetaK3pi_sig_bc",binN,0.,TMath::Pi());
-
-  pisoftmcThetaKpi_sig_bc = new TH1D("pisoftmcThetaKpi_sig_bc","pisoftmcThetaKpi_sig_bc",binN,0.,TMath::Pi());
-  pisoftmcThetaK3pi_sig_bc = new TH1D("pisoftmcThetaK3pi_sig_bc","pisoftmcThetaK3pi_sig_bc",binN,0.,TMath::Pi());
-
-  KmcThetaKpi_sig_bc = new TH1D("KmcThetaKpi_sig_bc","KmcThetaKpi_sig_bc",binN,0.,TMath::Pi());
-  KmcThetaK3pi_sig_bc = new TH1D("KmcThetaK3pi_sig_bc","KmcThetaK3pi_sig_bc",binN,0.,TMath::Pi());
+  channelName = chnl;
   
-  cout<<endl<<" Utils ready "<<endl;
+  for(int ijp=0;ijp<int(particleNames.size());ijp++) {
+    for(int ijh=0;ijh<int(histoNames.size());ijh++) {
+      TString name = (particleNames[ijp] + "_" + histoNames[ijh] + "_" + channelName);
+      cout<<" mc new "<<name<<endl;
+      histo_mc[ijp][ijh] = new TH1D(name.Data(),name.Data(),
+				    histoBins[ijp][ijh],histoXmin[ijp][ijh],histoXmax[ijp][ijh]);
+    }}
+  
+  for(int ijp=0;ijp<int(particleNames.size());ijp++) {
+    for(int ijh=0;ijh<int(histoNames.size());ijh++) {
+      for(int ijb=0;ijb<2;ijb++) {
+	TString name = (particleNames[ijp] + "_" + histoNames[ijh] + "_" + channelName
+			+ "_sig" + (ijb==0?"":"_bc"));
+	cout<<" mc new "<<name<<endl;
+	histo_sig[ijp][ijh][ijb] = new TH1D(name.Data(),name.Data(),
+					     histoBins[ijp][ijh],histoXmin[ijp][ijh],histoXmax[ijp][ijh]);
+      }}}
+  
+  cout<<" Utils ready "<<endl<<endl;
   
 }
 
-Long64_t Utils::countTracks(ROOT::RDataFrame &tr, ROOT::RDataFrame &MCtr, TString trk,
-			    TString cuts, bool isK3pi, int isEffi) {
+Long64_t Utils::countTracks(ROOT::RDataFrame &tr,
+			    ROOT::RDataFrame &MCtr,
+			    TString trk,
+			    TString cuts,
+			    int isBC) {
   
   /*
     function counts the number of unique tracks in all events
@@ -101,8 +97,10 @@ Long64_t Utils::countTracks(ROOT::RDataFrame &tr, ROOT::RDataFrame &MCtr, TStrin
   auto evtvec = tr.Filter(cuts.Data()).Take<Int_t>("__event__");
   auto indvec = tr.Filter(cuts.Data()).Take<Double_t>((trk+"_mdstIndex").Data());
   auto srcvec = tr.Filter(cuts.Data()).Take<Double_t>((trk+"_particleSource").Data());
-  auto thevec = tr.Filter(cuts.Data()).Take<Double_t>((trk+"_mcTheta").Data());
-  auto mcpvec = tr.Filter(cuts.Data()).Take<Double_t>((trk+"_mcPT").Data());
+  
+  for(int ijh=0;ijh<int(histoList.size());ijh++) {
+    parVecList[ijh] = tr.Filter(cuts.Data()).Take<Double_t>((trk + "_" + histoList[ijh]).Data());
+  }
   
   vector<int> expt, run, evt, index;
   expt.clear(); run.clear(); evt.clear(); index.clear();
@@ -166,72 +164,10 @@ Long64_t Utils::countTracks(ROOT::RDataFrame &tr, ROOT::RDataFrame &MCtr, TStrin
       index.push_back(vector(*indvec)[ij]);
     }
     
-    /* fill histo */
-    if(isK3pi) {
-      if(isEffi==1) {
-	// if(trk=="B0") {
-	//   B0mcThetaK3pi_sig->Fill(vector(*thevec)[ij]);
-	//   B0mcPTK3pi_sig->Fill(vector(*mcpvec)[ij]);
-	// } else 
-	if(trk=="mu") {
-	  mumcThetaK3pi_sig->Fill(vector(*thevec)[ij]);
-	  mumcPTK3pi_sig->Fill(vector(*mcpvec)[ij]);
-	} else if (trk=="pisoft") {
-	  pisoftmcThetaK3pi_sig->Fill(vector(*thevec)[ij]);
-	  pisoftmcPTK3pi_sig->Fill(vector(*mcpvec)[ij]);
-	} else if (trk=="K") {
-	  KmcThetaK3pi_sig->Fill(vector(*thevec)[ij]);
-	  KmcPTK3pi_sig->Fill(vector(*mcpvec)[ij]);
-	}
-      } else if(isEffi==2) {
-	// if(trk=="B0") {
-	//   B0mcThetaK3pi_sig_bc->Fill(vector(*thevec)[ij]);
-	//   B0mcPTK3pi_sig_bc->Fill(vector(*mcpvec)[ij]);
-	// } else 
-	if(trk=="mu") {
-	  mumcThetaK3pi_sig_bc->Fill(vector(*thevec)[ij]);
-	  mumcPTK3pi_sig_bc->Fill(vector(*mcpvec)[ij]);
-	} else if (trk=="pisoft") {
-	  pisoftmcThetaK3pi_sig_bc->Fill(vector(*thevec)[ij]);
-	  pisoftmcPTK3pi_sig_bc->Fill(vector(*mcpvec)[ij]);
-	} else if (trk=="K") {
-	  KmcThetaK3pi_sig_bc->Fill(vector(*thevec)[ij]);
-	  KmcPTK3pi_sig_bc->Fill(vector(*mcpvec)[ij]);
-	}
-      }
-    } else {
-      if(isEffi==1) {
-	// if(trk=="B0") {
-	//   B0mcThetaKpi_sig->Fill(vector(*thevec)[ij]);
-	//   B0mcPTKpi_sig->Fill(vector(*mcpvec)[ij]);
-	// } else 
-	if(trk=="mu") {
-	  mumcThetaKpi_sig->Fill(vector(*thevec)[ij]);
-	  mumcPTKpi_sig->Fill(vector(*mcpvec)[ij]);
-	} else if (trk=="pisoft") {
-	  pisoftmcThetaKpi_sig->Fill(vector(*thevec)[ij]);
-	  pisoftmcPTKpi_sig->Fill(vector(*mcpvec)[ij]);
-	} else if (trk=="K") {
-	  KmcThetaKpi_sig->Fill(vector(*thevec)[ij]);
-	  KmcPTKpi_sig->Fill(vector(*mcpvec)[ij]);
-	}
-      } else if(isEffi==2) {
-	// if(trk=="B0") {
-	//   B0mcThetaKpi_sig_bc->Fill(vector(*thevec)[ij]);
-	//   B0mcPTKpi_sig_bc->Fill(vector(*mcpvec)[ij]);
-	// } else 
-	if(trk=="mu") {
-	  mumcThetaKpi_sig_bc->Fill(vector(*thevec)[ij]);
-	  mumcPTKpi_sig_bc->Fill(vector(*mcpvec)[ij]);
-	} else if (trk=="pisoft") {
-	  pisoftmcThetaKpi_sig_bc->Fill(vector(*thevec)[ij]);
-	  pisoftmcPTKpi_sig_bc->Fill(vector(*mcpvec)[ij]);
-	} else if (trk=="K") {
-	  KmcThetaKpi_sig_bc->Fill(vector(*thevec)[ij]);
-	  KmcPTKpi_sig_bc->Fill(vector(*mcpvec)[ij]);
-	}
-      }
-    } // if(isK3pi) {
+    if(isBC>=0) {
+      for(int ijh=0;ijh<int(histoList.size());ijh++) {
+	histo_sig[particleMap[trk]][ijh][isBC]->Fill(vector(*parVecList[ijh])[ij]);
+      }}
     
   } // for(Long64_t ij=0;ij<entries;ij++) {
   
@@ -243,8 +179,10 @@ Long64_t Utils::countTracks(ROOT::RDataFrame &tr, ROOT::RDataFrame &MCtr, TStrin
 }
 
 
-int Utils::printEffi(ROOT::RDataFrame &tr, ROOT::RDataFrame &MCtr, TString common,
-		     TString rank, TString signal, TString trk, bool isK3pi) {
+int Utils::printEffi(ROOT::RDataFrame &tr,
+		     ROOT::RDataFrame &MCtr,
+		     TString common,
+		     TString rank) {
   
   /*
     tr    : input tree to calculate efficiency
@@ -257,68 +195,82 @@ int Utils::printEffi(ROOT::RDataFrame &tr, ROOT::RDataFrame &MCtr, TString commo
   
   auto nMC  = MCtr.Count();
   
+  for(int ijp=0;ijp<int(particleList.size());ijp++) {
+    for(int ijh=0;ijh<int(histoList.size());ijh++) {
+      TString name = (particleList[ijp] + "_" + histoList[ijh] + "_" + channelName);
+      TString parname = (particleList[ijp] + "_" + histoList[ijh]);
+      cout<<" mc fill "<<name<<" "<<parname<<endl;
+      cout<<"\t"<<histoBn[ijp][ijh]<<" "<<histoXmn[ijp][ijh]<<" "<<histoXmx[ijp][ijh]<<endl;
+      auto thisto = MCtr.Histo1D({name.Data(),name.Data(),histoBn[ijp][ijh],histoXmn[ijp][ijh],histoXmx[ijp][ijh]},
+				 parname.Data());
+      histo_mc[ijp][ijh] = (TH1D*)thisto->Clone();
+    }}
+  
   Long64_t nt, ns, nsb, ntb;
   
-  if(trk=="") {
-    auto nt1  = tr.Filter(common.Data()).Count();
-    auto ns1  = tr.Filter((common+" && "+signal).Data()).Count();
-    auto nsb1 = tr.Filter((common+" && "+signal+" && "+rank).Data()).Count();
-    auto ntb1 = tr.Filter((common+" && "+rank).Data()).Count();
+  for(int ijp=0;ijp<int(particleList.size());ijp++) {
     
-    if(isK3pi) {
-      auto tB0mcPTK3pi_sig = tr.Filter((common+" && "+signal).Data())
-	.Histo1D({"B0mcPTK3pi_sig","B0mcPTK3pi_sig",binN,0.,0.7},"B0_mcPT");
-      B0mcPTK3pi_sig = (TH1D*)tB0mcPTK3pi_sig->Clone("B0mcPTK3pi_sig");
-      auto tB0mcThetaK3pi_sig = tr.Filter((common+" && "+signal).Data())
-	.Histo1D({"B0mcThetaK3pi_sig","B0mcThetaK3pi_sig",binN,0.,TMath::Pi()},"B0_mcTheta");
-      B0mcThetaK3pi_sig = (TH1D*)tB0mcThetaK3pi_sig->Clone("B0mcThetaK3pi_sig");
-
-      auto tB0mcPTK3pi_sig_bc = tr.Filter((common+" && "+signal+" && "+rank).Data())
-	.Histo1D({"B0mcPTK3pi_sig_bc","B0mcPTK3pi_sig_bc",binN,0.,0.7},"B0_mcPT");
-      B0mcPTK3pi_sig_bc = (TH1D*)tB0mcPTK3pi_sig_bc->Clone("B0mcPTK3pi_sig_bc");
-      auto tB0mcThetaK3pi_sig_bc = tr.Filter((common+" && "+signal+" && "+rank).Data())
-	.Histo1D({"B0mcThetaK3pi_sig_bc","B0mcThetaK3pi_sig_bc",binN,0.,TMath::Pi()},"B0_mcTheta");
-      B0mcThetaK3pi_sig_bc = (TH1D*)tB0mcThetaK3pi_sig_bc->Clone("B0mcThetaK3pi_sig_bc");
+    TString trk = particleList[ijp];
+    TString signal = trk + "_isSignal==1";
+    signal += " && TMath::Abs(" + trk + "_genMotherPDG)==" + parMotherMap[trk];
+    cout<<endl<<" "<<trk<<" "<<particleMap[trk]<<" efficiency and purity : signal cut:: "<<signal<<endl;
+    
+    if(trk=="B0") {
+      auto nt1  = tr.Filter(common.Data()).Count();
+      auto ns1  = tr.Filter((common+" && "+signal).Data()).Count();
+      auto nsb1 = tr.Filter((common+" && "+signal+" && "+rank).Data()).Count();
+      auto ntb1 = tr.Filter((common+" && "+rank).Data()).Count();
+      
+      for(int ijh=0;ijh<int(histoList.size());ijh++) {
+	for(int ijb=0;ijb<2;ijb++) {
+	  TString name = ( trk + "_" + histoList[ijh] + "_" + channelName
+			   + "_sig" + (ijb==0?"":"_bc"));
+	  cout<<" reco fill "<<name<<endl;
+	  auto thisto = tr.Filter((common+" && "+signal).Data())
+	    .Histo1D({name.Data(),name.Data(),histoBn[ijp][ijh],histoXmn[ijp][ijh],histoXmx[ijp][ijh]},
+		     (trk + "_" + histoList[ijh]).Data());
+	  histo_sig[ijp][ijh][ijb] = (TH1D*)thisto->Clone();
+	}}
+      
+      nt = *nt1; ns = *ns1; nsb = *nsb1; ntb = *ntb1;
     } else {
-      auto tB0mcPTKpi_sig = tr.Filter((common+" && "+signal).Data())
-	.Histo1D({"B0mcPTKpi_sig","B0mcPTKpi_sig",binN,0.,0.7},"B0_mcPT");
-      B0mcPTKpi_sig = (TH1D*)tB0mcPTKpi_sig->Clone("B0mcPTKpi_sig");
-      auto tB0mcThetaKpi_sig = tr.Filter((common+" && "+signal).Data())
-	.Histo1D({"B0mcThetaKpi_sig","B0mcThetaKpi_sig",binN,0.,TMath::Pi()},"B0_mcTheta");
-      B0mcThetaKpi_sig = (TH1D*)tB0mcThetaKpi_sig->Clone("B0mcThetaKpi_sig");
-
-      auto tB0mcPTKpi_sig_bc = tr.Filter((common+" && "+signal+" && "+rank).Data())
-	.Histo1D({"B0mcPTKpi_sig_bc","B0mcPTKpi_sig_bc",binN,0.,0.7},"B0_mcPT");
-      B0mcPTKpi_sig_bc = (TH1D*)tB0mcPTKpi_sig_bc->Clone("B0mcPTKpi_sig_bc");
-      auto tB0mcThetaKpi_sig_bc = tr.Filter((common+" && "+signal+" && "+rank).Data())
-	.Histo1D({"B0mcThetaKpi_sig_bc","B0mcThetaKpi_sig_bc",binN,0.,TMath::Pi()},"B0_mcTheta");
-      B0mcThetaKpi_sig_bc = (TH1D*)tB0mcThetaKpi_sig_bc->Clone("B0mcThetaKpi_sig_bc");
+      nt  = countTracks(tr,MCtr,trk,common, -1);
+      ns  = countTracks(tr,MCtr,trk,common+" && "+signal, 0);
+      nsb = countTracks(tr,MCtr,trk,common+" && "+signal+" && "+rank, 1);
+      ntb = countTracks(tr,MCtr,trk,common+" && "+rank, -1);
     }
     
-    nt = *nt1; ns = *ns1; nsb = *nsb1; ntb = *ntb1;
-  } else {
-    nt  = countTracks(tr,MCtr,trk,common, isK3pi, 0);
-    ns  = countTracks(tr,MCtr,trk,common+" && "+signal, isK3pi, 1);
-    nsb = countTracks(tr,MCtr,trk,common+" && "+signal+" && "+rank, isK3pi, 2);
-    ntb = countTracks(tr,MCtr,trk,common+" && "+rank, isK3pi, 0);
-  }
-  
-  if(nt<=0 || *nMC<=0) {return -1;}
-  
-  TString fs;
-  cout << "             |  w/o bc  | w/ b.c.  " << endl;
-  cout << "   ----------+----------+----------" << endl;
-  fs.Form("     Total   |%10u|%10u", int(nt), int(ntb));
-  cout << fs << endl;
-  fs.Form("     Signal  |%10u|%10u", int(ns), int(nsb));
-  cout << fs << endl;
-  fs.Form("      MC     |%10u|%10u", int(*nMC), int(*nMC));
-  cout << fs << endl;
-  fs.Form("  Efficiency |%9.4g%%|%9.4g%%", 100.0 * (ns) / (*nMC), 100.0 * (nsb) / (*nMC));
-  cout << fs << endl;
-  fs.Form("    Purity   |%9.4g%%|%9.4g%%", 100.0 * (ns) / (nt), 100.0 * (nsb) / (ntb));
-  cout << fs << endl;
+    if(nt<=0 || *nMC<=0) {return -1;}
+    
+    TString fs;
+    cout << "             |  w/o bc  | w/ b.c.  " << endl;
+    cout << "   ----------+----------+----------" << endl;
+    fs.Form("     Total   |%10u|%10u", int(nt), int(ntb));
+    cout << fs << endl;
+    fs.Form("     Signal  |%10u|%10u", int(ns), int(nsb));
+    cout << fs << endl;
+    fs.Form("      MC     |%10u|%10u", int(*nMC), int(*nMC));
+    cout << fs << endl;
+    fs.Form("  Efficiency |%9.4g%%|%9.4g%%", 100.0 * (ns) / (*nMC), 100.0 * (nsb) / (*nMC));
+    cout << fs << endl;
+    fs.Form("    Purity   |%9.4g%%|%9.4g%%", 100.0 * (ns) / (nt), 100.0 * (nsb) / (ntb));
+    cout << fs << endl;
+
+  } // for(int ijp=0;ijp<int(particleList.size());ijp++) {
   
   return 0;
-} // void printEffi(TTree *tr, TTree *MCtr, TString common, TString rank, TString signal) {
+}
 
+
+void Utils::DivideHisto() {
+  for(int ijp=0;ijp<int(particleList.size());ijp++) {
+    for(int ijh=0;ijh<int(histoList.size());ijh++) {
+      for(int ijb=0;ijb<2;ijb++) {
+	TString name = (particleList[ijp] + "_" + histoList[ijh] + "_" + channelName
+			+ "_sig" + (ijb==0?"":"_bc") + "_effi");
+	cout<<" divide "<<name<<endl;
+	histo_effi[ijp][ijh][ijb] = (TH1D*)histo_sig[ijp][ijh][ijb]->Clone(name);
+	histo_effi[ijp][ijh][ijb]->SetTitle(name);
+	histo_effi[ijp][ijh][ijb]->Divide(histo_effi[ijp][ijh][ijb],histo_mc[ijp][ijh],1,1,"b");
+      }}}
+}

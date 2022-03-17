@@ -7,8 +7,32 @@ std::map<TString, TString> motherMap = {
   {"B0", "300553"},
   {"pisoft", "413"},
   {"K", "421"},
-  {"mu", "511"}
+  {"mu", "511"},
+  {"pi", "421"},
+  {"pi1", "421"}
 };
+
+std::vector<TString> channelList = {"Kpi", "K3pi"};
+std::vector<std::vector<TString>> particleList = {{"B0", "pisoft", "mu", "K", "pi"},
+						  {"B0", "pisoft", "mu", "K", "pi1"}};
+// std::vector<TString> particleList = {"B0", "pisoft", "mu", "K", "pi"};
+std::vector<TString> histoList = {"mcPT", "mcTheta"};
+
+std::vector<std::vector<Int_t>> histoBn = {{20, 20},
+					   {20, 20},
+					   {20, 20},
+					   {20, 20},
+					   {20, 20}};
+std::vector<std::vector<Double_t>> histoXmn = {{0., 0.},
+					       {0., 0.},
+					       {0., 0.},
+					       {0., 0.},
+					       {0., 0.}};
+std::vector<std::vector<Double_t>> histoXmx = {{0.7, TMath::Pi()},
+					       {0.25, TMath::Pi()},
+					       {2.5, TMath::Pi()},
+					       {2.5, TMath::Pi()},
+					       {2.5, TMath::Pi()}};
 
 std::vector<TString> commonMCBranch {"__experiment__", "__run__",
     "__event__"};

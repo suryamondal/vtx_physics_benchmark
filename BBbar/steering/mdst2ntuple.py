@@ -294,7 +294,7 @@ tracksVariables += ['nVTXHits'] if HAS_VTX else  ['nPXDHits', 'nSVDHits']
 tracksVariables += ['firstVTXLayer'] if HAS_VTX else ['firstPXDLayer', 'firstSVDLayer']
 tracksVariables += ['trackNECLClusters', 'nMatchedKLMClusters', 'klmClusterLayers']
 tracksVariables += ['charge', 'omega', 'phi0', 'z0', 'd0',
-                    'omegaPull', 'phi0Pull', 'z0Pull', 'd0Pull', 'tanLambdaPull']
+                    'omegaPull', 'phi0Pull', 'z0Pull', 'd0Pull', 'tanLambda', 'tanLambdaPull']
 tracksVariables += ['omegaErr', 'phi0Err', 'z0Err', 'd0Err', 'tanLambdaErr', 'chi2']
 
 # Variables of the composite particles (D0, D*, B0)

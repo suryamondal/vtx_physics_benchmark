@@ -32,6 +32,4 @@
 #include "TString.h"
 #include <ROOT/RDataFrame.hxx>
 
-const int binN = 20;
-
 #endif

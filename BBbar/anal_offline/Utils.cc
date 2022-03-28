@@ -8,27 +8,62 @@ Utils::Utils() {}
 void Utils::Setup(std::map<TString, TString> motherMap,
 		  std::vector<TString> &particleNames,
 		  std::vector<TString> &histoNames,
-		  std::vector<std::vector<Int_t>> &histoBins,
-		  std::vector<std::vector<Double_t>> &histoXmin,
-		  std::vector<std::vector<Double_t>> &histoXmax,
-		  TString chnl) {
+		  std::vector<std::vector<std::vector<Double_t>>> &histoBins,
+		  std::vector<TString> &particleResoNames,
+		  std::vector<std::vector<TString>> &histoResoNames,
+		  std::vector<std::vector<std::vector<Double_t>>> &histoResoBins,
+		  std::vector<TString> &particleResoFromPullNames,
+		  std::vector<std::vector<TString>> &histoResoFromPullNames,
+		  std::vector<std::vector<std::vector<Double_t>>> &histoResoFromPullBins,
+		  TString chnl,
+		  std::vector<TString> &paramNames
+		  ) {
+  
+  histoTypes = {"tot","sig","sig_bc","bc"};
   
   parMotherMap = motherMap;
   
-  particleList.clear(); particleMap.clear();
-  histoBn.clear(); histoXmn.clear(); histoXmx.clear();
-  for(int ij=0;ij<int(particleNames.size());ij++) {
-    particleList.push_back(particleNames[ij]);
-    // cout<<particleList.back()<<endl;
-    particleMap.insert(pair<TString, Int_t>(particleNames[ij], ij));
-    histoBn.push_back(histoBins[ij]);
-    histoXmn.push_back(histoXmin[ij]);
-    histoXmx.push_back(histoXmax[ij]);}
+  paramList = paramNames;
+  paramMap.clear();
+  for(int ij=0;ij<int(paramNames.size());ij++) {
+    paramMap.insert(pair<TString, Int_t>(paramNames[ij], ij));
+  }
   
-  histoList.clear(); histoMap.clear();
+  particleList = particleNames;
+  particleMap.clear();
+  for(int ij=0;ij<int(particleNames.size());ij++) {
+    particleMap.insert(pair<TString, Int_t>(particleNames[ij], ij));
+  }
+  
+  histoList = histoNames;
+  histoMap.clear();
   for(int ij=0;ij<int(histoNames.size());ij++) {
-    histoList.push_back(histoNames[ij]);
     histoMap.insert(pair<TString, Int_t>(histoNames[ij], ij));}
+  histoBn = histoBins;
+  
+  particleResoList = particleResoNames;
+  particleResoMap.clear();
+  for(int ij=0;ij<int(particleResoNames.size());ij++) {
+    particleResoMap.insert(pair<TString, Int_t>(particleResoNames[ij], ij));
+  }
+  
+  histoResoList = histoResoNames;
+  histoResoMap.clear();
+  for(int ij=0;ij<int(histoResoNames.size());ij++) {
+    histoResoMap.insert(pair<TString, Int_t>(histoResoNames[ij][0], ij));}
+  histoResoBn = histoResoBins;
+
+  particleResoFromPullList = particleResoFromPullNames;
+  particleResoFromPullMap.clear();
+  for(int ij=0;ij<int(particleResoFromPullNames.size());ij++) {
+    particleResoFromPullMap.insert(pair<TString, Int_t>(particleResoFromPullNames[ij], ij));
+  }
+  
+  histoResoFromPullList = histoResoFromPullNames;
+  histoResoFromPullMap.clear();
+  for(int ij=0;ij<int(histoResoFromPullNames.size());ij++) {
+    histoResoFromPullMap.insert(pair<TString, Int_t>(histoResoFromPullNames[ij][0], ij));}
+  histoResoFromPullBn = histoResoFromPullBins;
   
   channelName = chnl;
   
@@ -37,18 +72,43 @@ void Utils::Setup(std::map<TString, TString> motherMap,
       TString name = (particleNames[ijp] + "_" + histoNames[ijh] + "_" + channelName);
       cout<<" mc new "<<name<<endl;
       histo_mc[ijp][ijh] = new TH1D(name.Data(),name.Data(),
-				    histoBins[ijp][ijh],histoXmin[ijp][ijh],histoXmax[ijp][ijh]);
+				    int(histoBins[ijp][ijh][0]),histoBins[ijp][ijh][1],histoBins[ijp][ijh][2]);
     }}
   
   for(int ijp=0;ijp<int(particleNames.size());ijp++) {
     for(int ijh=0;ijh<int(histoNames.size());ijh++) {
-      for(int ijb=0;ijb<2;ijb++) {
+      for(int ijb=0;ijb<int(histoTypes.size());ijb++) {
 	TString name = (particleNames[ijp] + "_" + histoNames[ijh] + "_" + channelName
-			+ "_sig" + (ijb==0?"":"_bc"));
+			+ "_" + histoTypes[ijb]);
 	cout<<" mc new "<<name<<endl;
 	histo_sig[ijp][ijh][ijb] = new TH1D(name.Data(),name.Data(),
-					     histoBins[ijp][ijh],histoXmin[ijp][ijh],histoXmax[ijp][ijh]);
+					    int(histoBins[ijp][ijh][0]),histoBins[ijp][ijh][1],histoBins[ijp][ijh][2]);
       }}}
+  
+  for(int ijp=0;ijp<int(particleResoNames.size());ijp++) {
+    for(int ijh=0;ijh<int(histoResoNames.size());ijh++) {
+      for(int ijb=0;ijb<int(histoTypes.size());ijb++) {
+	TString name = (particleResoNames[ijp] + "_" + histoResoNames[ijh][0] + "_" + channelName
+			+ "_" + histoTypes[ijb] + "_reso");
+	cout<<" mc reso new "<<name<<endl;
+	histo_reso_sig[ijp][ijh][ijb] = new TH2D(name.Data(),name.Data(),
+						 int(histoResoBins[ijp][ijh][0]),histoResoBins[ijp][ijh][1],histoResoBins[ijp][ijh][2],
+						 int(histoResoBins[ijp][ijh][3]),histoResoBins[ijp][ijh][4],histoResoBins[ijp][ijh][5]);
+      }}}
+
+  for(int ijp=0;ijp<int(particleResoFromPullNames.size());ijp++) {
+    for(int ijh=0;ijh<int(histoResoFromPullNames.size());ijh++) {
+      for(int ijb=0;ijb<int(histoTypes.size());ijb++) {
+	TString name = (particleResoFromPullNames[ijp] + "_" + histoResoFromPullNames[ijh][0] + "_" + channelName
+			+ "_" + histoTypes[ijb] + "_reso");
+	name.ReplaceAll("Pull","");
+	cout<<" mc reso pull new "<<name<<endl;
+	histo_resofrompull_sig[ijp][ijh][ijb] = new TH1D(name.Data(),name.Data(),
+							 int(histoResoFromPullBins[ijp][ijh][0]),
+							 histoResoFromPullBins[ijp][ijh][1],
+							 histoResoFromPullBins[ijp][ijh][2]);
+      }}}
+
   
   cout<<" Utils ready "<<endl<<endl;
   
@@ -98,8 +158,8 @@ Long64_t Utils::countTracks(ROOT::RDataFrame &tr,
   auto indvec = tr.Filter(cuts.Data()).Take<Double_t>((trk+"_mdstIndex").Data());
   auto srcvec = tr.Filter(cuts.Data()).Take<Double_t>((trk+"_particleSource").Data());
   
-  for(int ijh=0;ijh<int(histoList.size());ijh++) {
-    parVecList[ijh] = tr.Filter(cuts.Data()).Take<Double_t>((trk + "_" + histoList[ijh]).Data());
+  for(int ijh=0;ijh<int(paramList.size());ijh++) {
+    parVecList[ijh] = tr.Filter(cuts.Data()).Take<Double_t>((trk + "_" + paramList[ijh]).Data());
   }
   
   vector<int> expt, run, evt, index;
@@ -166,8 +226,24 @@ Long64_t Utils::countTracks(ROOT::RDataFrame &tr,
     
     if(isBC>=0) {
       for(int ijh=0;ijh<int(histoList.size());ijh++) {
-	histo_sig[particleMap[trk]][ijh][isBC]->Fill(vector(*parVecList[ijh])[ij]);
-      }}
+	if(particleMap.count(trk)==0) {continue;}
+	histo_sig[particleMap[trk]][ijh][isBC]->Fill(vector(*parVecList[paramMap[histoList[ijh]]])[ij]);
+      }
+      
+      for(int ijh=0;ijh<int(histoResoList.size());ijh++) {
+	if(particleResoMap.count(trk)==0) {continue;}
+	histo_reso_sig[particleResoMap[trk]][ijh][isBC]->Fill(vector(*parVecList[paramMap[histoResoList[ijh][0]]])[ij],
+							      (vector(*parVecList[paramMap[histoResoList[ijh][0]]])[ij] -
+							       vector(*parVecList[paramMap[histoResoList[ijh][1]]])[ij]));
+      }
+     
+      for(int ijh=0;ijh<int(histoResoFromPullList.size());ijh++) {
+	if(particleResoFromPullMap.count(trk)==0) {continue;}
+	histo_resofrompull_sig[particleResoFromPullMap[trk]][ijh][isBC]->Fill(vector(*parVecList[paramMap[histoResoFromPullList[ijh][0]]])[ij] *
+									      vector(*parVecList[paramMap[histoResoFromPullList[ijh][1]]])[ij]);
+      }
+      
+    }
     
   } // for(Long64_t ij=0;ij<entries;ij++) {
   
@@ -200,8 +276,8 @@ int Utils::printEffi(ROOT::RDataFrame &tr,
       TString name = (particleList[ijp] + "_" + histoList[ijh] + "_" + channelName);
       TString parname = (particleList[ijp] + "_" + histoList[ijh]);
       cout<<" mc fill "<<name<<" "<<parname<<endl;
-      cout<<"\t"<<histoBn[ijp][ijh]<<" "<<histoXmn[ijp][ijh]<<" "<<histoXmx[ijp][ijh]<<endl;
-      auto thisto = MCtr.Histo1D({name.Data(),name.Data(),histoBn[ijp][ijh],histoXmn[ijp][ijh],histoXmx[ijp][ijh]},
+      cout<<"\t"<<histoBn[ijp][ijh][0]<<" "<<histoBn[ijp][ijh][1]<<" "<<histoBn[ijp][ijh][2]<<endl;
+      auto thisto = MCtr.Histo1D({name.Data(),name.Data(),int(histoBn[ijp][ijh][0]),histoBn[ijp][ijh][1],histoBn[ijp][ijh][2]},
 				 parname.Data());
       histo_mc[ijp][ijh] = (TH1D*)thisto->Clone();
     }}
@@ -215,29 +291,33 @@ int Utils::printEffi(ROOT::RDataFrame &tr,
     signal += " && TMath::Abs(" + trk + "_genMotherPDG)==" + parMotherMap[trk];
     cout<<endl<<" "<<trk<<" "<<particleMap[trk]<<" efficiency and purity : signal cut:: "<<signal<<endl;
     
+    vector<TString> cutlist = {common,
+			       common+" && "+signal,
+			       common+" && "+signal+" && "+rank,
+			       common+" && "+rank};
     if(trk=="B0") {
-      auto nt1  = tr.Filter(common.Data()).Count();
-      auto ns1  = tr.Filter((common+" && "+signal).Data()).Count();
-      auto nsb1 = tr.Filter((common+" && "+signal+" && "+rank).Data()).Count();
-      auto ntb1 = tr.Filter((common+" && "+rank).Data()).Count();
+      auto nt1  = tr.Filter(cutlist[0].Data()).Count();
+      auto ns1  = tr.Filter(cutlist[1].Data()).Count();
+      auto nsb1 = tr.Filter(cutlist[2].Data()).Count();
+      auto ntb1 = tr.Filter(cutlist[3].Data()).Count();
       
-      for(int ijh=0;ijh<int(histoList.size());ijh++) {
-	for(int ijb=0;ijb<2;ijb++) {
-	  TString name = ( trk + "_" + histoList[ijh] + "_" + channelName
-			   + "_sig" + (ijb==0?"":"_bc"));
-	  cout<<" reco fill "<<name<<endl;
-	  auto thisto = tr.Filter((common+" && "+signal).Data())
-	    .Histo1D({name.Data(),name.Data(),histoBn[ijp][ijh],histoXmn[ijp][ijh],histoXmx[ijp][ijh]},
-		     (trk + "_" + histoList[ijh]).Data());
-	  histo_sig[ijp][ijh][ijb] = (TH1D*)thisto->Clone();
-	}}
+      // for(int ijh=0;ijh<int(histoList.size());ijh++) {
+      // 	for(int ijb=0;ijb<int(histoTypes.size());ijb++) {
+      // 	  TString name = ( trk + "_" + histoList[ijh] + "_" + channelName
+      // 			   + "_" + histoTypes[ijb]);
+      // 	  cout<<" reco fill "<<name<<endl;
+      // 	  auto thisto = tr.Filter(cutlist[ijb].Data())
+      // 	    .Histo1D({name.Data(),name.Data(),int(histoBn[ijp][ijh][0]),histoBn[ijp][ijh][1],histoBn[ijp][ijh][2]},
+      // 		     (trk + "_" + histoList[ijh]).Data());
+      // 	  histo_sig[ijp][ijh][ijb] = (TH1D*)thisto->Clone();
+      // 	}}
       
       nt = *nt1; ns = *ns1; nsb = *nsb1; ntb = *ntb1;
     } else {
-      nt  = countTracks(tr,MCtr,trk,common, -1);
-      ns  = countTracks(tr,MCtr,trk,common+" && "+signal, 0);
-      nsb = countTracks(tr,MCtr,trk,common+" && "+signal+" && "+rank, 1);
-      ntb = countTracks(tr,MCtr,trk,common+" && "+rank, -1);
+      nt  = countTracks(tr,MCtr,trk,cutlist[0],0);
+      ns  = countTracks(tr,MCtr,trk,cutlist[1],1);
+      nsb = countTracks(tr,MCtr,trk,cutlist[2],2);
+      ntb = countTracks(tr,MCtr,trk,cutlist[3],3);
     }
     
     if(nt<=0 || *nMC<=0) {return -1;}
@@ -265,12 +345,19 @@ int Utils::printEffi(ROOT::RDataFrame &tr,
 void Utils::DivideHisto() {
   for(int ijp=0;ijp<int(particleList.size());ijp++) {
     for(int ijh=0;ijh<int(histoList.size());ijh++) {
-      for(int ijb=0;ijb<2;ijb++) {
+      for(int ijb=0;ijb<int(histoTypes.size());ijb++) {
 	TString name = (particleList[ijp] + "_" + histoList[ijh] + "_" + channelName
-			+ "_sig" + (ijb==0?"":"_bc") + "_effi");
+			+ "_" + histoTypes[ijb]);
 	cout<<" divide "<<name<<endl;
-	histo_effi[ijp][ijh][ijb] = (TH1D*)histo_sig[ijp][ijh][ijb]->Clone(name);
-	histo_effi[ijp][ijh][ijb]->SetTitle(name);
+	histo_effi[ijp][ijh][ijb] = (TH1D*)histo_sig[ijp][ijh][ijb]->Clone(name+"_effi");
+	histo_purity[ijp][ijh][ijb] = (TH1D*)histo_sig[ijp][ijh][ijb]->Clone(name+"_purity");
+	histo_effi[ijp][ijh][ijb]->SetTitle(name+"_effi");
+	histo_purity[ijp][ijh][ijb]->SetTitle(name+"_purity");
+	if(name.Contains("_sig_bc")) {
+	  histo_purity[ijp][ijh][ijb]->Divide(histo_purity[ijp][ijh][ijb],histo_sig[ijp][ijh][3],1,1,"b");
+	} else if(name.Contains("_sig")) {
+	  histo_purity[ijp][ijh][ijb]->Divide(histo_purity[ijp][ijh][ijb],histo_sig[ijp][ijh][0],1,1,"b");
+	}
 	histo_effi[ijp][ijh][ijb]->Divide(histo_effi[ijp][ijh][ijb],histo_mc[ijp][ijh],1,1,"b");
       }}}
 }

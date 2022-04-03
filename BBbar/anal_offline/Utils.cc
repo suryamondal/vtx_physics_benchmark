@@ -274,13 +274,14 @@ int Utils::printEffi(ROOT::RDataFrame &tr,
   for(int ijp=0;ijp<int(particleList.size());ijp++) {
     for(int ijh=0;ijh<int(histoList.size());ijh++) {
       TString name = (particleList[ijp] + "_" + histoList[ijh] + "_" + channelName);
-      TString parname = (particleList[ijp] + "_" + histoList[ijh]);
-      cout<<" mc fill "<<name<<" "<<parname<<endl;
-      cout<<"\t"<<histoBn[ijp][ijh][0]<<" "<<histoBn[ijp][ijh][1]<<" "<<histoBn[ijp][ijh][2]<<endl;
-      auto thisto = MCtr.Histo1D({name.Data(),name.Data(),int(histoBn[ijp][ijh][0]),histoBn[ijp][ijh][1],histoBn[ijp][ijh][2]},
-				 parname.Data());
-      histo_mc[ijp][ijh] = (TH1D*)thisto->Clone();
-    }}
+      if(name.Contains("_mc")) {
+	TString parname = (particleList[ijp] + "_" + histoList[ijh]);
+	cout<<" mc fill "<<name<<" "<<parname<<endl;
+	cout<<"\t"<<histoBn[ijp][ijh][0]<<" "<<histoBn[ijp][ijh][1]<<" "<<histoBn[ijp][ijh][2]<<endl;
+	auto thisto = MCtr.Histo1D({name.Data(),name.Data(),int(histoBn[ijp][ijh][0]),histoBn[ijp][ijh][1],histoBn[ijp][ijh][2]},
+				   parname.Data());
+	histo_mc[ijp][ijh] = (TH1D*)thisto->Clone();
+      }}}
   
   Long64_t nt, ns, nsb, ntb;
   
@@ -353,11 +354,11 @@ void Utils::DivideHisto() {
 	histo_purity[ijp][ijh][ijb] = (TH1D*)histo_sig[ijp][ijh][ijb]->Clone(name+"_purity");
 	histo_effi[ijp][ijh][ijb]->SetTitle(name+"_effi");
 	histo_purity[ijp][ijh][ijb]->SetTitle(name+"_purity");
-	if(name.Contains("_sig_bc")) {
-	  histo_purity[ijp][ijh][ijb]->Divide(histo_purity[ijp][ijh][ijb],histo_sig[ijp][ijh][3],1,1,"b");
-	} else if(name.Contains("_sig")) {
-	  histo_purity[ijp][ijh][ijb]->Divide(histo_purity[ijp][ijh][ijb],histo_sig[ijp][ijh][0],1,1,"b");
-	}
-	histo_effi[ijp][ijh][ijb]->Divide(histo_effi[ijp][ijh][ijb],histo_mc[ijp][ijh],1,1,"b");
-      }}}
+	if(name.Contains("_mc")) {
+	  histo_effi[ijp][ijh][ijb]->Divide(histo_effi[ijp][ijh][ijb],histo_mc[ijp][ijh],1,1,"b");
+	} else {
+	  if(name.Contains("_sig_bc")) {
+	    histo_purity[ijp][ijh][ijb]->Divide(histo_purity[ijp][ijh][ijb],histo_sig[ijp][ijh][3],1,1,"b");
+	  } else if(name.Contains("_sig")) {
+	    histo_purity[ijp][ijh][ijb]->Divide(histo_purity[ijp][ijh][ijb],histo_sig[ijp][ijh][0],1,1,"b");}}}}}
 }

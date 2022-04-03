@@ -21,12 +21,11 @@ std::vector<TString> parList = {"mcPT", "mcTheta", "mcP", "mcPhi", "pt", "p", "t
 std::vector<std::vector<TString>> particleList = {{"pisoft", "mu", "K", "pi"},
 						  {"pisoft", "mu", "K", "pi1"}};
 
-std::vector<TString> histoList = {"mcPT", "pt", "mcTheta"};
-std::vector<std::vector<std::vector<Double_t>>> histoBn = {{{20,0.,0.7},{20,0.,0.7},{20,0.,TMath::Pi()}}, // B0
-							   {{20,0.,0.25},{20,0.,0.25},{20,0.,TMath::Pi()}}, // pisoft
-							   {{20,0.,2.5},{20,0.,2.5},{20,0.,TMath::Pi()}}, // mu
-							   {{20,0.,2.5},{20,0.,2.5},{20,0.,TMath::Pi()}}, // K
-							   {{20,0.,2.5},{20,0.,2.5},{20,0.,TMath::Pi()}}}; // pi
+std::vector<TString> histoList = {"mcPT", "pt", "mcTheta", "theta"};
+std::vector<std::vector<std::vector<Double_t>>> histoBn = {{{20,0.,0.25},{20,0.,0.25},{20,0.,TMath::Pi()},{20,0.,TMath::Pi()}}, // pisoft
+							   {{20,0.,2.5},{20,0.,2.5},{20,0.,TMath::Pi()},{20,0.,TMath::Pi()}}, // mu
+							   {{20,0.,2.5},{20,0.,2.5},{20,0.,TMath::Pi()},{20,0.,TMath::Pi()}}, // K
+							   {{20,0.,2.5},{20,0.,2.5},{20,0.,TMath::Pi()},{20,0.,TMath::Pi()}}}; // pi
 
 std::vector<std::vector<TString>> particleResoList = {{"pisoft", "mu", "K", "pi"},
 						      {"pisoft", "mu", "K", "pi1"}};

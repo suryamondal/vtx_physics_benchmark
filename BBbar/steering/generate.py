@@ -27,6 +27,8 @@ except ImportError:
     import background
     HAS_VTX = False
 
+HAS_VTX = False
+
 # Can't use __file__, the interpreter doesn't set it
 SCRIPT_DIR = os.path.dirname(os.path.abspath(sys.argv[0]))
 DECAY_FILE = os.path.join(SCRIPT_DIR, "decays.dec")

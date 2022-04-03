@@ -54,7 +54,10 @@ try:  # Dummy import to check basf2 version
 except ImportError:
     HAS_VTX = False
 
+HAS_VTX = False
+
 b2.set_log_level(b2.LogLevel.DEBUG)
+# b2.set_log_level(19)
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--addTopoAna', action="store_true",
@@ -296,6 +299,7 @@ tracksVariables += ['trackNECLClusters', 'nMatchedKLMClusters', 'klmClusterLayer
 tracksVariables += ['charge', 'omega', 'phi0', 'z0', 'd0',
                     'omegaPull', 'phi0Pull', 'z0Pull', 'd0Pull', 'tanLambda', 'tanLambdaPull']
 tracksVariables += ['omegaErr', 'phi0Err', 'z0Err', 'd0Err', 'tanLambdaErr', 'chi2']
+tracksVariables += ['isFromECL', 'isFromKLM', 'isFromTrack', 'abs(mdstIndex)']
 
 # Variables of the composite particles (D0, D*, B0)
 compositeVariables = vc.vertex + vc.inv_mass + ['M_preFit', 'dM']

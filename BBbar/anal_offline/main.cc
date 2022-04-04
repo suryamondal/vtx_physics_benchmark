@@ -29,6 +29,8 @@ int main(int argc, char **argv) {
   TString cutsList[10];
   cutsList[0] = cutsKpi;
   cutsList[1] = cutsK3pi;
+
+  TFile *f_sim = new TFile(argv[1],"READ");
   
   TString rank   = "B0_M_rank==1";
   
@@ -46,8 +48,8 @@ int main(int argc, char **argv) {
 			tParResoFromPullList,histoResoFromPullList,histoResoFromPullBn,
 			channelList[cn],
 			parList);
-    ROOT::RDataFrame MCtr(("MC"+channelList[cn]).Data(),   argv[1]);
-    ROOT::RDataFrame RCtr(channelList[cn].Data(),       argv[1]);
+    TTree *MCtr = (TTree*)f_sim->Get(("MC"+channelList[cn]).Data());
+    TTree *RCtr = (TTree*)f_sim->Get((     channelList[cn]).Data());
     testUtils[cn].printEffi(RCtr,MCtr,cutsList[cn],rank);
   }
   

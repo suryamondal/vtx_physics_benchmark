@@ -25,8 +25,58 @@ void Utils::Setup(std::map<TString, TString> motherMap,
   
   paramList = paramNames;
   paramMap.clear();
-  for(int ij=0;ij<int(paramNames.size());ij++) {
-    paramMap.insert(pair<TString, Int_t>(paramNames[ij], ij));
+  for(auto it = paramNames.begin(); it!=paramNames.end(); it++) {
+    // paramMap.insert(pair<TString, Int_t>(paramNames[ij], ij));
+    
+    int cnt[10] = {0};
+    for(int ijp=0;ijp<int(particleNames.size());ijp++) {
+      TString name = (particleNames[ijp] + "_" + it->first);
+      auto datatype = VariableDataType[it->second];
+      if(datatype == VariableDataType.end()) {cout<<" data type not found for "<<name<<endl;}
+      if(paramMap.find(name) == paramMap.end()) {
+	if(name.Contains("_mc")) {
+	  branchDataList[cnt[datatype]].push_back(0);
+	  MCtr->SetBranchAddress(name,&branchDataList[cnt[datatype]]);
+	} else {
+	  branchDataList[cnt[datatype]].push_back(0);
+	  RCtr->SetBranchAddress(name,&branchDataList[cnt[datatype]]);
+	}
+	paramMap[name] = pair(it->second, cnt[datatype]);
+	cnt[datatype]++;
+      }}
+
+    for(int ijp=0;ijp<int(particleResoNames.size());ijp++) {
+      TString name = (particleResoNames[ijp] + "_" + it->first);
+      auto datatype = VariableDataType[it->second];
+      if(datatype == VariableDataType.end()) {cout<<" data type not found for "<<name<<endl;}
+      if(paramMap.find(name) == paramMap.end()) {
+	if(name.Contains("_mc")) {
+	  branchDataList[cnt[datatype]].push_back(0);
+	  MCtr->SetBranchAddress(name,&branchDataList[cnt[datatype]]);
+	} else {
+	  branchDataList[cnt[datatype]].push_back(0);
+	  RCtr->SetBranchAddress(name,&branchDataList[cnt[datatype]]);
+	}
+	paramMap[name] = pair(it->second, cnt[datatype]);
+	cnt[datatype]++;
+      }}
+    
+    for(int ijp=0;ijp<int(particleResoFromPullNames.size());ijp++) {
+      TString name = (particleResoFromPullNames[ijp] + "_" + it->first);
+      auto datatype = VariableDataType[it->second];
+      if(datatype == VariableDataType.end()) {cout<<" data type not found for "<<name<<endl;}
+      if(paramMap.find(name) == paramMap.end()) {
+	if(name.Contains("_mc")) {
+	  branchDataList[cnt[datatype]].push_back(0);
+	  MCtr->SetBranchAddress(name,&branchDataList[cnt[datatype]]);
+	} else {
+	  branchDataList[cnt[datatype]].push_back(0);
+	  RCtr->SetBranchAddress(name,&branchDataList[cnt[datatype]]);
+	}
+	paramMap[name] = pair(it->second, cnt[datatype]);
+	cnt[datatype]++;
+      }}
+    
   }
   
   particleList = particleNames;
@@ -155,12 +205,12 @@ Long64_t Utils::countTracks(ROOT::RDataFrame &tr,
   auto expvec = tr.Filter(cuts.Data()).Take<Int_t>("__experiment__");
   auto runvec = tr.Filter(cuts.Data()).Take<Int_t>("__run__");
   auto evtvec = tr.Filter(cuts.Data()).Take<Int_t>("__event__");
-  auto indvec = tr.Filter(cuts.Data()).Take<Double_t>((trk+"_mdstIndex").Data());
-  auto srcvec = tr.Filter(cuts.Data()).Take<Double_t>((trk+"_particleSource").Data());
+  // auto indvec = tr.Filter(cuts.Data()).Take<Double_t>((trk+"_mdstIndex").Data());
+  // auto srcvec = tr.Filter(cuts.Data()).Take<Double_t>((trk+"_particleSource").Data());
   
-  for(int ijh=0;ijh<int(paramList.size());ijh++) {
-    parVecList[ijh] = tr.Filter(cuts.Data()).Take<Double_t>((trk + "_" + paramList[ijh]).Data());
-  }
+  // for(int ijh=0;ijh<int(paramList.size());ijh++) {
+  //   parVecList[ijh] = tr.Filter(cuts.Data()).Take<Double_t>((trk + "_" + paramList[ijh]).Data());
+  // }
   
   vector<int> expt, run, evt, index;
   expt.clear(); run.clear(); evt.clear(); index.clear();

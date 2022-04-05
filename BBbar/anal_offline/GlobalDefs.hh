@@ -3,13 +3,6 @@
 
 #include "GlobalLibs.hh"
 
-/** data type of variables */
-std::map<TString, int> VariableDataType =
-  {{"c_double", 0},
-   {"c_int",    1},
-   {"c_bool",   2}
-  };
-
 std::map<TString, TString> motherMap = {
   {"B0", "300553"},
   {"pisoft", "413"},

@@ -16,9 +16,21 @@ void Utils::Setup(std::map<TString, TString> motherMap,
 		  std::vector<std::vector<TString>> &histoResoFromPullNames,
 		  std::vector<std::vector<std::vector<Double_t>>> &histoResoFromPullBins,
 		  TString chnl,
+		  TTree *tree, TTree *mctree,
 		  std::vector<TString> &paramNames
 		  ) {
-  
+
+  MCtr = &mctree;
+  RCtr = &tree;
+
+  RCtr->SetBranchAddress("__experiment__",&expData);
+  RCtr->SetBranchAddress("__run__",       &runData);
+  RCtr->SetBranchAddress("__event__",     &evtData);
+
+  MCtr->SetBranchAddress("__experiment__",&expDataMC);
+  MCtr->SetBranchAddress("__run__",       &runDataMC);
+  MCtr->SetBranchAddress("__event__",     &evtDataMC);
+
   histoTypes = {"tot","sig","sig_bc","bc"};
   
   parMotherMap = motherMap;
@@ -29,53 +41,18 @@ void Utils::Setup(std::map<TString, TString> motherMap,
     // paramMap.insert(pair<TString, Int_t>(paramNames[ij], ij));
     
     int cnt[10] = {0};
+    
     for(int ijp=0;ijp<int(particleNames.size());ijp++) {
-      TString name = (particleNames[ijp] + "_" + it->first);
-      auto datatype = VariableDataType[it->second];
-      if(datatype == VariableDataType.end()) {cout<<" data type not found for "<<name<<endl;}
-      if(paramMap.find(name) == paramMap.end()) {
-	if(name.Contains("_mc")) {
-	  branchDataList[cnt[datatype]].push_back(0);
-	  MCtr->SetBranchAddress(name,&branchDataList[cnt[datatype]]);
-	} else {
-	  branchDataList[cnt[datatype]].push_back(0);
-	  RCtr->SetBranchAddress(name,&branchDataList[cnt[datatype]]);
-	}
-	paramMap[name] = pair(it->second, cnt[datatype]);
-	cnt[datatype]++;
-      }}
+      makeBranch(particleNames[ijp],it->first,it->second, cnt);
+    }
 
     for(int ijp=0;ijp<int(particleResoNames.size());ijp++) {
-      TString name = (particleResoNames[ijp] + "_" + it->first);
-      auto datatype = VariableDataType[it->second];
-      if(datatype == VariableDataType.end()) {cout<<" data type not found for "<<name<<endl;}
-      if(paramMap.find(name) == paramMap.end()) {
-	if(name.Contains("_mc")) {
-	  branchDataList[cnt[datatype]].push_back(0);
-	  MCtr->SetBranchAddress(name,&branchDataList[cnt[datatype]]);
-	} else {
-	  branchDataList[cnt[datatype]].push_back(0);
-	  RCtr->SetBranchAddress(name,&branchDataList[cnt[datatype]]);
-	}
-	paramMap[name] = pair(it->second, cnt[datatype]);
-	cnt[datatype]++;
-      }}
+      makeBranch(particleResoNames[ijp],it->first,it->second, cnt);
+    }
     
     for(int ijp=0;ijp<int(particleResoFromPullNames.size());ijp++) {
-      TString name = (particleResoFromPullNames[ijp] + "_" + it->first);
-      auto datatype = VariableDataType[it->second];
-      if(datatype == VariableDataType.end()) {cout<<" data type not found for "<<name<<endl;}
-      if(paramMap.find(name) == paramMap.end()) {
-	if(name.Contains("_mc")) {
-	  branchDataList[cnt[datatype]].push_back(0);
-	  MCtr->SetBranchAddress(name,&branchDataList[cnt[datatype]]);
-	} else {
-	  branchDataList[cnt[datatype]].push_back(0);
-	  RCtr->SetBranchAddress(name,&branchDataList[cnt[datatype]]);
-	}
-	paramMap[name] = pair(it->second, cnt[datatype]);
-	cnt[datatype]++;
-      }}
+      makeBranch(particleResoFromPullNames[ijp],it->first,it->second, cnt);
+    }
     
   }
   
@@ -201,10 +178,10 @@ Long64_t Utils::countTracks(ROOT::RDataFrame &tr,
     // cout<<"\ttpos "<<tpos<<" "<<isThisBranch[tpos]<<endl;
   }
   
-  auto entries  = tr.Filter(cuts.Data()).Count();
-  auto expvec = tr.Filter(cuts.Data()).Take<Int_t>("__experiment__");
-  auto runvec = tr.Filter(cuts.Data()).Take<Int_t>("__run__");
-  auto evtvec = tr.Filter(cuts.Data()).Take<Int_t>("__event__");
+  // auto entries  = tr.Filter(cuts.Data()).Count();
+  // auto expvec = tr.Filter(cuts.Data()).Take<Int_t>("__experiment__");
+  // auto runvec = tr.Filter(cuts.Data()).Take<Int_t>("__run__");
+  // auto evtvec = tr.Filter(cuts.Data()).Take<Int_t>("__event__");
   // auto indvec = tr.Filter(cuts.Data()).Take<Double_t>((trk+"_mdstIndex").Data());
   // auto srcvec = tr.Filter(cuts.Data()).Take<Double_t>((trk+"_particleSource").Data());
   
@@ -412,3 +389,23 @@ void Utils::DivideHisto() {
 	  } else if(name.Contains("_sig")) {
 	    histo_purity[ijp][ijh][ijb]->Divide(histo_purity[ijp][ijh][ijb],histo_sig[ijp][ijh][0],1,1,"b");}}}}}
 }
+
+void Utils::makeBranch(const TString &partname,
+		       const TString &parname,
+		       const TString &type
+		       int *cnt) {
+  TString name = (partname + "_" + parname);
+  auto datatype = VariableDataType[type];
+  if(datatype == VariableDataType.end()) {cout<<" data type not found for "<<name<<endl;}
+  if(paramMap.find(name) == paramMap.end()) {
+    if(name.Contains("_mc")) {
+      branchDataList[cnt[datatype]].push_back(0);
+      MCtr->SetBranchAddress(name,&branchDataList[cnt[datatype]]);
+    } else {
+      branchDataList[cnt[datatype]].push_back(0);
+      RCtr->SetBranchAddress(name,&branchDataList[cnt[datatype]]);
+    }
+    paramMap[name] = pair(type, cnt[datatype]);
+    cnt[datatype]++;
+  }
+  

@@ -18,6 +18,7 @@ public :
 	     std::vector<std::vector<TString>> &histoResoFromPullNames,
 	     std::vector<std::vector<std::vector<Double_t>>> &histoResoFromPullBins,
 	     TString chnl,
+	     TTree *tree, TTree *mctree,
 	     std::vector<TString> &paramNames);
   
   int printEffi(ROOT::RDataFrame &tr,
@@ -31,13 +32,18 @@ public :
 		       int isBC);
 
   void DivideHisto();
+  makeBranch(TTree *tr,
+	     const TString &partname,
+	     const TString &parname,
+	     const TString &type
+	     int &cnt);
   
 public:
 
   std::map<TString, TString> parMotherMap;
 
   std::vector<TString> paramList;
-  std::map<TString, Int_t> paramMap;
+  std::map<TString, std::pair<TString,Int_t>> paramMap;
   
   std::vector<TString> particleList;
   std::map<TString, Int_t> particleMap;
@@ -61,6 +67,17 @@ public:
   std::vector<std::vector<std::vector<Double_t>>> histoResoFromPullBn;
   
   TString channelName;
+  
+  TTree *MCtr, *RCtr;
+  
+  Int_t expData, runData, evtData, expDataMC, runDataMC, evtDataMC;
+  std::vector<Double_t> branchDouble;
+  std::vector<Int_t>    branchInt;
+  std::vector<Bool_t>   branchBool;
+
+  template<typename T, typename Allocator>
+  std::reference_wrapper<T, Allocator> BranchDataList[] =
+    {branchDouble, branchInt, branchBool};
   
   TH1D *histo_mc[20][20];	// [nparticle][histo]
   TH1D *histo_sig[20][20][4];	// [nparticles][histo][bc]

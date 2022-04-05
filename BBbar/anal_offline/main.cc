@@ -42,14 +42,15 @@ int main(int argc, char **argv) {
     printVector(tParResoList);
     vector<TString> tParResoFromPullList = particleResoFromPullList[cn];
     printVector(tParResoFromPullList);
+    TTree *MCtr = (TTree*)f_sim->Get(("MC"+channelList[cn]).Data());
+    TTree *RCtr = (TTree*)f_sim->Get((     channelList[cn]).Data());
     testUtils[cn].Setup(motherMap,
 			tParList,histoList,histoBn,
 			tParResoList,histoResoList,histoResoBn,
 			tParResoFromPullList,histoResoFromPullList,histoResoFromPullBn,
 			channelList[cn],
+			RCtr, MCtr,
 			parList);
-    TTree *MCtr = (TTree*)f_sim->Get(("MC"+channelList[cn]).Data());
-    TTree *RCtr = (TTree*)f_sim->Get((     channelList[cn]).Data());
     testUtils[cn].printEffi(RCtr,MCtr,cutsList[cn],rank);
   }
   

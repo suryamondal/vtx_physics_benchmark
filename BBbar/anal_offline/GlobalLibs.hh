@@ -11,6 +11,7 @@
 #include <map>
 #include <algorithm>
 #include <string>
+#include <functional>
 
 #include "TTimeStamp.h"
 #include "TH1.h"
@@ -34,7 +35,7 @@
 
 
 /** data type of variables */
-std::map<TString, int> VariableDataType =
+static std::map<TString, int> VariableDataType =
   {{"c_double", 0},
    {"c_int",    1},
    {"c_bool",   2}

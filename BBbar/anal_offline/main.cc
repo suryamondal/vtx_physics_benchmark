@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
 			channelList[cn],
 			RCtr, MCtr,
 			parList);
-    testUtils[cn].printEffi(RCtr,MCtr,cutsList[cn],rank);
+    testUtils[cn].printEffi(cutsList[cn],rank);
   }
   
   /* writting histograms */

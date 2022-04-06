@@ -17,12 +17,12 @@ void Utils::Setup(std::map<TString, TString> motherMap,
 		  std::vector<std::vector<std::vector<Double_t>>> &histoResoFromPullBins,
 		  TString chnl,
 		  TTree *tree, TTree *mctree,
-		  std::vector<TString> &paramNames
+		  std::map<TString, TString> &paramNames
 		  ) {
 
-  MCtr = &mctree;
-  RCtr = &tree;
-
+  RCtr = (TTree*)tree->Clone("tree");
+  MCtr = (TTree*)mctree->Clone("mctree");
+  
   RCtr->SetBranchAddress("__experiment__",&expData);
   RCtr->SetBranchAddress("__run__",       &runData);
   RCtr->SetBranchAddress("__event__",     &evtData);
@@ -30,17 +30,15 @@ void Utils::Setup(std::map<TString, TString> motherMap,
   MCtr->SetBranchAddress("__experiment__",&expDataMC);
   MCtr->SetBranchAddress("__run__",       &runDataMC);
   MCtr->SetBranchAddress("__event__",     &evtDataMC);
-
+  
   histoTypes = {"tot","sig","sig_bc","bc"};
   
   parMotherMap = motherMap;
   
   paramList = paramNames;
   paramMap.clear();
+  int cnt[10] = {0};
   for(auto it = paramNames.begin(); it!=paramNames.end(); it++) {
-    // paramMap.insert(pair<TString, Int_t>(paramNames[ij], ij));
-    
-    int cnt[10] = {0};
     
     for(int ijp=0;ijp<int(particleNames.size());ijp++) {
       makeBranch(particleNames[ijp],it->first,it->second, cnt);
@@ -59,37 +57,34 @@ void Utils::Setup(std::map<TString, TString> motherMap,
   particleList = particleNames;
   particleMap.clear();
   for(int ij=0;ij<int(particleNames.size());ij++) {
-    particleMap.insert(pair<TString, Int_t>(particleNames[ij], ij));
-  }
+    particleMap[particleNames[ij]] = ij;}
   
   histoList = histoNames;
   histoMap.clear();
   for(int ij=0;ij<int(histoNames.size());ij++) {
-    histoMap.insert(pair<TString, Int_t>(histoNames[ij], ij));}
+    histoMap[histoNames[ij]] = ij;}
   histoBn = histoBins;
   
   particleResoList = particleResoNames;
   particleResoMap.clear();
   for(int ij=0;ij<int(particleResoNames.size());ij++) {
-    particleResoMap.insert(pair<TString, Int_t>(particleResoNames[ij], ij));
-  }
+    particleResoMap[particleResoNames[ij]] = ij;}
   
   histoResoList = histoResoNames;
   histoResoMap.clear();
   for(int ij=0;ij<int(histoResoNames.size());ij++) {
-    histoResoMap.insert(pair<TString, Int_t>(histoResoNames[ij][0], ij));}
+    histoResoMap[histoResoNames[ij][0]] = ij;}
   histoResoBn = histoResoBins;
 
   particleResoFromPullList = particleResoFromPullNames;
   particleResoFromPullMap.clear();
   for(int ij=0;ij<int(particleResoFromPullNames.size());ij++) {
-    particleResoFromPullMap.insert(pair<TString, Int_t>(particleResoFromPullNames[ij], ij));
-  }
+    particleResoFromPullMap[particleResoFromPullNames[ij]] = ij;}
   
   histoResoFromPullList = histoResoFromPullNames;
   histoResoFromPullMap.clear();
   for(int ij=0;ij<int(histoResoFromPullNames.size());ij++) {
-    histoResoFromPullMap.insert(pair<TString, Int_t>(histoResoFromPullNames[ij][0], ij));}
+    histoResoFromPullMap[histoResoFromPullNames[ij][0]] = ij;}
   histoResoFromPullBn = histoResoFromPullBins;
   
   channelName = chnl;
@@ -141,9 +136,7 @@ void Utils::Setup(std::map<TString, TString> motherMap,
   
 }
 
-Long64_t Utils::countTracks(ROOT::RDataFrame &tr,
-			    ROOT::RDataFrame &MCtr,
-			    TString trk,
+Long64_t Utils::countTracks(TString trk,
 			    TString cuts,
 			    int isBC) {
   
@@ -155,19 +148,19 @@ Long64_t Utils::countTracks(ROOT::RDataFrame &tr,
     fromOtherBranch : tracks are reconstructed from other decay modes
   */
   
-  auto nMC  = MCtr.Count();
-
-  auto maxexp = MCtr.Max("__experiment__");
-  auto maxrun = MCtr.Max("__run__");
-  auto maxevt = MCtr.Max("__event__");
+  ROOT::RDataFrame mcRDF(*MCtr);
   
-  auto expvecMC = MCtr.Take<Int_t>("__experiment__");
-  auto runvecMC = MCtr.Take<Int_t>("__run__");
-  auto evtvecMC = MCtr.Take<Int_t>("__event__");
+  auto nMC  = mcRDF.Count();
+
+  auto maxexp = mcRDF.Max("__experiment__");
+  auto maxrun = mcRDF.Max("__run__");
+  auto maxevt = mcRDF.Max("__event__");
+  
+  auto expvecMC = mcRDF.Take<Int_t>("__experiment__");
+  auto runvecMC = mcRDF.Take<Int_t>("__run__");
+  auto evtvecMC = mcRDF.Take<Int_t>("__event__");
   
   vector<bool> isThisBranch((*maxexp +1)*(*maxrun +1)*(*maxevt +1),0);
-  // for(Long64_t ij=0;ij<int(isThisBranch.size());ij++) {
-  //   cout<<ij<<" isThisBranch "<<isThisBranch[ij]<<endl;}
   
   for(Long64_t ij=0;ij<Long64_t(*nMC);ij++) {
     // cout<<ij<<" "<<vector(*runvecMC)[ij]<<" "<<vector(*evtvecMC)[ij]<<" "<<endl;
@@ -178,52 +171,44 @@ Long64_t Utils::countTracks(ROOT::RDataFrame &tr,
     // cout<<"\ttpos "<<tpos<<" "<<isThisBranch[tpos]<<endl;
   }
   
-  // auto entries  = tr.Filter(cuts.Data()).Count();
-  // auto expvec = tr.Filter(cuts.Data()).Take<Int_t>("__experiment__");
-  // auto runvec = tr.Filter(cuts.Data()).Take<Int_t>("__run__");
-  // auto evtvec = tr.Filter(cuts.Data()).Take<Int_t>("__event__");
-  // auto indvec = tr.Filter(cuts.Data()).Take<Double_t>((trk+"_mdstIndex").Data());
-  // auto srcvec = tr.Filter(cuts.Data()).Take<Double_t>((trk+"_particleSource").Data());
-  
-  // for(int ijh=0;ijh<int(paramList.size());ijh++) {
-  //   parVecList[ijh] = tr.Filter(cuts.Data()).Take<Double_t>((trk + "_" + paramList[ijh]).Data());
-  // }
-  
   vector<int> expt, run, evt, index;
   expt.clear(); run.clear(); evt.clear(); index.clear();
   int source = -10;
   
   Long64_t sum = 0;
-  for(Long64_t ij=0;ij<Long64_t(*entries);ij++) {
+  Long64_t nentries = RCtr->GetEntries();
+  for(Long64_t ij=0;ij<nentries;ij++) {
+    RCtr->GetEntry(ij);
+    if(ij%1000==0) {cout<<(nentries-ij)<<endl;}
     
-    Long64_t tpos = ( vector(*evtvec)[ij] +
-		      vector(*runvec)[ij]*(*maxevt +1) +
-		      vector(*expvec)[ij]*(*maxevt +1)*(*maxrun +1));
-    // cout<<ij<<" "<<vector(*expvec)[ij]<<" "<<vector(*runvec)[ij]<<" "<<vector(*evtvec)[ij]<<" "<<endl;
-    // cout<<"\ttpos "<<tpos<<" "<<isThisBranch[tpos]<<endl;
+    Long64_t tpos = ( evtData +
+		      runData*(*maxevt +1) +
+		      expData*(*maxevt +1)*(*maxrun +1));
+    cout<<ij<<" "<<expData<<" "<<runData<<" "<<evtData<<" "<<endl;
+    cout<<"\ttpos "<<tpos<<" "<<isThisBranch[tpos]<<endl;
     if(isThisBranch[tpos]==false) {continue;}
     
     int passORinsertORpush = -1;
-    if(source<0) {source = vector(*srcvec)[ij]; passORinsertORpush = 1;}
+    if(source<0) {source = getDataValue(trk+"_particleSource"); passORinsertORpush = 1;}
     
     Long64_t tsz = expt.size();
-    if(tsz && (expt.back()!=vector(*expvec)[ij] || run.back()!=vector(*runvec)[ij])) {
+    if(tsz && (expt.back()!=expData || run.back()!=runData)) {
       sum += tsz; tsz = 0; passORinsertORpush = 1;
       expt.clear(); run.clear(); evt.clear(); index.clear();
       // cout<<" sum: "<<sum<<endl;
     }
     
-    if(source==vector(*srcvec)[ij]) {
+    if(source==getDataValue(trk+"_particleSource")) {
       for(int jk=tsz-1;jk>=0;jk--) {
-  	if(expt[jk]==vector(*expvec)[ij] && run[jk]==vector(*runvec)[ij] &&
-  	   evt[jk]==vector(*evtvec)[ij] && index[jk]==vector(*indvec)[ij]) {
+  	if(expt[jk]==expData && run[jk]==runData &&
+  	   evt[jk]==evtData && index[jk]==getDataValue(trk+"_mdstIndex")) {
   	  passORinsertORpush = -1; break;
-  	} else if(expt[jk]<vector(*expvec)[ij] ||
-  		  (expt[jk]==vector(*expvec)[ij] && run[jk]<vector(*runvec)[ij]) ||
-  		  (expt[jk]==vector(*expvec)[ij] && run[jk]==vector(*runvec)[ij] &&
-		   evt[jk]<vector(*evtvec)[ij]) ||
-  		  (expt[jk]==vector(*expvec)[ij] && run[jk]==vector(*runvec)[ij] &&
-		   evt[jk]==vector(*evtvec)[ij] && index[jk]<vector(*indvec)[ij])) {
+	} else if(expt[jk]<expData ||
+  		  (expt[jk]==expData && run[jk]<runData) ||
+  		  (expt[jk]==expData && run[jk]==runData &&
+		   evt[jk]<evtData) ||
+  		  (expt[jk]==expData && run[jk]==runData &&
+		   evt[jk]==evtData && index[jk]<getDataValue(trk+"_mdstIndex"))) {
   	  passORinsertORpush = jk + 1; break;}
   	passORinsertORpush = jk;
       } // for(int jk=tsz-1;jk>=0;jk++) {
@@ -234,40 +219,44 @@ Long64_t Utils::countTracks(ROOT::RDataFrame &tr,
     if(passORinsertORpush<0) {
       continue;
     } else if(passORinsertORpush<tsz) {
-      // cout<<ij<<" "<<vector(*runvec)[ij]<<" "<<vector(*evtvec)[ij]<<" "<<vector(*indvec)[ij]<<" "<<endl;
-      // cout<<"\t"<<tsz<<" "<<passORinsertORpush<<endl;
-      // cout<<"\t\tinsert"<<endl;
-      expt.insert(expt.begin()+passORinsertORpush,vector(*expvec)[ij]);
-      run.insert(run.begin()+passORinsertORpush,vector(*runvec)[ij]);
-      evt.insert(evt.begin()+passORinsertORpush,vector(*evtvec)[ij]);
-      index.insert(index.begin()+passORinsertORpush,vector(*indvec)[ij]);
+      cout<<ij<<" "<<runData<<" "<<evtData<<" "<<getDataValue(trk+"_mdstIndex")<<" "<<endl;
+      cout<<"\t"<<tsz<<" "<<passORinsertORpush<<endl;
+      cout<<"\t\tinsert"<<endl;
+      expt.insert(expt.begin()+passORinsertORpush,expData);
+      run.insert(run.begin()+passORinsertORpush,runData);
+      evt.insert(evt.begin()+passORinsertORpush,evtData);
+      index.insert(index.begin()+passORinsertORpush,int(getDataValue(trk+"_mdstIndex")));
     } else {
-      // cout<<ij<<" "<<vector(*runvec)[ij]<<" "<<vector(*evtvec)[ij]<<" "<<vector(*indvec)[ij]<<" "<<endl;
-      // cout<<"\t"<<tsz<<" "<<passORinsertORpush<<endl;
-      // cout<<"\t\tpush"<<endl;
-      expt.push_back(vector(*expvec)[ij]);
-      run.push_back(vector(*runvec)[ij]);
-      evt.push_back(vector(*evtvec)[ij]);
-      index.push_back(vector(*indvec)[ij]);
+      cout<<ij<<" "<<runData<<" "<<evtData<<" "<<getDataValue(trk+"_mdstIndex")<<" "<<endl;
+      cout<<"\t"<<tsz<<" "<<passORinsertORpush<<endl;
+      cout<<"\t\tpush"<<endl;
+      expt.push_back(expData);
+      run.push_back(runData);
+      evt.push_back(evtData);
+      index.push_back(int(getDataValue(trk+"_mdstIndex")));
     }
     
     if(isBC>=0) {
       for(int ijh=0;ijh<int(histoList.size());ijh++) {
-	if(particleMap.count(trk)==0) {continue;}
-	histo_sig[particleMap[trk]][ijh][isBC]->Fill(vector(*parVecList[paramMap[histoList[ijh]]])[ij]);
+	cout<<trk<<" "<<particleMap[trk]<<" "<<histoList[ijh]<<endl;
+    	if(particleMap.find(trk.Data())==particleMap.end()) {continue;}
+    	// histo_sig[particleMap[trk]][ijh][isBC]->
+	//   Fill(getDataValue(trk+histoList[ijh]));
       }
       
       for(int ijh=0;ijh<int(histoResoList.size());ijh++) {
-	if(particleResoMap.count(trk)==0) {continue;}
-	histo_reso_sig[particleResoMap[trk]][ijh][isBC]->Fill(vector(*parVecList[paramMap[histoResoList[ijh][0]]])[ij],
-							      (vector(*parVecList[paramMap[histoResoList[ijh][0]]])[ij] -
-							       vector(*parVecList[paramMap[histoResoList[ijh][1]]])[ij]));
+    	if(particleResoMap.find(trk.Data())==particleResoMap.end()) {continue;}
+    	histo_reso_sig[particleResoMap[trk]][ijh][isBC]->
+	  Fill(getDataValue(trk+histoResoList[ijh][0]),
+	       getDataValue(trk+histoResoList[ijh][0]) -
+	       getDataValue(trk+histoResoList[ijh][1]));
       }
-     
+      
       for(int ijh=0;ijh<int(histoResoFromPullList.size());ijh++) {
-	if(particleResoFromPullMap.count(trk)==0) {continue;}
-	histo_resofrompull_sig[particleResoFromPullMap[trk]][ijh][isBC]->Fill(vector(*parVecList[paramMap[histoResoFromPullList[ijh][0]]])[ij] *
-									      vector(*parVecList[paramMap[histoResoFromPullList[ijh][1]]])[ij]);
+    	if(particleResoFromPullMap.find(trk.Data())==particleResoFromPullMap.end()) {continue;}
+    	histo_resofrompull_sig[particleResoFromPullMap[trk]][ijh][isBC]->
+	  Fill(getDataValue(trk+histoResoFromPullList[ijh][0]) *
+	       getDataValue(trk+histoResoFromPullList[ijh][1]));
       }
       
     }
@@ -282,9 +271,7 @@ Long64_t Utils::countTracks(ROOT::RDataFrame &tr,
 }
 
 
-int Utils::printEffi(ROOT::RDataFrame &tr,
-		     ROOT::RDataFrame &MCtr,
-		     TString common,
+int Utils::printEffi(TString common,
 		     TString rank) {
   
   /*
@@ -296,7 +283,8 @@ int Utils::printEffi(ROOT::RDataFrame &tr,
     trk   : which track to look for, ie. pisoft, mu, K, etc.
   */
   
-  auto nMC  = MCtr.Count();
+  ROOT::RDataFrame mcRDF(*MCtr);
+  auto nMC  = mcRDF.Count();
   
   for(int ijp=0;ijp<int(particleList.size());ijp++) {
     for(int ijh=0;ijh<int(histoList.size());ijh++) {
@@ -305,7 +293,7 @@ int Utils::printEffi(ROOT::RDataFrame &tr,
 	TString parname = (particleList[ijp] + "_" + histoList[ijh]);
 	cout<<" mc fill "<<name<<" "<<parname<<endl;
 	cout<<"\t"<<histoBn[ijp][ijh][0]<<" "<<histoBn[ijp][ijh][1]<<" "<<histoBn[ijp][ijh][2]<<endl;
-	auto thisto = MCtr.Histo1D({name.Data(),name.Data(),int(histoBn[ijp][ijh][0]),histoBn[ijp][ijh][1],histoBn[ijp][ijh][2]},
+	auto thisto = mcRDF.Histo1D({name.Data(),name.Data(),int(histoBn[ijp][ijh][0]),histoBn[ijp][ijh][1],histoBn[ijp][ijh][2]},
 				   parname.Data());
 	histo_mc[ijp][ijh] = (TH1D*)thisto->Clone();
       }}}
@@ -324,10 +312,10 @@ int Utils::printEffi(ROOT::RDataFrame &tr,
 			       common+" && "+signal+" && "+rank,
 			       common+" && "+rank};
     if(trk=="B0") {
-      auto nt1  = tr.Filter(cutlist[0].Data()).Count();
-      auto ns1  = tr.Filter(cutlist[1].Data()).Count();
-      auto nsb1 = tr.Filter(cutlist[2].Data()).Count();
-      auto ntb1 = tr.Filter(cutlist[3].Data()).Count();
+      // auto nt1  = tr.Filter(cutlist[0].Data()).Count();
+      // auto ns1  = tr.Filter(cutlist[1].Data()).Count();
+      // auto nsb1 = tr.Filter(cutlist[2].Data()).Count();
+      // auto ntb1 = tr.Filter(cutlist[3].Data()).Count();
       
       // for(int ijh=0;ijh<int(histoList.size());ijh++) {
       // 	for(int ijb=0;ijb<int(histoTypes.size());ijb++) {
@@ -340,12 +328,12 @@ int Utils::printEffi(ROOT::RDataFrame &tr,
       // 	  histo_sig[ijp][ijh][ijb] = (TH1D*)thisto->Clone();
       // 	}}
       
-      nt = *nt1; ns = *ns1; nsb = *nsb1; ntb = *ntb1;
+      // nt = *nt1; ns = *ns1; nsb = *nsb1; ntb = *ntb1;
     } else {
-      nt  = countTracks(tr,MCtr,trk,cutlist[0],0);
-      ns  = countTracks(tr,MCtr,trk,cutlist[1],1);
-      nsb = countTracks(tr,MCtr,trk,cutlist[2],2);
-      ntb = countTracks(tr,MCtr,trk,cutlist[3],3);
+      nt  = countTracks(trk,cutlist[0],0);
+      ns  = countTracks(trk,cutlist[1],1);
+      nsb = countTracks(trk,cutlist[2],2);
+      ntb = countTracks(trk,cutlist[3],3);
     }
     
     if(nt<=0 || *nMC<=0) {return -1;}
@@ -392,20 +380,54 @@ void Utils::DivideHisto() {
 
 void Utils::makeBranch(const TString &partname,
 		       const TString &parname,
-		       const TString &type
+		       const TString &type,
 		       int *cnt) {
   TString name = (partname + "_" + parname);
-  auto datatype = VariableDataType[type];
-  if(datatype == VariableDataType.end()) {cout<<" data type not found for "<<name<<endl;}
-  if(paramMap.find(name) == paramMap.end()) {
+  if(VariableDataType.find(type.Data()) == VariableDataType.end()) {
+    cout<<" data type not found for "<<name<<endl;}
+  
+  int datatype = VariableDataType[type];
+  cout<<" name "<<name<<" type "<<type<<" "<<datatype<<" cnt "<<cnt[datatype]<<endl;
+  if(paramMap.find(name.Data()) == paramMap.end()) {
+    pair<TString,Int_t> brdetails(type,cnt[datatype]);
     if(name.Contains("_mc")) {
-      branchDataList[cnt[datatype]].push_back(0);
-      MCtr->SetBranchAddress(name,&branchDataList[cnt[datatype]]);
+      if(type=="c_double") {
+	branchDouble.push_back(0);
+	MCtr->SetBranchAddress(name,&branchDouble[cnt[datatype]]);
+      } else if(type=="c_int") {
+      	branchInt.push_back(0);
+      	MCtr->SetBranchAddress(name,&branchInt[cnt[datatype]]);
+      } else if(type=="c_bool") {
+      	branchBool.push_back(0);
+      	MCtr->SetBranchAddress(name,&branchBool[cnt[datatype]]);
+      }
     } else {
-      branchDataList[cnt[datatype]].push_back(0);
-      RCtr->SetBranchAddress(name,&branchDataList[cnt[datatype]]);
+      if(type=="c_double") {
+	branchDouble.push_back(0);
+	RCtr->SetBranchAddress(name,&branchDouble[cnt[datatype]]);
+      } else if(type=="c_int") {
+	branchInt.push_back(0);
+	RCtr->SetBranchAddress(name,&branchInt[cnt[datatype]]);
+      } else if(type=="c_bool") {
+      	branchBool.push_back(0);
+      	RCtr->SetBranchAddress(name,&branchBool[cnt[datatype]]);
+      }
     }
-    paramMap[name] = pair(type, cnt[datatype]);
+    paramMap[name] = brdetails;
     cnt[datatype]++;
   }
-  
+}
+
+double Utils::getDataValue(const TString brdetails)
+{
+  cout<<" getDataValue "<<brdetails<<" "<<paramMap[brdetails].first<<" "<<paramMap[brdetails].second<<endl;
+  if(paramMap[brdetails].first == "c_double") {
+    return branchDouble[paramMap[brdetails].second];
+  } else if(paramMap[brdetails].first == "c_int") {
+    return branchInt[paramMap[brdetails].second];
+  } else if(paramMap[brdetails].first == "c_bool") {
+    return branchBool[paramMap[brdetails].second];
+  } else {
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+}

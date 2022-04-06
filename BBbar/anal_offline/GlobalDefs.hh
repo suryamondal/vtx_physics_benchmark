@@ -28,8 +28,8 @@ std::map<TString, TString> parList =
    {"d0Err","c_double"},
    {"z0Pull","c_double"},
    {"z0Err","c_double"},
-   {"mdstIndex","c_int"},
-   {"particleSource","c_int"}
+   {"mdstIndex","c_double"},
+   {"particleSource","c_double"}
   };
 
 std::vector<std::vector<TString>> particleList =

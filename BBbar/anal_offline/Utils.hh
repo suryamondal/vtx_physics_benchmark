@@ -7,30 +7,31 @@ public :
   Utils();
   ~Utils(){;};
   
-  void Setup(std::map<TString, TString> motherMap,
-	     std::vector<TString> &particleNames,
-	     std::vector<TString> &histoNames,
-	     std::vector<std::vector<std::vector<Double_t>>> &histoBins,
-	     std::vector<TString> &particleResoNames,
-	     std::vector<std::vector<TString>> &histoResoNames,
-	     std::vector<std::vector<std::vector<Double_t>>> &histoResoBins,
-	     std::vector<TString> &particleResoFromPullNames,
-	     std::vector<std::vector<TString>> &histoResoFromPullNames,
-	     std::vector<std::vector<std::vector<Double_t>>> &histoResoFromPullBins,
-	     TString chnl,
-	     TTree *tree, TTree *mctree,
-	     std::map<TString, TString> &paramNames);
+  void Setup(const std::map<TString, TString> motherMap,
+	     const std::vector<TString> &particleNames,
+	     const std::vector<TString> &histoNames,
+	     const std::vector<std::vector<std::vector<Double_t>>> &histoBins,
+	     const std::vector<TString> &particleResoNames,
+	     const std::vector<std::vector<TString>> &histoResoNames,
+	     const std::vector<std::vector<std::vector<Double_t>>> &histoResoBins,
+	     const std::vector<TString> &particleResoFromPullNames,
+	     const std::vector<std::vector<TString>> &histoResoFromPullNames,
+	     const std::vector<std::vector<std::vector<Double_t>>> &histoResoFromPullBins,
+	     const TString chnl,
+	     const TTree *tree,
+	     const TTree *mctree,
+	     const std::map<TString, TString> &paramNames);
   
-  int printEffi(TString common,
-		TString rank);
-  Long64_t countTracks(TString trk,
-		       TString cuts,
-		       int isBC);
+  int printEffi(const TString common,
+		const TString rank);
+  Long64_t countTracks(const TString trk,
+		       const TString cuts,
+		       const int isBC);
 
   void DivideHisto();
-  void makeBranch(const TString &partname,
-		  const TString &parname,
-		  const TString &type,
+  void makeBranch(const TString partname,
+		  const TString parname,
+		  const TString type,
 		  int *cnt);
   
 public:

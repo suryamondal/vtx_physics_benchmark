@@ -5,19 +5,20 @@ using namespace std;
 
 Utils::Utils() {}
 
-void Utils::Setup(std::map<TString, TString> motherMap,
-		  std::vector<TString> &particleNames,
-		  std::vector<TString> &histoNames,
-		  std::vector<std::vector<std::vector<Double_t>>> &histoBins,
-		  std::vector<TString> &particleResoNames,
-		  std::vector<std::vector<TString>> &histoResoNames,
-		  std::vector<std::vector<std::vector<Double_t>>> &histoResoBins,
-		  std::vector<TString> &particleResoFromPullNames,
-		  std::vector<std::vector<TString>> &histoResoFromPullNames,
-		  std::vector<std::vector<std::vector<Double_t>>> &histoResoFromPullBins,
-		  TString chnl,
-		  TTree *tree, TTree *mctree,
-		  std::map<TString, TString> &paramNames
+void Utils::Setup(const std::map<TString, TString> motherMap,
+		  const std::vector<TString> &particleNames,
+		  const std::vector<TString> &histoNames,
+		  const std::vector<std::vector<std::vector<Double_t>>> &histoBins,
+		  const std::vector<TString> &particleResoNames,
+		  const std::vector<std::vector<TString>> &histoResoNames,
+		  const std::vector<std::vector<std::vector<Double_t>>> &histoResoBins,
+		  const std::vector<TString> &particleResoFromPullNames,
+		  const std::vector<std::vector<TString>> &histoResoFromPullNames,
+		  const std::vector<std::vector<std::vector<Double_t>>> &histoResoFromPullBins,
+		  const TString chnl,
+		  const TTree *tree,
+		  const TTree *mctree,
+		  const std::map<TString, TString> &paramNames
 		  ) {
 
   RCtr = (TTree*)tree->Clone("tree");
@@ -136,9 +137,9 @@ void Utils::Setup(std::map<TString, TString> motherMap,
   
 }
 
-Long64_t Utils::countTracks(TString trk,
-			    TString cuts,
-			    int isBC) {
+Long64_t Utils::countTracks(const TString trk,
+			    const TString cuts,
+			    const int isBC) {
   
   /*
     function counts the number of unique tracks in all events
@@ -238,10 +239,10 @@ Long64_t Utils::countTracks(TString trk,
     
     if(isBC>=0) {
       for(int ijh=0;ijh<int(histoList.size());ijh++) {
-	cout<<trk<<" "<<particleMap[trk]<<" "<<histoList[ijh]<<endl;
-    	if(particleMap.find(trk.Data())==particleMap.end()) {continue;}
-    	// histo_sig[particleMap[trk]][ijh][isBC]->
-	//   Fill(getDataValue(trk+histoList[ijh]));
+      	cout<<trk<<" "<<particleMap[trk]<<" "<<histoList[ijh]<<endl;
+      	if(particleMap.find(trk.Data())==particleMap.end()) {continue;}
+      	histo_sig[particleMap[trk]][ijh][isBC]->
+      	  Fill(getDataValue(trk+histoList[ijh]));
       }
       
       for(int ijh=0;ijh<int(histoResoList.size());ijh++) {
@@ -271,8 +272,8 @@ Long64_t Utils::countTracks(TString trk,
 }
 
 
-int Utils::printEffi(TString common,
-		     TString rank) {
+int Utils::printEffi(const TString common,
+		     const TString rank) {
   
   /*
     tr    : input tree to calculate efficiency
@@ -378,9 +379,9 @@ void Utils::DivideHisto() {
 	    histo_purity[ijp][ijh][ijb]->Divide(histo_purity[ijp][ijh][ijb],histo_sig[ijp][ijh][0],1,1,"b");}}}}}
 }
 
-void Utils::makeBranch(const TString &partname,
-		       const TString &parname,
-		       const TString &type,
+void Utils::makeBranch(const TString partname,
+		       const TString parname,
+		       const TString type,
 		       int *cnt) {
   TString name = (partname + "_" + parname);
   if(VariableDataType.find(type.Data()) == VariableDataType.end()) {

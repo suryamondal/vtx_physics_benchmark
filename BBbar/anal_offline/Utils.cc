@@ -40,7 +40,7 @@ void Utils::Setup(const std::map<TString, TString> motherMap,
   paramList.clear(); paramMap.clear();
   int cnt[10] = {0};
   for(auto it = paramNames.begin(); it!=paramNames.end(); it++) {
-    paramList.push_back(it);
+    paramList[it->first] = it->second;
     
     for(int ijp=0;ijp<int(particleNames.size());ijp++) {
       makeBranch(particleNames[ijp],it->first,it->second, cnt);

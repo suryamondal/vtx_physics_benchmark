@@ -36,10 +36,11 @@ void Utils::Setup(const std::map<TString, TString> motherMap,
   
   parMotherMap = motherMap;
   
-  paramList = paramNames;
-  paramMap.clear();
+  // paramList = paramNames;
+  paramList.clear(); paramMap.clear();
   int cnt[10] = {0};
   for(auto it = paramNames.begin(); it!=paramNames.end(); it++) {
+    paramList.push_back(it);
     
     for(int ijp=0;ijp<int(particleNames.size());ijp++) {
       makeBranch(particleNames[ijp],it->first,it->second, cnt);
@@ -55,36 +56,42 @@ void Utils::Setup(const std::map<TString, TString> motherMap,
     
   }
   
-  particleList = particleNames;
-  particleMap.clear();
+  // particleList = particleNames;
+  particleList.clear(); particleMap.clear();
   for(int ij=0;ij<int(particleNames.size());ij++) {
+    particleList.push_back(particleNames[ij]);
     particleMap[particleNames[ij]] = ij;}
   
-  histoList = histoNames;
-  histoMap.clear();
+  // histoList = histoNames;
+  histoList.clear(); histoMap.clear();
   for(int ij=0;ij<int(histoNames.size());ij++) {
+    histoList.push_back(histoNames[ij]);
     histoMap[histoNames[ij]] = ij;}
   histoBn = histoBins;
   
-  particleResoList = particleResoNames;
-  particleResoMap.clear();
+  // particleResoList = particleResoNames;
+  particleResoList.clear(); particleResoMap.clear();
   for(int ij=0;ij<int(particleResoNames.size());ij++) {
+    particleResoList.push_back(particleResoNames[ij]);
     particleResoMap[particleResoNames[ij]] = ij;}
   
-  histoResoList = histoResoNames;
-  histoResoMap.clear();
+  // histoResoList = histoResoNames;
+  histoResoList.clear(); histoResoMap.clear();
   for(int ij=0;ij<int(histoResoNames.size());ij++) {
+    histoResoList.push_back(histoResoNames[ij]);
     histoResoMap[histoResoNames[ij][0]] = ij;}
   histoResoBn = histoResoBins;
-
-  particleResoFromPullList = particleResoFromPullNames;
-  particleResoFromPullMap.clear();
+  
+  // particleResoFromPullList = particleResoFromPullNames;
+  particleResoFromPullList.clear(); particleResoFromPullMap.clear();
   for(int ij=0;ij<int(particleResoFromPullNames.size());ij++) {
+    particleResoFromPullList.push_back(particleResoFromPullNames[ij]);
     particleResoFromPullMap[particleResoFromPullNames[ij]] = ij;}
   
-  histoResoFromPullList = histoResoFromPullNames;
-  histoResoFromPullMap.clear();
+  // histoResoFromPullList = histoResoFromPullNames;
+  histoResoFromPullList.clear(); histoResoFromPullMap.clear();
   for(int ij=0;ij<int(histoResoFromPullNames.size());ij++) {
+    histoResoFromPullList.push_back(histoResoFromPullNames[ij]);
     histoResoFromPullMap[histoResoFromPullNames[ij][0]] = ij;}
   histoResoFromPullBn = histoResoFromPullBins;
   

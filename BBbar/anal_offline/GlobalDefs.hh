@@ -69,20 +69,6 @@ std::vector<std::vector<std::vector<Double_t>>> histoResoFromPullBn =
    {{100,-0.01,0.01},{100,-0.01,0.01}}, // K
    {{100,-0.01,0.01},{100,-0.01,0.01}}}; // pi
 
-// std::vector<TString> commonMCBranch {"__experiment__", "__run__",
-//     "__event__"};
-// std::vector<TString> commonBranch {"__experiment__", "__run__",
-//     "__event__", "B0_M_rank",
-//     "Dst_M_preFit", "D0_M_preFit", "Dst_M_preFit",
-//     "mu_dr", "mu_dz", "K_dr", "K_dz", "pisoft_dr", "pisoft_dz",
-//     "mu_nVXDHits", "K_nVXDHits", "pisoft_nVXDHits", "Dst_p_CMS"};
-// std::vector<TString> KpiBranch {"pi_dr", "pi_dz", "pi_nVXDHits"};
-// std::vector<TString> K3piBranch {"pi1_dr", "pi1_dz",
-//     "pi1_nVXDHits", "pi2_dr", "pi2_dz", "pi2_nVXDHits",
-//     "pi3_dr", "pi3_dz", "pi3_nVXDHits"};
-// std::vector<TString> extraBranch {"isSignal", "mdstIndex",
-//     "particleSource"};
-
 const TString CommonCuts =
   "TMath::Abs(Dst_M_preFit-2.01026) < 0.1"
   "&& TMath::Abs(D0_M_preFit-1.86484) < 0.1"

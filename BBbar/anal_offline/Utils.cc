@@ -198,7 +198,9 @@ Long64_t Utils::countTracks(TString trk,
     isThisBranch[tpos] = true;
     // cout<<"\ttpos "<<tpos<<" "<<isThisBranch[tpos]<<endl;
   }
-
+  
+  TSelectorEntries s(cuts);
+  
   vector<int> expt, run, evt, index;
   expt.clear(); run.clear(); evt.clear(); index.clear();
   int source = -10;
@@ -206,6 +208,10 @@ Long64_t Utils::countTracks(TString trk,
   Long64_t sum = 0;
   Long64_t nentries = RCtr->GetEntries();
   for(Long64_t ij=0;ij<nentries;ij++) {
+    RCtr->Process(&s,"",ij+1,ij);
+    RCtr->SetNotify(0);
+    cout<<" entry "<<s.GetSelectedRows()<<endl;
+    
     RCtr->GetEntry(ij);
     if(ij%1000==0) {cout<<(nentries-ij)<<endl;}
     

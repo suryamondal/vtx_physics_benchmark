@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <string>
 #include <functional>
+#include <tuple>
 
 #include "TTimeStamp.h"
 #include "TH1.h"
@@ -32,5 +33,6 @@
 #include "TMinuit.h"
 #include "TString.h"
 #include <ROOT/RDataFrame.hxx>
+#include "TSelectorEntries.h"
 
 #endif

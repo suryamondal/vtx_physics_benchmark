@@ -5,21 +5,25 @@ using namespace std;
 
 Utils::Utils() {}
 
-void Utils::Setup(const std::map<TString, TString> motherMap,
-		  const std::vector<TString> &particleNames,
-		  const std::vector<TString> &histoNames,
-		  const std::vector<std::vector<std::vector<Double_t>>> &histoBins,
-		  const std::vector<TString> &particleResoNames,
-		  const std::vector<std::vector<TString>> &histoResoNames,
-		  const std::vector<std::vector<std::vector<Double_t>>> &histoResoBins,
-		  const std::vector<TString> &particleResoFromPullNames,
-		  const std::vector<std::vector<TString>> &histoResoFromPullNames,
-		  const std::vector<std::vector<std::vector<Double_t>>> &histoResoFromPullBins,
-		  const TString chnl,
-		  const TTree *tree,
-		  const TTree *mctree,
-		  const std::map<TString, TString> &paramNames
+void Utils::Setup(std::map<TString, TString> motherMap,
+		  std::vector<TString> &particleNames,
+		  std::vector<TString> &histoNames,
+		  std::vector<std::vector<std::vector<Double_t>>> &histoBins,
+		  std::vector<TString> &particleResoNames,
+		  std::vector<std::vector<TString>> &histoResoNames,
+		  std::vector<std::vector<std::vector<Double_t>>> &histoResoBins,
+		  std::vector<TString> &particleResoFromPullNames,
+		  std::vector<std::vector<TString>> &histoResoFromPullNames,
+		  std::vector<std::vector<std::vector<Double_t>>> &histoResoFromPullBins,
+		  TString chnl,
+		  TTree *tree,
+		  TTree *mctree,
+		  std::map<TString, TString> &paramNames
 		  ) {
+
+  branchDouble.reserve(1000);
+  branchInt.reserve(1000);
+  branchBool.reserve(1000);
 
   RCtr = (TTree*)tree->Clone("tree");
   MCtr = (TTree*)mctree->Clone("mctree");
@@ -60,12 +64,15 @@ void Utils::Setup(const std::map<TString, TString> motherMap,
   particleList.clear(); particleMap.clear();
   for(int ij=0;ij<int(particleNames.size());ij++) {
     particleList.push_back(particleNames[ij]);
-    particleMap[particleNames[ij]] = ij;}
+    cout<<" "<<particleNames[ij]<<endl;
+    particleMap.emplace(particleNames[ij],ij);
+    // particleMap[particleNames[ij]] = ij;
+  }
   
-  // histoList = histoNames;
-  histoList.clear(); histoMap.clear();
+  // histoLists = histoNames;
+  histoLists.clear(); histoMap.clear();
   for(int ij=0;ij<int(histoNames.size());ij++) {
-    histoList.push_back(histoNames[ij]);
+    histoLists.push_back(histoNames[ij]);
     histoMap[histoNames[ij]] = ij;}
   histoBn = histoBins;
   
@@ -144,9 +151,9 @@ void Utils::Setup(const std::map<TString, TString> motherMap,
   
 }
 
-Long64_t Utils::countTracks(const TString trk,
-			    const TString cuts,
-			    const int isBC) {
+Long64_t Utils::countTracks(TString trk,
+			    TString cuts,
+			    int isBC) {
   
   /*
     function counts the number of unique tracks in all events
@@ -178,7 +185,7 @@ Long64_t Utils::countTracks(const TString trk,
     isThisBranch[tpos] = true;
     // cout<<"\ttpos "<<tpos<<" "<<isThisBranch[tpos]<<endl;
   }
-  
+
   vector<int> expt, run, evt, index;
   expt.clear(); run.clear(); evt.clear(); index.clear();
   int source = -10;
@@ -245,12 +252,21 @@ Long64_t Utils::countTracks(const TString trk,
     }
     
     if(isBC>=0) {
-      for(int ijh=0;ijh<int(histoList.size());ijh++) {
-      	cout<<trk<<" "<<particleMap[trk]<<" "<<histoList[ijh]<<endl;
-      	if(particleMap.find(trk.Data())==particleMap.end()) {continue;}
-      	histo_sig[particleMap[trk]][ijh][isBC]->
-      	  Fill(getDataValue(trk+histoList[ijh]));
-      }
+      auto it = particleMap.find(trk);
+      if(it != particleMap.end())
+	cout<<trk<<" "<<it->first<<" "<<it->second<<endl;
+
+      // for(auto it = particleMap.begin(); it!=particleMap.end(); it++) {
+      // 	cout<<trk<<" "<<it->first<<" size "<<it->second<<endl;
+      // }
+
+      // cout<<trk<<" "<<particleMap.size()<<" size "<<histoLists.size()<<endl;
+      // for(int ijh=0;ijh<int(histoLists.size());ijh++) {
+      // 	cout<<trk<<" "<<particleMap[trk]<<" "<<histoLists[ijh]<<endl;
+      // 	if(particleMap.find(trk.Data())==particleMap.end()) {continue;}
+      // 	histo_sig[particleMap[trk]][ijh][isBC]->
+      // 	  Fill(getDataValue(trk+histoLists[ijh]));
+      // }
       
       for(int ijh=0;ijh<int(histoResoList.size());ijh++) {
     	if(particleResoMap.find(trk.Data())==particleResoMap.end()) {continue;}
@@ -279,8 +295,8 @@ Long64_t Utils::countTracks(const TString trk,
 }
 
 
-int Utils::printEffi(const TString common,
-		     const TString rank) {
+int Utils::printEffi(TString common,
+		     TString rank) {
   
   /*
     tr    : input tree to calculate efficiency
@@ -295,10 +311,10 @@ int Utils::printEffi(const TString common,
   auto nMC  = mcRDF.Count();
   
   for(int ijp=0;ijp<int(particleList.size());ijp++) {
-    for(int ijh=0;ijh<int(histoList.size());ijh++) {
-      TString name = (particleList[ijp] + "_" + histoList[ijh] + "_" + channelName);
+    for(int ijh=0;ijh<int(histoLists.size());ijh++) {
+      TString name = (particleList[ijp] + "_" + histoLists[ijh] + "_" + channelName);
       if(name.Contains("_mc")) {
-	TString parname = (particleList[ijp] + "_" + histoList[ijh]);
+	TString parname = (particleList[ijp] + "_" + histoLists[ijh]);
 	cout<<" mc fill "<<name<<" "<<parname<<endl;
 	cout<<"\t"<<histoBn[ijp][ijh][0]<<" "<<histoBn[ijp][ijh][1]<<" "<<histoBn[ijp][ijh][2]<<endl;
 	auto thisto = mcRDF.Histo1D({name.Data(),name.Data(),int(histoBn[ijp][ijh][0]),histoBn[ijp][ijh][1],histoBn[ijp][ijh][2]},
@@ -325,20 +341,22 @@ int Utils::printEffi(const TString common,
       // auto nsb1 = tr.Filter(cutlist[2].Data()).Count();
       // auto ntb1 = tr.Filter(cutlist[3].Data()).Count();
       
-      // for(int ijh=0;ijh<int(histoList.size());ijh++) {
+      // for(int ijh=0;ijh<int(histoLists.size());ijh++) {
       // 	for(int ijb=0;ijb<int(histoTypes.size());ijb++) {
-      // 	  TString name = ( trk + "_" + histoList[ijh] + "_" + channelName
+      // 	  TString name = ( trk + "_" + histoLists[ijh] + "_" + channelName
       // 			   + "_" + histoTypes[ijb]);
       // 	  cout<<" reco fill "<<name<<endl;
       // 	  auto thisto = tr.Filter(cutlist[ijb].Data())
       // 	    .Histo1D({name.Data(),name.Data(),int(histoBn[ijp][ijh][0]),histoBn[ijp][ijh][1],histoBn[ijp][ijh][2]},
-      // 		     (trk + "_" + histoList[ijh]).Data());
+      // 		     (trk + "_" + histoLists[ijh]).Data());
       // 	  histo_sig[ijp][ijh][ijb] = (TH1D*)thisto->Clone();
       // 	}}
       
       // nt = *nt1; ns = *ns1; nsb = *nsb1; ntb = *ntb1;
     } else {
+      cout<<trk<<" "<<particleMap[trk]<<" "<<histoLists[0]<<endl;
       nt  = countTracks(trk,cutlist[0],0);
+      cout<<trk<<" "<<particleMap[trk]<<" "<<histoLists[0]<<endl;
       ns  = countTracks(trk,cutlist[1],1);
       nsb = countTracks(trk,cutlist[2],2);
       ntb = countTracks(trk,cutlist[3],3);
@@ -368,9 +386,9 @@ int Utils::printEffi(const TString common,
 
 void Utils::DivideHisto() {
   for(int ijp=0;ijp<int(particleList.size());ijp++) {
-    for(int ijh=0;ijh<int(histoList.size());ijh++) {
+    for(int ijh=0;ijh<int(histoLists.size());ijh++) {
       for(int ijb=0;ijb<int(histoTypes.size());ijb++) {
-	TString name = (particleList[ijp] + "_" + histoList[ijh] + "_" + channelName
+	TString name = (particleList[ijp] + "_" + histoLists[ijh] + "_" + channelName
 			+ "_" + histoTypes[ijb]);
 	cout<<" divide "<<name<<endl;
 	histo_effi[ijp][ijh][ijb] = (TH1D*)histo_sig[ijp][ijh][ijb]->Clone(name+"_effi");
@@ -386,18 +404,18 @@ void Utils::DivideHisto() {
 	    histo_purity[ijp][ijh][ijb]->Divide(histo_purity[ijp][ijh][ijb],histo_sig[ijp][ijh][0],1,1,"b");}}}}}
 }
 
-void Utils::makeBranch(const TString partname,
-		       const TString parname,
-		       const TString type,
+void Utils::makeBranch(TString partname,
+		       TString parname,
+		       TString type,
 		       int *cnt) {
   TString name = (partname + "_" + parname);
   if(VariableDataType.find(type.Data()) == VariableDataType.end()) {
     cout<<" data type not found for "<<name<<endl;}
   
   int datatype = VariableDataType[type];
-  cout<<" name "<<name<<" type "<<type<<" "<<datatype<<" cnt "<<cnt[datatype]<<endl;
+  // cout<<" name "<<name<<" type "<<type<<" "<<datatype<<" cnt "<<cnt[datatype]<<endl;
   if(paramMap.find(name.Data()) == paramMap.end()) {
-    pair<TString,Int_t> brdetails(type,cnt[datatype]);
+    // pair<TString,Int_t> brdetails(type,cnt[datatype]);
     if(name.Contains("_mc")) {
       if(type=="c_double") {
 	branchDouble.push_back(0);
@@ -421,20 +439,20 @@ void Utils::makeBranch(const TString partname,
       	RCtr->SetBranchAddress(name,&branchBool[cnt[datatype]]);
       }
     }
-    paramMap[name] = brdetails;
+    paramMap[name] = std::pair<TString,Int_t>(type,cnt[datatype]);// brdetails;
     cnt[datatype]++;
   }
 }
 
-double Utils::getDataValue(const TString brdetails)
+double Utils::getDataValue(TString brdetails1)
 {
-  cout<<" getDataValue "<<brdetails<<" "<<paramMap[brdetails].first<<" "<<paramMap[brdetails].second<<endl;
-  if(paramMap[brdetails].first == "c_double") {
-    return branchDouble[paramMap[brdetails].second];
-  } else if(paramMap[brdetails].first == "c_int") {
-    return branchInt[paramMap[brdetails].second];
-  } else if(paramMap[brdetails].first == "c_bool") {
-    return branchBool[paramMap[brdetails].second];
+  cout<<" getDataValue "<<brdetails1<<" "<<paramMap[brdetails1].first<<" "<<paramMap[brdetails1].second<<endl;
+  if(paramMap[brdetails1].first == "c_double") {
+    return branchDouble[paramMap[brdetails1].second];
+  } else if(paramMap[brdetails1].first == "c_int") {
+    return branchInt[paramMap[brdetails1].second];
+  } else if(paramMap[brdetails1].first == "c_bool") {
+    return branchBool[paramMap[brdetails1].second];
   } else {
     return std::numeric_limits<double>::quiet_NaN();
   }

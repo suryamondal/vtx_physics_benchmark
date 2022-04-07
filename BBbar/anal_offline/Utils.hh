@@ -6,32 +6,39 @@ class Utils {
 public :
   Utils();
   ~Utils(){;};
+
+  /** data type of variables */
+  std::map<TString, int> VariableDataType =
+    {{"c_double", 0},
+     {"c_int",    1},
+     {"c_bool",   2}
+    };
   
-  void Setup(const std::map<TString, TString> motherMap,
-	     const std::vector<TString> &particleNames,
-	     const std::vector<TString> &histoNames,
-	     const std::vector<std::vector<std::vector<Double_t>>> &histoBins,
-	     const std::vector<TString> &particleResoNames,
-	     const std::vector<std::vector<TString>> &histoResoNames,
-	     const std::vector<std::vector<std::vector<Double_t>>> &histoResoBins,
-	     const std::vector<TString> &particleResoFromPullNames,
-	     const std::vector<std::vector<TString>> &histoResoFromPullNames,
-	     const std::vector<std::vector<std::vector<Double_t>>> &histoResoFromPullBins,
-	     const TString chnl,
-	     const TTree *tree,
-	     const TTree *mctree,
-	     const std::map<TString, TString> &paramNames);
+  void Setup(std::map<TString, TString> motherMap,
+	     std::vector<TString> &particleNames,
+	     std::vector<TString> &histoNames,
+	     std::vector<std::vector<std::vector<Double_t>>> &histoBins,
+	     std::vector<TString> &particleResoNames,
+	     std::vector<std::vector<TString>> &histoResoNames,
+	     std::vector<std::vector<std::vector<Double_t>>> &histoResoBins,
+	     std::vector<TString> &particleResoFromPullNames,
+	     std::vector<std::vector<TString>> &histoResoFromPullNames,
+	     std::vector<std::vector<std::vector<Double_t>>> &histoResoFromPullBins,
+	     TString chnl,
+	     TTree *tree,
+	     TTree *mctree,
+	     std::map<TString, TString> &paramNames);
   
-  int printEffi(const TString common,
-		const TString rank);
-  Long64_t countTracks(const TString trk,
-		       const TString cuts,
-		       const int isBC);
+  Long64_t countTracks(TString trk,
+		       TString cuts,
+		       int isBC);
+  int printEffi(TString common,
+		TString rank);
 
   void DivideHisto();
-  void makeBranch(const TString partname,
-		  const TString parname,
-		  const TString type,
+  void makeBranch(TString partname,
+		  TString parname,
+		  TString type,
 		  int *cnt);
   
 public:
@@ -44,7 +51,7 @@ public:
   std::vector<TString> particleList;
   std::map<TString, Int_t> particleMap;
   
-  std::vector<TString> histoList;
+  std::vector<TString> histoLists;
   std::map<TString, Int_t> histoMap;
   std::vector<std::vector<std::vector<Double_t>>> histoBn;
 
@@ -75,8 +82,6 @@ public:
   TH1D *histo_resofrompull_sig[20][20][4]; // [nparticles][histo][bc]
   
   std::vector<TString> histoTypes;
-  
-private :
 
   TTree *MCtr, *RCtr;
   
@@ -84,7 +89,9 @@ private :
   std::vector<Double_t> branchDouble;
   std::vector<Int_t>    branchInt;
   std::vector<Char_t>   branchBool;
-
-  double getDataValue(const TString brdetails);
+  
+  double getDataValue(TString brdetails);
+  
+private :
   
 };

@@ -59,13 +59,13 @@ int main(int argc, char **argv) {
   
   for(int cn=0;cn<int(channelList.size());cn++) {
     for(int ijp=0;ijp<int(testUtils[cn].particleList.size());ijp++) {
-      for(int ijh=0;ijh<int(testUtils[cn].histoList.size());ijh++) {
+      for(int ijh=0;ijh<int(testUtils[cn].histoLists.size());ijh++) {
 	TString name = testUtils[cn].histo_mc[ijp][ijh]->GetName();
 	if(name.Contains("_sig")) {
 	  testUtils[cn].histo_mc[ijp][ijh]->Write();}}}
     
     for(int ijp=0;ijp<int(testUtils[cn].particleList.size());ijp++) {
-      for(int ijh=0;ijh<int(testUtils[cn].histoList.size());ijh++) {
+      for(int ijh=0;ijh<int(testUtils[cn].histoLists.size());ijh++) {
 	for(int ijb=0;ijb<int(testUtils[cn].histoTypes.size());ijb++) {
 	  TString name = testUtils[cn].histo_sig[ijp][ijh][ijb]->GetName();
 	  if((name.Contains("_sig") && name.Contains("_mc")) || 
@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
     
     testUtils[cn].DivideHisto();
     for(int ijp=0;ijp<int(testUtils[cn].particleList.size());ijp++) {
-      for(int ijh=0;ijh<int(testUtils[cn].histoList.size());ijh++) {
+      for(int ijh=0;ijh<int(testUtils[cn].histoLists.size());ijh++) {
 	for(int ijb=0;ijb<int(testUtils[cn].histoTypes.size());ijb++) {
 	  TString name = testUtils[cn].histo_effi[ijp][ijh][ijb]->GetName();
 	  if(name.Contains("_sig")) {

@@ -36,9 +36,15 @@ void Utils::Setup(std::map<TString, TString> motherMap,
   
   parMotherMap = motherMap;
 
-  branchDouble.reserve(int(paramNames.size()));
-  branchInt.reserve(int(paramNames.size()));
-  branchBool.reserve(int(paramNames.size()));
+  int maxBranchNo =
+    int(paramNames.size())*
+    int(particleNames.size())*
+    int(particleResoNames.size())*
+    int(particleResoFromPullNames.size());
+
+  branchDouble.reserve(maxBranchNo);
+  branchInt.reserve(maxBranchNo);
+  branchBool.reserve(maxBranchNo);
 
   paramList = paramNames;
   // paramList.clear();
@@ -67,8 +73,8 @@ void Utils::Setup(std::map<TString, TString> motherMap,
   for(int ij=0;ij<int(particleNames.size());ij++) {
     // particleList.push_back(particleNames[ij]);
     // cout<<" "<<particleNames[ij]<<endl;
-    particleMap.emplace(particleNames[ij],ij);
-    // particleMap[particleNames[ij]] = ij;
+    // particleMap.emplace(particleNames[ij],ij);
+    particleMap[particleNames[ij]] = ij;
   }
   
   histoLists = histoNames;
@@ -206,8 +212,8 @@ Long64_t Utils::countTracks(TString trk,
     Long64_t tpos = ( evtData +
 		      runData*(*maxevt +1) +
 		      expData*(*maxevt +1)*(*maxrun +1));
-    cout<<ij<<" "<<expData<<" "<<runData<<" "<<evtData<<" "<<endl;
-    cout<<"\ttpos "<<tpos<<" "<<isThisBranch[tpos]<<endl;
+    // cout<<ij<<" "<<expData<<" "<<runData<<" "<<evtData<<" "<<endl;
+    // cout<<"\ttpos "<<tpos<<" "<<isThisBranch[tpos]<<endl;
     if(isThisBranch[tpos]==false) {continue;}
     
     int passORinsertORpush = -1;
@@ -241,17 +247,17 @@ Long64_t Utils::countTracks(TString trk,
     if(passORinsertORpush<0) {
       continue;
     } else if(passORinsertORpush<tsz) {
-      cout<<ij<<" "<<runData<<" "<<evtData<<" "<<getDataValue(trk+"_mdstIndex")<<" "<<endl;
-      cout<<"\t"<<tsz<<" "<<passORinsertORpush<<endl;
-      cout<<"\t\tinsert"<<endl;
+      // cout<<ij<<" "<<runData<<" "<<evtData<<" "<<getDataValue(trk+"_mdstIndex")<<" "<<endl;
+      // cout<<"\t"<<tsz<<" "<<passORinsertORpush<<endl;
+      // cout<<"\t\tinsert"<<endl;
       expt.insert(expt.begin()+passORinsertORpush,expData);
       run.insert(run.begin()+passORinsertORpush,runData);
       evt.insert(evt.begin()+passORinsertORpush,evtData);
       index.insert(index.begin()+passORinsertORpush,int(getDataValue(trk+"_mdstIndex")));
     } else {
-      cout<<ij<<" "<<runData<<" "<<evtData<<" "<<getDataValue(trk+"_mdstIndex")<<" "<<endl;
-      cout<<"\t"<<tsz<<" "<<passORinsertORpush<<endl;
-      cout<<"\t\tpush"<<endl;
+      // cout<<ij<<" "<<runData<<" "<<evtData<<" "<<getDataValue(trk+"_mdstIndex")<<" "<<endl;
+      // cout<<"\t"<<tsz<<" "<<passORinsertORpush<<endl;
+      // cout<<"\t\tpush"<<endl;
       expt.push_back(expData);
       run.push_back(runData);
       evt.push_back(evtData);
@@ -259,35 +265,26 @@ Long64_t Utils::countTracks(TString trk,
     }
     
     if(isBC>=0) {
-      auto it = particleMap.find(trk);
-      if(it != particleMap.end())
-	cout<<" trk "<<trk<<" "<<it->first<<" "<<it->second<<endl;
-
-      // for(auto it = particleMap.begin(); it!=particleMap.end(); it++) {
-      // 	cout<<trk<<" "<<it->first<<" size "<<it->second<<endl;
-      // }
-
-      // cout<<trk<<" "<<particleMap.size()<<" size "<<histoLists.size()<<endl;
       for(int ijh=0;ijh<int(histoLists.size());ijh++) {
-      	cout<<" trk "<<trk<<" "<<particleMap[trk]<<" "<<histoLists[ijh]<<endl;
-      	if(particleMap.find(trk.Data())==particleMap.end()) {continue;}
+      	// cout<<" trk "<<trk<<" "<<particleMap[trk]<<" "<<histoLists[ijh]<<endl;
+      	if(particleMap.find(trk)==particleMap.end()) {continue;}
       	histo_sig[particleMap[trk]][ijh][isBC]->
-      	  Fill(getDataValue(trk+histoLists[ijh]));
+      	  Fill(getDataValue(trk+"_"+histoLists[ijh]));
       }
       
       for(int ijh=0;ijh<int(histoResoList.size());ijh++) {
-    	if(particleResoMap.find(trk.Data())==particleResoMap.end()) {continue;}
+    	if(particleResoMap.find(trk)==particleResoMap.end()) {continue;}
     	histo_reso_sig[particleResoMap[trk]][ijh][isBC]->
-	  Fill(getDataValue(trk+histoResoList[ijh][0]),
-	       getDataValue(trk+histoResoList[ijh][0]) -
-	       getDataValue(trk+histoResoList[ijh][1]));
+	  Fill(getDataValue(trk+"_"+histoResoList[ijh][0]),
+	       getDataValue(trk+"_"+histoResoList[ijh][0]) -
+	       getDataValue(trk+"_"+histoResoList[ijh][1]));
       }
       
       for(int ijh=0;ijh<int(histoResoFromPullList.size());ijh++) {
-    	if(particleResoFromPullMap.find(trk.Data())==particleResoFromPullMap.end()) {continue;}
+    	if(particleResoFromPullMap.find(trk)==particleResoFromPullMap.end()) {continue;}
     	histo_resofrompull_sig[particleResoFromPullMap[trk]][ijh][isBC]->
-	  Fill(getDataValue(trk+histoResoFromPullList[ijh][0]) *
-	       getDataValue(trk+histoResoFromPullList[ijh][1]));
+	  Fill(getDataValue(trk+"_"+histoResoFromPullList[ijh][0]) *
+	       getDataValue(trk+"_"+histoResoFromPullList[ijh][1]));
       }
       
     }
@@ -361,9 +358,7 @@ int Utils::printEffi(TString common,
       
       // nt = *nt1; ns = *ns1; nsb = *nsb1; ntb = *ntb1;
     } else {
-      cout<<trk<<" "<<particleMap[trk]<<" "<<histoLists[0]<<endl;
       nt  = countTracks(trk,cutlist[0],0);
-      cout<<trk<<" "<<particleMap[trk]<<" "<<histoLists[0]<<endl;
       ns  = countTracks(trk,cutlist[1],1);
       nsb = countTracks(trk,cutlist[2],2);
       ntb = countTracks(trk,cutlist[3],3);
@@ -416,13 +411,12 @@ void Utils::makeBranch(TString partname,
 		       TString type,
 		       int *cnt) {
   TString name = (partname + "_" + parname);
-  if(VariableDataType.find(type.Data()) == VariableDataType.end()) {
+  if(VariableDataType.find(type) == VariableDataType.end()) {
     cout<<" data type not found for "<<name<<endl;}
   
   int datatype = VariableDataType[type];
-  // cout<<" name "<<name<<" type "<<type<<" "<<datatype<<" cnt "<<cnt[datatype]<<endl;
-  if(paramMap.find(name.Data()) == paramMap.end()) {
-    // pair<TString,Int_t> brdetails(type,cnt[datatype]);
+  if(paramMap.find(name) == paramMap.end()) {
+    cout<<" name "<<name<<" type "<<type<<" "<<datatype<<" cnt "<<cnt[datatype]<<endl;
     if(name.Contains("_mc")) {
       if(type=="c_double") {
 	branchDouble.push_back(0);
@@ -446,14 +440,14 @@ void Utils::makeBranch(TString partname,
       	RCtr->SetBranchAddress(name,&branchBool[cnt[datatype]]);
       }
     }
-    paramMap[name] = std::pair<TString,Int_t>(type,cnt[datatype]);// brdetails;
+    paramMap[name] = std::pair<TString,Int_t>(type,cnt[datatype]);
     cnt[datatype]++;
   }
 }
 
 double Utils::getDataValue(TString brdetails1)
 {
-  cout<<" getDataValue "<<brdetails1<<" "<<paramMap[brdetails1].first<<" "<<paramMap[brdetails1].second<<endl;
+  // cout<<" getDataValue "<<brdetails1<<" "<<paramMap[brdetails1].first<<" "<<paramMap[brdetails1].second<<endl;
   if(paramMap[brdetails1].first == "c_double") {
     return branchDouble[paramMap[brdetails1].second];
   } else if(paramMap[brdetails1].first == "c_int") {

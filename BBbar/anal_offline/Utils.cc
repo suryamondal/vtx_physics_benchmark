@@ -21,10 +21,6 @@ void Utils::Setup(std::map<TString, TString> motherMap,
 		  std::map<TString, TString> &paramNames
 		  ) {
 
-  branchDouble.reserve(1000);
-  branchInt.reserve(1000);
-  branchBool.reserve(1000);
-
   RCtr = (TTree*)tree->Clone("tree");
   MCtr = (TTree*)mctree->Clone("mctree");
   
@@ -39,12 +35,17 @@ void Utils::Setup(std::map<TString, TString> motherMap,
   histoTypes = {"tot","sig","sig_bc","bc"};
   
   parMotherMap = motherMap;
-  
-  // paramList = paramNames;
-  paramList.clear(); paramMap.clear();
+
+  branchDouble.reserve(int(paramNames.size()));
+  branchInt.reserve(int(paramNames.size()));
+  branchBool.reserve(int(paramNames.size()));
+
+  paramList = paramNames;
+  // paramList.clear();
+  paramMap.clear();
   int cnt[10] = {0};
   for(auto it = paramNames.begin(); it!=paramNames.end(); it++) {
-    paramList[it->first] = it->second;
+    // paramList[it->first] = it->second;
     
     for(int ijp=0;ijp<int(particleNames.size());ijp++) {
       makeBranch(particleNames[ijp],it->first,it->second, cnt);
@@ -60,45 +61,51 @@ void Utils::Setup(std::map<TString, TString> motherMap,
     
   }
   
-  // particleList = particleNames;
-  particleList.clear(); particleMap.clear();
+  particleList = particleNames;
+  // particleList.clear();
+  particleMap.clear();
   for(int ij=0;ij<int(particleNames.size());ij++) {
-    particleList.push_back(particleNames[ij]);
-    cout<<" "<<particleNames[ij]<<endl;
+    // particleList.push_back(particleNames[ij]);
+    // cout<<" "<<particleNames[ij]<<endl;
     particleMap.emplace(particleNames[ij],ij);
     // particleMap[particleNames[ij]] = ij;
   }
   
-  // histoLists = histoNames;
-  histoLists.clear(); histoMap.clear();
+  histoLists = histoNames;
+  // histoLists.clear();
+  histoMap.clear();
   for(int ij=0;ij<int(histoNames.size());ij++) {
-    histoLists.push_back(histoNames[ij]);
+    // histoLists.push_back(histoNames[ij]);
     histoMap[histoNames[ij]] = ij;}
   histoBn = histoBins;
   
-  // particleResoList = particleResoNames;
-  particleResoList.clear(); particleResoMap.clear();
+  particleResoList = particleResoNames;
+  // particleResoList.clear();
+  particleResoMap.clear();
   for(int ij=0;ij<int(particleResoNames.size());ij++) {
-    particleResoList.push_back(particleResoNames[ij]);
+    // particleResoList.push_back(particleResoNames[ij]);
     particleResoMap[particleResoNames[ij]] = ij;}
   
-  // histoResoList = histoResoNames;
-  histoResoList.clear(); histoResoMap.clear();
+  histoResoList = histoResoNames;
+  // histoResoList.clear();
+  histoResoMap.clear();
   for(int ij=0;ij<int(histoResoNames.size());ij++) {
-    histoResoList.push_back(histoResoNames[ij]);
+    // histoResoList.push_back(histoResoNames[ij]);
     histoResoMap[histoResoNames[ij][0]] = ij;}
   histoResoBn = histoResoBins;
   
-  // particleResoFromPullList = particleResoFromPullNames;
-  particleResoFromPullList.clear(); particleResoFromPullMap.clear();
+  particleResoFromPullList = particleResoFromPullNames;
+  // particleResoFromPullList.clear();
+  particleResoFromPullMap.clear();
   for(int ij=0;ij<int(particleResoFromPullNames.size());ij++) {
-    particleResoFromPullList.push_back(particleResoFromPullNames[ij]);
+    // particleResoFromPullList.push_back(particleResoFromPullNames[ij]);
     particleResoFromPullMap[particleResoFromPullNames[ij]] = ij;}
   
-  // histoResoFromPullList = histoResoFromPullNames;
-  histoResoFromPullList.clear(); histoResoFromPullMap.clear();
+  histoResoFromPullList = histoResoFromPullNames;
+  // histoResoFromPullList.clear();
+  histoResoFromPullMap.clear();
   for(int ij=0;ij<int(histoResoFromPullNames.size());ij++) {
-    histoResoFromPullList.push_back(histoResoFromPullNames[ij]);
+    // histoResoFromPullList.push_back(histoResoFromPullNames[ij]);
     histoResoFromPullMap[histoResoFromPullNames[ij][0]] = ij;}
   histoResoFromPullBn = histoResoFromPullBins;
   
@@ -254,19 +261,19 @@ Long64_t Utils::countTracks(TString trk,
     if(isBC>=0) {
       auto it = particleMap.find(trk);
       if(it != particleMap.end())
-	cout<<trk<<" "<<it->first<<" "<<it->second<<endl;
+	cout<<" trk "<<trk<<" "<<it->first<<" "<<it->second<<endl;
 
       // for(auto it = particleMap.begin(); it!=particleMap.end(); it++) {
       // 	cout<<trk<<" "<<it->first<<" size "<<it->second<<endl;
       // }
 
       // cout<<trk<<" "<<particleMap.size()<<" size "<<histoLists.size()<<endl;
-      // for(int ijh=0;ijh<int(histoLists.size());ijh++) {
-      // 	cout<<trk<<" "<<particleMap[trk]<<" "<<histoLists[ijh]<<endl;
-      // 	if(particleMap.find(trk.Data())==particleMap.end()) {continue;}
-      // 	histo_sig[particleMap[trk]][ijh][isBC]->
-      // 	  Fill(getDataValue(trk+histoLists[ijh]));
-      // }
+      for(int ijh=0;ijh<int(histoLists.size());ijh++) {
+      	cout<<" trk "<<trk<<" "<<particleMap[trk]<<" "<<histoLists[ijh]<<endl;
+      	if(particleMap.find(trk.Data())==particleMap.end()) {continue;}
+      	histo_sig[particleMap[trk]][ijh][isBC]->
+      	  Fill(getDataValue(trk+histoLists[ijh]));
+      }
       
       for(int ijh=0;ijh<int(histoResoList.size());ijh++) {
     	if(particleResoMap.find(trk.Data())==particleResoMap.end()) {continue;}

@@ -58,8 +58,7 @@ int main(int argc, char **argv) {
     for(int ijp=0;ijp<int(testUtils[cn].particleList.size());ijp++) {
       for(int ijh=0;ijh<int(testUtils[cn].histoList.size());ijh++) {
 	TString name = testUtils[cn].histo_mc[ijp][ijh]->GetName();
-	if(name.Contains("_sig")) {
-	  testUtils[cn].histo_mc[ijp][ijh]->Write();}}}
+	testUtils[cn].histo_mc[ijp][ijh]->Write();}}
     
     for(int ijp=0;ijp<int(testUtils[cn].particleList.size());ijp++) {
       for(int ijh=0;ijh<int(testUtils[cn].histoList.size());ijh++) {

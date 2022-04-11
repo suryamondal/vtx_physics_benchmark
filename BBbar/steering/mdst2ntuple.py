@@ -54,7 +54,7 @@ try:  # Dummy import to check basf2 version
 except ImportError:
     HAS_VTX = False
 
-HAS_VTX = False
+# HAS_VTX = False
 
 b2.set_log_level(b2.LogLevel.DEBUG)
 # b2.set_log_level(19)

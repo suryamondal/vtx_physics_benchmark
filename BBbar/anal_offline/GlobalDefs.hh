@@ -30,14 +30,14 @@ std::vector<std::vector<std::vector<Double_t>>> histoBn = {{{20,0.,0.25},{20,0.,
 std::vector<std::vector<TString>> particleResoList = {{"pisoft", "mu", "K", "pi"},
 						      {"pisoft", "mu", "K", "pi1"}};
 std::vector<std::vector<TString>> histoResoList = {{"mcPT","pt"}, {"mcP","p"}, {"mcTheta","theta"}, {"mcPhi","phi"}};
-std::vector<std::vector<std::vector<Double_t>>> histoResoBn = {{{20,0.,0.25,50,-0.025,0.025},{20,0.,0.25,50,-0.025,0.025},
-								{20,0.,TMath::Pi(),50,-0.01,0.01},{20,-TMath::Pi(),TMath::Pi(),50,-0.01,0.01}}, // pisoft
-							       {{20,0.,2.5,50,-0.025,0.025},{20,0.,2.5,50,-0.025,0.025},
-								{20,0.,TMath::Pi(),50,-0.01,0.01},{20,-TMath::Pi(),TMath::Pi(),50,-0.01,0.01}}, // mu
-							       {{20,0.,2.5,50,-0.025,0.025},{20,0.,2.5,50,-0.025,0.025},
-								{20,0.,TMath::Pi(),50,-0.01,0.01},{20,-TMath::Pi(),TMath::Pi(),50,-0.01,0.01}}, // K
-							       {{20,0.,2.5,50,-0.025,0.025},{20,0.,2.5,50,-0.025,0.025},
-								{20,0.,TMath::Pi(),50,-0.01,0.01},{20,-TMath::Pi(),TMath::Pi(),50,-0.01,0.01}}}; // pi
+std::vector<std::vector<std::vector<Double_t>>> histoResoBn = {{{40,0.,0.25,50,-0.025,0.025},{40,0.,0.25,50,-0.025,0.025},
+								{40,0.,TMath::Pi(),50,-0.01,0.01},{40,-TMath::Pi(),TMath::Pi(),50,-0.01,0.01}}, // pisoft
+							       {{40,0.,2.5,50,-0.025,0.025},{40,0.,2.5,50,-0.025,0.025},
+								{40,0.,TMath::Pi(),50,-0.01,0.01},{40,-TMath::Pi(),TMath::Pi(),50,-0.01,0.01}}, // mu
+							       {{40,0.,2.5,50,-0.025,0.025},{40,0.,2.5,50,-0.025,0.025},
+								{40,0.,TMath::Pi(),50,-0.01,0.01},{40,-TMath::Pi(),TMath::Pi(),50,-0.01,0.01}}, // K
+							       {{40,0.,2.5,50,-0.025,0.025},{40,0.,2.5,50,-0.025,0.025},
+								{40,0.,TMath::Pi(),50,-0.01,0.01},{40,-TMath::Pi(),TMath::Pi(),50,-0.01,0.01}}}; // pi
 
 // std::vector<std::vector<TString>> particlePullList = {{"pisoft", "mu", "K", "pi"},
 // 						      {"pisoft", "mu", "K", "pi1"}};
@@ -50,10 +50,10 @@ std::vector<std::vector<std::vector<Double_t>>> histoResoBn = {{{20,0.,0.25,50,-
 std::vector<std::vector<TString>> particleResoFromPullList = {{"pisoft", "mu", "K", "pi"},
 							      {"pisoft", "mu", "K", "pi1"}};
 std::vector<std::vector<TString>> histoResoFromPullList = {{"d0Pull","d0Err"}, {"z0Pull","z0Err"}};
-std::vector<std::vector<std::vector<Double_t>>> histoResoFromPullBn = {{{100,-0.25,0.25},{100,-0.25,0.25}}, // pisoft
-								       {{100,-0.01,0.01},{100,-0.01,0.01}}, // mu
-								       {{100,-0.01,0.01},{100,-0.01,0.01}}, // K
-								       {{100,-0.01,0.01},{100,-0.01,0.01}}}; // pi
+std::vector<std::vector<std::vector<Double_t>>> histoResoFromPullBn = {{{200,-0.25,0.25},{200,-0.5,0.5}}, // pisoft
+								       {{200,-0.025,0.025},{200,-0.025,0.025}}, // mu
+								       {{200,-0.025,0.025},{200,-0.025,0.025}}, // K
+								       {{200,-0.025,0.025},{200,-0.025,0.025}}}; // pi
 
 // std::vector<std::vector<TString>> particleFlightResoList = {{"B0", "D0"},
 // 							    {"B0", "D0"}};

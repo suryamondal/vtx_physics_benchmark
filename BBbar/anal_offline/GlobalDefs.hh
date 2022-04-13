@@ -30,22 +30,14 @@ std::vector<std::vector<std::vector<Double_t>>> histoBn = {{{25,0.,0.25},{25,0.,
 std::vector<std::vector<TString>> particleResoList = {{"pisoft", "mu", "K", "pi"},
 						      {"pisoft", "mu", "K", "pi1"}};
 std::vector<std::vector<TString>> histoResoList = {{"mcPT","pt"}, {"mcP","p"}, {"mcTheta","theta"}, {"mcPhi","phi"}};
-std::vector<std::vector<std::vector<Double_t>>> histoResoBn = {{{25,0.,0.25,50,-0.025,0.025},{25,0.,0.25,50,-0.025,0.025},
-								{25,0.,TMath::Pi(),50,-0.01,0.01},{25,-TMath::Pi(),TMath::Pi(),50,-0.01,0.01}}, // pisoft
-							       {{25,0.,2.5,50,-0.025,0.025},{25,0.,2.5,50,-0.025,0.025},
-								{25,0.,TMath::Pi(),50,-0.01,0.01},{25,-TMath::Pi(),TMath::Pi(),50,-0.01,0.01}}, // mu
-							       {{25,0.,2.5,50,-0.025,0.025},{25,0.,2.5,50,-0.025,0.025},
-								{25,0.,TMath::Pi(),50,-0.01,0.01},{25,-TMath::Pi(),TMath::Pi(),50,-0.01,0.01}}, // K
-							       {{25,0.,2.5,50,-0.025,0.025},{25,0.,2.5,50,-0.025,0.025},
-								{25,0.,TMath::Pi(),50,-0.01,0.01},{25,-TMath::Pi(),TMath::Pi(),50,-0.01,0.01}}}; // pi
-
-// std::vector<std::vector<TString>> particlePullList = {{"pisoft", "mu", "K", "pi"},
-// 						      {"pisoft", "mu", "K", "pi1"}};
-// std::vector<TString> histoPullList = {"d0Pull","z0Pull"};
-// std::vector<std::vector<std::vector<Double_t>>> histoPullBn = {{{100,-5.,-5.},{100,-5.,5.}}, // pisoft
-// 							       {{100,-5.,-5.},{100,-5.,5.}}, // mu
-// 							       {{100,-5.,-5.},{100,-5.,5.}}, // K
-// 							       {{100,-5.,-5.},{100,-5.,5.}}}; // pi
+std::vector<std::vector<std::vector<Double_t>>> histoResoBn = {{{25,0.,0.25,100,-0.025,0.025},{25,0.,0.25,100,-0.025,0.025},
+								{25,0.,TMath::Pi(),100,-0.01,0.01},{25,-TMath::Pi(),TMath::Pi(),100,-0.01,0.01}}, // pisoft
+							       {{25,0.,2.5,100,-0.025,0.025},{25,0.,2.5,100,-0.025,0.025},
+								{25,0.,TMath::Pi(),100,-0.01,0.01},{25,-TMath::Pi(),TMath::Pi(),100,-0.01,0.01}}, // mu
+							       {{25,0.,2.5,100,-0.025,0.025},{25,0.,2.5,100,-0.025,0.025},
+								{25,0.,TMath::Pi(),100,-0.01,0.01},{25,-TMath::Pi(),TMath::Pi(),100,-0.01,0.01}}, // K
+							       {{25,0.,2.5,100,-0.025,0.025},{25,0.,2.5,100,-0.025,0.025},
+								{25,0.,TMath::Pi(),100,-0.01,0.01},{25,-TMath::Pi(),TMath::Pi(),100,-0.01,0.01}}}; // pi
 
 std::vector<std::vector<TString>> particleResoFromPullList = {{"pisoft", "mu", "K", "pi"},
 							      {"pisoft", "mu", "K", "pi1"}};
@@ -55,11 +47,16 @@ std::vector<std::vector<std::vector<Double_t>>> histoResoFromPullBn = {{{500,-0.
 								       {{500,-0.025,0.025},{500,-0.025,0.025}}, // K
 								       {{500,-0.025,0.025},{500,-0.025,0.025}}}; // pi
 
-// std::vector<std::vector<TString>> particleFlightResoList = {{"B0", "D0"},
-// 							    {"B0", "D0"}};
+// std::vector<std::vector<TString>> particleFlightResoList = {{"D0"},
+// 							    {"D0"}};
 // std::vector<std::vector<TString>> histoFlightResoList = {{"flightDistance","mcFlightDistance"}};
-// std::vector<std::vector<std::vector<Double_t>>> histoFlightResoBn = {{{100,-0.025,0.025},{100,-0.025,0.025}}, // B0
-// 								     {{100,-0.025,0.025},{100,-0.025,0.025}}}; // D0
+// std::vector<std::vector<std::vector<Double_t>>> histoFlightResoBn = {{{500,-0.05,0.05},{500,-0.05,0.05}}}; // D0
+
+// std::vector<std::vector<TString>> particleDecayResoList = {{"B0", "D0"},
+// 							   {"B0", "D0"}};
+// std::vector<std::vector<TString>> histoDecayResoList = {{"mcDecayVertexX","x"},{"mcDecayVertexY","y"},{"mcDecayVertexZ","z"}};
+// std::vector<std::vector<std::vector<Double_t>>> histoDecayResoBn = {{{500,-0.025,0.025},{500,-0.025,0.025},{500,-0.025,0.025}}, // B0
+// 								    {{500,-0.025,0.025},{500,-0.025,0.025},{500,-0.025,0.025}}}; // D0
 
 
 // std::vector<TString> commonMCBranch {"__experiment__", "__run__",

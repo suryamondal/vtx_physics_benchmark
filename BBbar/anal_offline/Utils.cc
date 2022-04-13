@@ -6,15 +6,27 @@ using namespace std;
 Utils::Utils() {}
 
 void Utils::Setup(std::map<TString, TString> motherMap,
+
 		  std::vector<TString> &particleNames,
 		  std::vector<TString> &histoNames,
 		  std::vector<std::vector<std::vector<Double_t>>> &histoBins,
+
 		  std::vector<TString> &particleResoNames,
 		  std::vector<std::vector<TString>> &histoResoNames,
 		  std::vector<std::vector<std::vector<Double_t>>> &histoResoBins,
+
 		  std::vector<TString> &particleResoFromPullNames,
 		  std::vector<std::vector<TString>> &histoResoFromPullNames,
 		  std::vector<std::vector<std::vector<Double_t>>> &histoResoFromPullBins,
+
+		  // std::vector<TString> &particleResoFlightResoNames,
+		  // std::vector<std::vector<TString>> &histoResoFlightResoNames,
+		  // std::vector<std::vector<std::vector<Double_t>>> &histoResoFlightResoBins,
+
+		  // std::vector<TString> &particleResoDecayResoNames,
+		  // std::vector<std::vector<TString>> &histoResoDecayResoNames,
+		  // std::vector<std::vector<std::vector<Double_t>>> &histoResoDecayResoBins,
+
 		  TString chnl,
 		  std::vector<TString> &paramNames
 		  ) {

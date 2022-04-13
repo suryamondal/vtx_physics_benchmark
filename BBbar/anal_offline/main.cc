@@ -41,16 +41,17 @@ int main(int argc, char **argv) {
     vector<TString> tParResoFromPullList = particleResoFromPullList[cn];
     printVector(tParResoFromPullList);
     
-    vector<TString> tParFlightList = particleFlightResoList[cn];
-    printVector(tParFlightList);
-    vector<TString> tParDecayList = particleDecayResoList[cn];
-    printVector(tParDecayList);
+    // vector<TString> tParFlightList = particleFlightResoList[cn];
+    // printVector(tParFlightList);
+    // vector<TString> tParDecayList = particleDecayResoList[cn];
+    // printVector(tParDecayList);
+
     testUtils[cn].Setup(motherMap,
 			tParList,histoList,histoBn,
 			tParResoList,histoResoList,histoResoBn,
 			tParResoFromPullList,histoResoFromPullList,histoResoFromPullBn,
-			tParFlightList,histoFlightResoList,histoFlightResoBn,
-			tParDecayList,histoDecayResoList,histoDecayResoBn,
+			// tParFlightList,histoFlightResoList,histoFlightResoBn,
+			// tParDecayList,histoDecayResoList,histoDecayResoBn,
 			channelList[cn],
 			parList);
     ROOT::RDataFrame MCtr(("MC"+channelList[cn]).Data(),   argv[1]);

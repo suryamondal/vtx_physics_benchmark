@@ -288,8 +288,8 @@ int Utils::printEffi(ROOT::RDataFrame &tr,
   for(int ijp=0;ijp<int(particleList.size());ijp++) {
     
     TString trk = particleList[ijp];
-    TString signal = trk + "_isSignal==1";
-    // TString signal = "B0_isSignal==1";
+    // TString signal = trk + "_isSignal==1";
+    TString signal = "B0_isSignal==1";
     signal += " && TMath::Abs(" + trk + "_genMotherPDG)==" + parMotherMap[trk];
     cout<<endl<<" "<<trk<<" "<<particleMap[trk]<<" efficiency and purity : signal cut:: "<<signal<<endl;
     

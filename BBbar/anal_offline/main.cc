@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
 	for(int ijb=0;ijb<int(testUtils[cn].histoTypes.size());ijb++) {
 	  TString name = testUtils[cn].histo_sig[ijp][ijh][ijb]->GetName();
 	  if((name.Contains("_sig") && name.Contains("_mc")) || 
-	     (!name.Contains("_sig") && !name.Contains("_mc"))) {
+	     (!name.Contains("_mc"))) {
 	    testUtils[cn].histo_sig[ijp][ijh][ijb]->Write();}}}}
     
     testUtils[cn].DivideHisto();

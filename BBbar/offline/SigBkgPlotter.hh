@@ -16,7 +16,6 @@ class SigBkgPlotter {
   typedef std::tuple<RRes1D,RRes1D> TRRes1D;
   typedef ROOT::RDF::RResultPtr<TH2D> RRes2D;
   typedef std::tuple<RRes2D,RRes2D> TRRes2D;
-  typedef std::tuple<int, int, int, double> filterElement;
 
   SigBkgPlotter() = delete;
   SigBkgPlotter(const SigBkgPlotter&) = delete;
@@ -53,7 +52,7 @@ class SigBkgPlotter {
    */
   TRRes1D Histo1D(const char* variable, TString title,
                   int nBins, double xLow, double xUp, double scale = 1.0,
-		  bool sigOnly = false, bool isFilter = false);
+		  bool sigOnly = false);
 
   /** Makes a tuple {sig,bkg} of histograms of the given variable for
    * each of the given particles. In title, $p is replaced with the
@@ -61,7 +60,7 @@ class SigBkgPlotter {
    */
   void Histo1D(std::initializer_list<TString> particles, const char *variable,
                TString title, int nBins, double xLow, double xUp, double scale = 1.0,
-	       bool sigOnly = false, bool isFilter = false);
+	       bool sigOnly = false);
 
   /** Makes a tuple {sig,bkg} of 2D histograms of the given variables.
    * The tuple is returned and saved to the interal list of plots.
@@ -172,8 +171,4 @@ class SigBkgPlotter {
   bool m_logScale; /**< Histograms y (or z) axis with log scale. */
   int m_bkgDownScale = 1; /**< Down-scaling factor for bkg (for visibility of sig). */
   bool m_histsAlreadyNormalized = false;
-
-  std::vector<filterElement> filterVector;
-  const int maxCount = 10;
-
 };

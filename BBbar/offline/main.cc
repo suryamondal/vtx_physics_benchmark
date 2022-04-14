@@ -179,23 +179,23 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   plt.Histo1D(FSParts, "d0Pull", "d_{0$p} pull;(MC - meas) / #sigma_{meas}", 500, -10, 10, 1, true);
   plt.Histo1D(FSParts, "z0Pull", "z_{0$p} pull;(MC - meas) / #sigma_{meas}", 500, -10, 10, 1, true);
   // fit parameters
-  plt.Histo1D(FSHParts,   "ptResidual", "pt_{$p} residual;MC - meas [MeV]", 100, -0.025, 0.025, 1, false, true);
-  plt.Histo1D({"pisoft"}, "ptResidual", "pt_{$p} residual;MC - meas [MeV]", 100, -0.025, 0.025, 1, false, true);
-  plt.Histo1D(FSHParts,   "pResidual", "p_{$p} residual;MC - meas [MeV]", 100, -0.025, 0.025, 1, false, true);
-  plt.Histo1D({"pisoft"}, "pResidual", "p_{$p} residual;MC - meas [MeV]", 100, -0.025, 0.025, 1, false, true);
-  plt.Histo1D(FSHParts,   "thetaResidual", "theta_{$p} residual;MC - meas", 100, -0.005, 0.005, 1, false, true);
-  plt.Histo1D({"pisoft"}, "thetaResidual", "theta_{$p} residual;MC - meas", 100, -0.01, 0.01, 1, false, true);
-  plt.Histo1D(FSHParts,   "phiResidual", "phi_{$p} residual;MC - meas", 100, -0.005, 0.005, 1, false, true);
-  plt.Histo1D({"pisoft"}, "phiResidual", "phi_{$p} residual;MC - meas", 100, -0.01, 0.01, 1, false, true);
+  plt.Histo1D(FSHParts,   "ptResidual", "pt_{$p} residual;MC - meas [MeV]", 100, -0.025, 0.025);
+  plt.Histo1D({"pisoft"}, "ptResidual", "pt_{$p} residual;MC - meas [MeV]", 100, -0.025, 0.025);
+  plt.Histo1D(FSHParts,   "pResidual", "p_{$p} residual;MC - meas [MeV]",   100, -0.025, 0.025);
+  plt.Histo1D({"pisoft"}, "pResidual", "p_{$p} residual;MC - meas [MeV]",   100, -0.025, 0.025);
+  plt.Histo1D(FSHParts,   "thetaResidual", "theta_{$p} residual;MC - meas", 100, -0.005, 0.005);
+  plt.Histo1D({"pisoft"}, "thetaResidual", "theta_{$p} residual;MC - meas", 100, -0.01, 0.01);
+  plt.Histo1D(FSHParts,   "phiResidual", "phi_{$p} residual;MC - meas",     100, -0.005, 0.005);
+  plt.Histo1D({"pisoft"}, "phiResidual", "phi_{$p} residual;MC - meas",     100, -0.01, 0.01);
   // fit parameters : 2D
   plt.Histo2D(FSHParts,   "mcPT",    "ptResidual",    "pt_{$p} residual;pt_{$p};MC - meas [MeV]", 25, 0., 2.5, 100, -0.015, 0.015);
   plt.Histo2D({"pisoft"}, "mcPT",    "ptResidual",    "pt_{$p} residual;pt_{$p};MC - meas [MeV]", 25, 0., 0.25, 100, -0.015, 0.015);
-  plt.Histo2D(FSHParts,   "mcP",     "pResidual",     "p_{$p} residual;p_{$p};MC - meas [MeV]",  25, 0., 2.5, 100, -0.015, 0.015);
-  plt.Histo2D({"pisoft"}, "mcP",     "pResidual",     "p_{$p} residual;p_{$p};MC - meas [MeV]",  25, 0., 0.25, 100, -0.015, 0.015);
-  plt.Histo2D(FSHParts,   "mcTheta", "thetaResidual", "theta_{$p} residual;theta_{$p};MC - meas",    25, 0., TMath::Pi(), 100, -0.0025, 0.0025);
-  plt.Histo2D({"pisoft"}, "mcTheta", "thetaResidual", "theta_{$p} residual;theta_{$p};MC - meas",    25, 0., TMath::Pi(), 100, -0.01, 0.01);
-  plt.Histo2D(FSHParts,   "mcPhi",   "phiResidual",   "phi_{$p} residual;phi_{$p};MC - meas",      25, -TMath::Pi(), TMath::Pi(), 100, -0.0025, 0.0025);
-  plt.Histo2D({"pisoft"}, "mcPhi",   "phiResidual",   "phi_{$p} residual;phi_{$p};MC - meas",      25, -TMath::Pi(), TMath::Pi(), 100, -0.01, 0.01);
+  plt.Histo2D(FSHParts,   "mcP",     "pResidual",     "p_{$p} residual;p_{$p};MC - meas [MeV]",   25, 0., 2.5, 100, -0.015, 0.015);
+  plt.Histo2D({"pisoft"}, "mcP",     "pResidual",     "p_{$p} residual;p_{$p};MC - meas [MeV]",   25, 0., 0.25, 100, -0.015, 0.015);
+  plt.Histo2D(FSHParts,   "mcTheta", "thetaResidual", "theta_{$p} residual;theta_{$p};MC - meas", 25, 0., TMath::Pi(), 100, -0.0025, 0.0025);
+  plt.Histo2D({"pisoft"}, "mcTheta", "thetaResidual", "theta_{$p} residual;theta_{$p};MC - meas", 25, 0., TMath::Pi(), 100, -0.01, 0.01);
+  plt.Histo2D(FSHParts,   "mcPhi",   "phiResidual",   "phi_{$p} residual;phi_{$p};MC - meas",     25, -TMath::Pi(), TMath::Pi(), 100, -0.0025, 0.0025);
+  plt.Histo2D({"pisoft"}, "mcPhi",   "phiResidual",   "phi_{$p} residual;phi_{$p};MC - meas",     25, -TMath::Pi(), TMath::Pi(), 100, -0.01, 0.01);
 
   // ==== Efficiency
   // Best-candidates selection/ranking

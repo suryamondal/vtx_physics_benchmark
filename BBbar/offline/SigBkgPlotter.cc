@@ -14,7 +14,7 @@ using namespace std;
 
 SigBkgPlotter::TRRes1D SigBkgPlotter::Histo1D(
   const char* variable, TString title, int nBins, double xLow, double xUp,
-  double scale, bool sigOnly, bool isFilter)
+  double scale, bool sigOnly)
 {
   TString nameSig = GetUniqueName(m_namePrefix + "_sig_" + variable);
   TString nameBkg = GetUniqueName(m_namePrefix + "_bkg_" + variable);
@@ -23,69 +23,17 @@ SigBkgPlotter::TRRes1D SigBkgPlotter::Histo1D(
     for (int i = title.CountChar(';'); i < 2; i++) title += ";";
     title += "Candidates / bin";
   }
-
-  std::vector<filterElement> filterVector;
-  const int maxCount = 10;
-  // filterVector.reserve(maxCount);
-  auto filterOut = [isFilter, maxCount, &filterVector] (int exp, int run, int evt, double indx)
-		   {
-		     if(!isFilter) return true;
-		     
-		     filterElement element = std::make_tuple(exp, run, evt, indx);
-
-		     int tsz = filterVector.size();
-		     if(tsz==maxCount) {filterVector.erase(filterVector.begin());}
-
-		     int passORinsertORpush = -1;
-		     if(!tsz) {passORinsertORpush = 1;}
-
-		     for(int jk=tsz-1;jk>=0;jk--) {
-		       if (filterVector[jk] == element) {passORinsertORpush = -1; break;}
-		       else if (filterVector[jk] > element) {passORinsertORpush = jk + 1; break;}
-		       passORinsertORpush = jk;
-		     } // for(int jk=tsz-1;jk>=0;jk--) {
-
-		     if(passORinsertORpush<0) {
-		       return false;
-		     } else if(passORinsertORpush<tsz) {
-		       cout<<" "<<std::get<1>(element)<<" "<<std::get<2>(element)<<" "<<std::get<3>(element)<<" "<<endl;
-		       cout<<"\t"<<tsz<<" "<<passORinsertORpush<<endl;
-		       cout<<"\t\tinsert"<<endl;
-		       filterVector.insert(filterVector.begin()+passORinsertORpush,element);
-		     } else {
-		       cout<<" "<<std::get<1>(element)<<" "<<std::get<2>(element)<<" "<<std::get<3>(element)<<" "<<endl;
-		       cout<<"\t"<<tsz<<" "<<passORinsertORpush<<endl;
-		       cout<<"\t\tpush"<<endl;
-		       filterVector.push_back(element);
-		     }
-		     return true;
-		   };
-
-  TString varFilter;
-  std::string somestr = variable;
-  std::string::size_type scorepos = somestr.find('_');
-  if (scorepos != std::string::npos) {
-    varFilter = somestr.substr(0, scorepos);
-  }
-  varFilter = varFilter + "_mdstIndex";
-  std::cout<<variable<<" "<<varFilter<<endl;
   
   TRRes1D res;
   if (scale == 1.0) {
     res = make_tuple(
       m_sig.Histo1D({nameSig, title, nBins, xLow, xUp}, variable),
-      sigOnly ? RRes1D() :
-      (isFilter ?
-       m_bkg.Filter(filterOut,{"__experiment__","__run__","__event__",varFilter.Data()}).Histo1D({nameBkg, title, nBins, xLow, xUp}, variable) :
-       m_bkg.Histo1D({nameBkg, title, nBins, xLow, xUp}, variable)));
+      sigOnly ? RRes1D() : m_bkg.Histo1D({nameBkg, title, nBins, xLow, xUp}, variable));
   } else {
     TString expr = TString::Format("%s*%.18lg", variable, scale);
     res = make_tuple(
       m_sig.Define("h1dtmp", expr.Data()).Histo1D({nameSig, title, nBins, xLow, xUp}, "h1dtmp"),
-      sigOnly ? RRes1D() :
-      (isFilter ?
-       m_bkg.Filter(filterOut,{"__experiment__","__run__","__event__",varFilter.Data()}).Define("h1dtmp", expr.Data()).Histo1D({nameBkg, title, nBins, xLow, xUp}, "h1dtmp") :
-       m_bkg.Define("h1dtmp", expr.Data()).Histo1D({nameBkg, title, nBins, xLow, xUp}, "h1dtmp")));
+      sigOnly ? RRes1D() : m_bkg.Define("h1dtmp", expr.Data()).Histo1D({nameBkg, title, nBins, xLow, xUp}, "h1dtmp"));
   }
   m_h1s.push_back(res);
   return res;
@@ -93,12 +41,12 @@ SigBkgPlotter::TRRes1D SigBkgPlotter::Histo1D(
 
 void SigBkgPlotter::Histo1D(
   std::initializer_list<TString> particles, const char* variable,
-  TString title, int nBins, double xLow, double xUp, double scale, bool sigOnly, bool isFilter)
+  TString title, int nBins, double xLow, double xUp, double scale, bool sigOnly)
 {
   for (const TString& p : particles) {
     TString t = title; // Replacement happens in-place :(
     TString v = p + "_" + variable;
-    Histo1D(v, t.ReplaceAll("$p", ParticlesTitles.at(p)), nBins, xLow, xUp, scale, sigOnly, isFilter);
+    Histo1D(v, t.ReplaceAll("$p", ParticlesTitles.at(p)), nBins, xLow, xUp, scale, sigOnly);
   }
 }
 

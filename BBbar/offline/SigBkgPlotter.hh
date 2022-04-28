@@ -1,3 +1,6 @@
+#ifndef SigBkgPlotter__HH
+#define SigBkgPlotter__HH
+
 #pragma once
 #include "PDFCanvas.hh"
 #include <TString.h>
@@ -172,3 +175,5 @@ class SigBkgPlotter {
   int m_bkgDownScale = 1; /**< Down-scaling factor for bkg (for visibility of sig). */
   bool m_histsAlreadyNormalized = false;
 };
+
+#endif

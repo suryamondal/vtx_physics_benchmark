@@ -1,3 +1,6 @@
+#ifndef Utils__HH
+#define Utils__HH
+
 #pragma once
 #include <TH1.h>
 #include <TString.h>
@@ -69,3 +72,5 @@ TH1* ComputeEfficiency(TH1* passes, TH1* totals);
 TString FormatNumberWithError(double number, double error);
 
 TString FormatNumberWithError(TString name, double number, double error);
+
+#endif

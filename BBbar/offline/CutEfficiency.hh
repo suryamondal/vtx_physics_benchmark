@@ -1,3 +1,6 @@
+#ifndef CutEfficiency__HH
+#define CutEfficiency__HH
+
 #pragma once
 #include "Constants.hh"
 #include <ROOT/RDataFrame.hxx>
@@ -56,3 +59,5 @@ std::tuple<TH2D*,UInt_t,UInt_t> CutEfficiencyAnalysis(ROOT::RDF::RInterface<T,vo
 }
 
 // TODO function to compare nCands sig/bkg from TH2D* of df w/ and w/o cuts
+
+#endif

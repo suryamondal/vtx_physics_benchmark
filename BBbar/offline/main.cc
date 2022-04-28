@@ -236,7 +236,7 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   // pT
   plt.EffH1D({"B0"}, "mcPT", "Efficiency vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 0.7);
   plt.EffH1D({"Dst", "D0"}, "mcPT", "Efficiency vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 2.6);
-  plt.EffH1D(FSHParts, "mcPT", "Efficiency vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 2.6);
+  plt.EffH1D(FSHParts, "mcPT", "Efficiency vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 2.5);
   plt.EffH1D({"pisoft"}, "mcPT", "Efficiency vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 0.25);
   // pz
   plt.EffH1D({"B0"}, "mcPZ", "Efficiency vs true p_{Z,$p};True p_{Z,$p} [GeV/c]", 20, 1, 2);
@@ -251,7 +251,7 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
 
   // ==== Efficiency
   // plt.PurityH1D({"Dst", "D0"}, "pt", "Purity vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 2.6);
-  plt.PurityH1D(FSHParts, "pt", "Purity vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 2.6);
+  plt.PurityH1D(FSHParts, "pt", "Purity vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 2.5);
   plt.PurityH1D({"pisoft"}, "pt", "Purity vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 0.25);
   
 }

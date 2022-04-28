@@ -40,14 +40,12 @@ SigBkgPlotter::DefineDF defineVarsForParticles(
 }
 
 /** Define expression variables. */
-SigBkgPlotter::DefineDF defineVariables(RDataFrame& df, bool isK3pi, bool isMC)
+SigBkgPlotter::DefineDF defineVariables(RDataFrame& df, bool isK3pi)
 {
   const auto& CompParts = CompositeParticles;
   const auto& FSParts = isK3pi ? K3PiFSParticles : KPiFSParticles;
 
-  auto ddf = df.Define("testColumn","2+3");
-  if(!isMC) {
-  ddf = defineVarsForParticles(df, CompParts,
+  auto ddf = defineVarsForParticles(df, CompParts,
     {"mcDecayVertexX", "mcDecayVertexY", "mcDecayVertexZ"},
     {"x",              "y",              "z"},
     {"residualDecayX", "residualDecayY", "residualDecayZ"});
@@ -84,7 +82,6 @@ SigBkgPlotter::DefineDF defineVariables(RDataFrame& df, bool isK3pi, bool isMC)
       ddf.HasColumn((p + "_firstVTXLayer").Data()) ? (p + "_firstVTXLayer").Data()
                                                    : (p + "_firstPXDLayer").Data()
     );
-  }
 
   // Define variables for piH and piL, which are pi1 and pi2 sorted by pT
   if (isK3pi) {
@@ -94,23 +91,14 @@ SigBkgPlotter::DefineDF defineVariables(RDataFrame& df, bool isK3pi, bool isMC)
       col = col(4, col.Length() - 4);
       TString newName, newExpr;
       newName.Form("piH_%s", col.Data());
-      if(!isMC) {
-      	newExpr.Form("pi1_pt < pi2_pt ? pi2_%s : pi1_%s", col.Data(), col.Data());
-      } else {
-      	newExpr.Form("pi1_mcPT < pi2_mcPT ? pi2_%s : pi1_%s", col.Data(), col.Data());
-      }
+      newExpr.Form("pi1_pt < pi2_pt ? pi2_%s : pi1_%s", col.Data(), col.Data());
       // cout << newName << " = " << newExpr << endl;
       ddf = ddf.Define(newName.Data(), newExpr.Data());
       newName.Form("piL_%s", col.Data());
-      if(!isMC) {
-      	newExpr.Form("pi1_pt < pi2_pt ? pi1_%s : pi2_%s", col.Data(), col.Data());
-      } else {
-      	newExpr.Form("pi1_mcPT < pi2_mcPT ? pi1_%s : pi2_%s", col.Data(), col.Data());
-      }
+      newExpr.Form("pi1_pt < pi2_pt ? pi1_%s : pi2_%s", col.Data(), col.Data());
       // cout << newName << " = " << newExpr << endl;
       ddf = ddf.Define(newName.Data(), newExpr.Data());
     }
-    if(!isMC) {
     ddf = defineVarsForParticles(ddf, {"piH", "piL"},
       {"d0Err",      "z0Err"},
       {"d0Pull",     "z0Pull"},
@@ -120,17 +108,40 @@ SigBkgPlotter::DefineDF defineVariables(RDataFrame& df, bool isK3pi, bool isMC)
       {"mcPT",       "mcP",        "mcTheta",       "mcPhi"},
       {"pt",         "p",          "theta",         "phi"},
       {"ptResidual", "pResidual",  "thetaResidual", "phiResidual"});
-    }
   }
 
-  if(!isMC) {
-    ddf = ddf.Define("massDiffPreFit", "Dst_M_preFit-D0_M_preFit")
-             .Define("massDiff", "Dst_M-D0_M");
+  return ddf.Define("massDiffPreFit", "Dst_M_preFit-D0_M_preFit")
+            .Define("massDiff", "Dst_M-D0_M");
+  
+}
+
+/** Define expression variables for MC. */
+SigBkgPlotter::DefineDF defineMCVariables(RDataFrame& df, bool isK3pi)
+{
+  auto ddf = df.Define("testColumn","2+3");
+
+  // Define variables for piH and piL, which are pi1 and pi2 sorted by pT
+  if (isK3pi) {
+    for (const auto& sCol : df.GetColumnNames()) {
+      TString col = sCol;
+      if (!col.BeginsWith("pi1_")) continue;
+      col = col(4, col.Length() - 4);
+      TString newName, newExpr;
+      newName.Form("piH_%s", col.Data());
+      newExpr.Form("pi1_mcPT < pi2_mcPT ? pi2_%s : pi1_%s", col.Data(), col.Data());
+      // cout << newName << " = " << newExpr << endl;
+      ddf = ddf.Define(newName.Data(), newExpr.Data());
+      newName.Form("piL_%s", col.Data());
+      newExpr.Form("pi1_mcPT < pi2_mcPT ? pi1_%s : pi2_%s", col.Data(), col.Data());
+      // cout << newName << " = " << newExpr << endl;
+      ddf = ddf.Define(newName.Data(), newExpr.Data());
+    }
   }
 
   return ddf;
   
 }
+
 
 SigBkgPlotter::FilterDF applyOfflineCuts(SigBkgPlotter::DefineDF& df, bool isK3pi)
 {
@@ -344,15 +355,15 @@ int main(int argc, char* argv[])
   RDataFrame dfMCKpi("MCKpi", inFileName.Data());
   RDataFrame dfMCK3pi("MCK3pi", inFileName.Data());
 
-  auto dfDefKpi = defineVariables(dfKpi, false, false);
-  auto dfDefK3pi = defineVariables(dfK3pi, true, false);
+  auto dfDefKpi = defineVariables(dfKpi, false);
+  auto dfDefK3pi = defineVariables(dfK3pi, true);
   auto dfCutKpi = applyOfflineCuts(dfDefKpi, false);
   auto dfCutK3pi = applyOfflineCuts(dfDefK3pi, true);
   auto dfBCKpi = dfCutKpi.Filter("B0_M_rank == 1", "Best Candidate");
   auto dfBCK3pi = dfCutK3pi.Filter("B0_M_rank == 1", "Best Candidate");
 
-  auto dfDefMCKpi = defineVariables(dfMCKpi, false, true);
-  auto dfDefMCK3pi = defineVariables(dfMCK3pi, true, true);
+  auto dfDefMCKpi = defineMCVariables(dfMCKpi, false);
+  auto dfDefMCK3pi = defineMCVariables(dfMCK3pi, true);
 
   gStyle->SetOptStat(0); // TODO If more style lines appear, make a function
   PDFCanvas canvas(outFileName + ".pdf", "c"); // Default size is fine (I wrote it!)

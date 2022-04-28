@@ -40,12 +40,14 @@ SigBkgPlotter::DefineDF defineVarsForParticles(
 }
 
 /** Define expression variables. */
-SigBkgPlotter::DefineDF defineVariables(RDataFrame& df, bool isK3pi)
+SigBkgPlotter::DefineDF defineVariables(RDataFrame& df, bool isK3pi, bool isMC)
 {
   const auto& CompParts = CompositeParticles;
   const auto& FSParts = isK3pi ? K3PiFSParticles : KPiFSParticles;
 
-  auto ddf = defineVarsForParticles(df, CompParts,
+  auto ddf = df.Define("testColumn","2+3");
+  if(!isMC) {
+  ddf = defineVarsForParticles(df, CompParts,
     {"mcDecayVertexX", "mcDecayVertexY", "mcDecayVertexZ"},
     {"x",              "y",              "z"},
     {"residualDecayX", "residualDecayY", "residualDecayZ"});
@@ -82,6 +84,7 @@ SigBkgPlotter::DefineDF defineVariables(RDataFrame& df, bool isK3pi)
       ddf.HasColumn((p + "_firstVTXLayer").Data()) ? (p + "_firstVTXLayer").Data()
                                                    : (p + "_firstPXDLayer").Data()
     );
+  }
 
   // Define variables for piH and piL, which are pi1 and pi2 sorted by pT
   if (isK3pi) {
@@ -91,14 +94,23 @@ SigBkgPlotter::DefineDF defineVariables(RDataFrame& df, bool isK3pi)
       col = col(4, col.Length() - 4);
       TString newName, newExpr;
       newName.Form("piH_%s", col.Data());
-      newExpr.Form("pi1_pt < pi2_pt ? pi2_%s : pi1_%s", col.Data(), col.Data());
+      if(!isMC) {
+      	newExpr.Form("pi1_pt < pi2_pt ? pi2_%s : pi1_%s", col.Data(), col.Data());
+      } else {
+      	newExpr.Form("pi1_mcPT < pi2_mcPT ? pi2_%s : pi1_%s", col.Data(), col.Data());
+      }
       // cout << newName << " = " << newExpr << endl;
       ddf = ddf.Define(newName.Data(), newExpr.Data());
       newName.Form("piL_%s", col.Data());
-      newExpr.Form("pi1_pt < pi2_pt ? pi1_%s : pi2_%s", col.Data(), col.Data());
+      if(!isMC) {
+      	newExpr.Form("pi1_pt < pi2_pt ? pi1_%s : pi2_%s", col.Data(), col.Data());
+      } else {
+      	newExpr.Form("pi1_mcPT < pi2_mcPT ? pi1_%s : pi2_%s", col.Data(), col.Data());
+      }
       // cout << newName << " = " << newExpr << endl;
       ddf = ddf.Define(newName.Data(), newExpr.Data());
     }
+    if(!isMC) {
     ddf = defineVarsForParticles(ddf, {"piH", "piL"},
       {"d0Err",      "z0Err"},
       {"d0Pull",     "z0Pull"},
@@ -108,10 +120,16 @@ SigBkgPlotter::DefineDF defineVariables(RDataFrame& df, bool isK3pi)
       {"mcPT",       "mcP",        "mcTheta",       "mcPhi"},
       {"pt",         "p",          "theta",         "phi"},
       {"ptResidual", "pResidual",  "thetaResidual", "phiResidual"});
+    }
   }
 
-  return ddf.Define("massDiffPreFit", "Dst_M_preFit-D0_M_preFit")
-            .Define("massDiff", "Dst_M-D0_M");
+  if(!isMC) {
+    ddf = ddf.Define("massDiffPreFit", "Dst_M_preFit-D0_M_preFit")
+             .Define("massDiff", "Dst_M-D0_M");
+  }
+
+  return ddf;
+  
 }
 
 SigBkgPlotter::FilterDF applyOfflineCuts(SigBkgPlotter::DefineDF& df, bool isK3pi)
@@ -218,6 +236,7 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   // pT
   plt.EffH1D({"B0"}, "mcPT", "Efficiency vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 0.7);
   plt.EffH1D({"Dst", "D0"}, "mcPT", "Efficiency vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 2.6);
+  plt.EffH1D(FSHParts, "mcPT", "Efficiency vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 2.6);
   plt.EffH1D({"pisoft"}, "mcPT", "Efficiency vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 0.25);
   // pz
   plt.EffH1D({"B0"}, "mcPZ", "Efficiency vs true p_{Z,$p};True p_{Z,$p} [GeV/c]", 20, 1, 2);
@@ -229,6 +248,12 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   plt.EffH1D(CompParts, "mcPhi", "Efficiency vs true #phi_{$p};True #phi_{$p} [#circ]", 20, -180, 180, 180 / M_PI);
   if (!isK3pi)
     plt.EffH1D("Kpi_MCAngle", "Eff. vs true K-to-#pi angle;True angle between K and #pi [#circ]", 20, 40, 180, 180 / M_PI);
+
+  // ==== Efficiency
+  // plt.PurityH1D({"Dst", "D0"}, "pt", "Purity vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 2.6);
+  plt.PurityH1D(FSHParts, "pt", "Purity vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 2.6);
+  plt.PurityH1D({"pisoft"}, "pt", "Purity vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 0.25);
+  
 }
 
 void DoPlot(SigBkgPlotter& plt, bool isK3pi)
@@ -319,12 +344,15 @@ int main(int argc, char* argv[])
   RDataFrame dfMCKpi("MCKpi", inFileName.Data());
   RDataFrame dfMCK3pi("MCK3pi", inFileName.Data());
 
-  auto dfDefKpi = defineVariables(dfKpi, false);
-  auto dfDefK3pi = defineVariables(dfK3pi, true);
+  auto dfDefKpi = defineVariables(dfKpi, false, false);
+  auto dfDefK3pi = defineVariables(dfK3pi, true, false);
   auto dfCutKpi = applyOfflineCuts(dfDefKpi, false);
   auto dfCutK3pi = applyOfflineCuts(dfDefK3pi, true);
   auto dfBCKpi = dfCutKpi.Filter("B0_M_rank == 1", "Best Candidate");
   auto dfBCK3pi = dfCutK3pi.Filter("B0_M_rank == 1", "Best Candidate");
+
+  auto dfDefMCKpi = defineVariables(dfMCKpi, false, true);
+  auto dfDefMCK3pi = defineVariables(dfMCK3pi, true, true);
 
   gStyle->SetOptStat(0); // TODO If more style lines appear, make a function
   PDFCanvas canvas(outFileName + ".pdf", "c"); // Default size is fine (I wrote it!)
@@ -332,12 +360,12 @@ int main(int argc, char* argv[])
   PDFCanvas canvasBC(outFileNameBC + ".pdf", "ccb");
   PDFCanvas canvasCand(outFileName + "_candidates.pdf", "ccc");
 
-  SigBkgPlotter plotterKpi(dfDefKpi, dfMCKpi, SignalCondition, canvas, "Kpi", "K#pi");
-  SigBkgPlotter plotterK3pi(dfDefK3pi, dfMCK3pi, SignalCondition, canvas, "K3pi", "K3#pi");
-  SigBkgPlotter plotterKpiCuts(dfCutKpi, dfMCKpi, SignalCondition, canvasCuts, "KpiCuts", "K#pi");
-  SigBkgPlotter plotterK3piCuts(dfCutK3pi, dfMCK3pi, SignalCondition, canvasCuts, "K3piCuts", "K3#pi");
-  SigBkgPlotter plotterKpiBC(dfBCKpi, dfMCKpi, SignalCondition, canvasBC, "KpiBC", "K#pi");
-  SigBkgPlotter plotterK3piBC(dfBCK3pi, dfMCK3pi, SignalCondition, canvasBC, "K3piBC", "K3#pi");
+  SigBkgPlotter plotterKpi(dfDefKpi, dfDefMCKpi, SignalCondition, canvas, "Kpi", "K#pi");
+  SigBkgPlotter plotterK3pi(dfDefK3pi, dfDefMCK3pi, SignalCondition, canvas, "K3pi", "K3#pi");
+  SigBkgPlotter plotterKpiCuts(dfCutKpi, dfDefMCKpi, SignalCondition, canvasCuts, "KpiCuts", "K#pi");
+  SigBkgPlotter plotterK3piCuts(dfCutK3pi, dfDefMCK3pi, SignalCondition, canvasCuts, "K3piCuts", "K3#pi");
+  SigBkgPlotter plotterKpiBC(dfBCKpi, dfDefMCKpi, SignalCondition, canvasBC, "KpiBC", "K#pi");
+  SigBkgPlotter plotterK3piBC(dfBCK3pi, dfDefMCK3pi, SignalCondition, canvasBC, "K3piBC", "K3#pi");
 
   bookHistos(plotterKpi, false);
   bookHistos(plotterK3pi, true);

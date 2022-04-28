@@ -120,6 +120,93 @@ void SigBkgPlotter::EffH1D(
   }
 }
 
+SigBkgPlotter::TRRes1D SigBkgPlotter::PurityH1D(
+  const char* variable, TString title, int nBins, double xLow, double xUp, double scale)
+{
+  TString nameSig = GetUniqueName(m_namePrefix + "_PuritySig_" + variable);
+  TString nameMC = GetUniqueName(m_namePrefix + "_PurityAll_" + variable);
+  title = m_titlePrefix + " - " + title;
+  TString titleSig = title, titleMC = title;
+  if (title.CountChar(';') < 2) {
+    for (int i = title.CountChar(';'); i < 2; i++) { titleSig += ";"; titleMC += ";"; }
+    titleSig += "Candidates / bin"; titleMC += "MC particles / bin";
+  }
+
+  TString varName, varFilter;
+  std::string somestr = variable;
+  std::string::size_type scorepos = somestr.find('_');
+  if (scorepos != std::string::npos) {
+    varName = somestr.substr(0, scorepos);
+  }
+  varFilter = varName + "_mdstIndex";
+  // std::cout<<variable<<" "<<varName<<" "<<varFilter<<endl;
+  
+  auto filterOut =
+    [&filterVector = filterVector, varName, nameSig] (int exp, int run, int evt, double indx)
+    {
+      filterElement element = std::make_tuple(exp, run, evt, indx);
+
+      TString isK3pi = nameSig.Contains("K3pi") ? "_K3pi" : "_Kpi";
+      isK3pi = varName + isK3pi;
+      auto isVarPresent = filterVector.find(isK3pi.Data());
+      if(isVarPresent == filterVector.end()) {
+	filterVector[isK3pi.Data()] = {element};
+	filterVector[isK3pi.Data()].reserve(10000000);
+	return true;
+      }
+      
+      int tsz = isVarPresent->second.size();
+      int passORinsertORpush = -1;
+      
+      for(int jk=tsz-1;jk>=0;jk--) {
+	if (isVarPresent->second.at(jk) == element) {passORinsertORpush = -1; break;}
+	else if (isVarPresent->second.at(jk) < element) {passORinsertORpush = jk + 1; break;}
+	passORinsertORpush = jk;
+      } // for(int jk=tsz-1;jk>=0;jk--) {
+      
+      if(passORinsertORpush<0) {
+	return false;
+      } else if(passORinsertORpush<tsz) {
+	// std::cout<<" "<<nameSig<<" varName "<<isK3pi<<endl;
+      	// std::cout<<" "<<std::get<1>(element)<<" "<<std::get<2>(element)<<" "<<std::get<3>(element)<<" "<<std::endl;
+	// cout<<"\t"<<tsz<<" "<<passORinsertORpush<<endl;
+	// cout<<"\t\tinsert"<<endl;
+	isVarPresent->second.insert(isVarPresent->second.begin()+passORinsertORpush,element);
+      } else {
+	// std::cout<<" "<<nameSig<<" varName "<<(varName+isK3pi)<<endl;
+	// cout<<" "<<std::get<1>(element)<<" "<<std::get<2>(element)<<" "<<std::get<3>(element)<<" "<<endl;
+	// cout<<"\t"<<tsz<<" "<<passORinsertORpush<<endl;
+	// cout<<"\t\tpush"<<endl;
+	isVarPresent->second.push_back(element);
+      }
+      return true;
+    };
+  
+  TString expr = TString::Format("%s", variable);
+  if (scale != 1.0) {
+    expr = TString::Format("%s*%.18lg", variable, scale);
+  }
+  TRRes1D res = make_tuple(
+    m_sig.Define("h1dtmp", expr.Data()).Histo1D({nameSig, titleSig, nBins, xLow, xUp}, "h1dtmp"),
+    m_all.Define("h1dtmp", expr.Data())
+    .Filter(filterOut,{"__experiment__","__run__","__event__",varFilter.Data()})
+    .Histo1D({nameMC, titleMC, nBins, xLow, xUp}, "h1dtmp"));
+
+  m_purityh1s.push_back(res);
+  return res;
+}
+
+void SigBkgPlotter::PurityH1D(
+  std::initializer_list<TString> particles, const char *variable,
+  TString title, int nBins, double xLow, double xUp, double scale)
+{
+  for (const TString& p : particles) {
+    TString t = title; // Replacement happens in-place :(
+    TString v = p + "_" + variable;
+    PurityH1D(v, t.ReplaceAll("$p", ParticlesTitles.at(p)), nBins, xLow, xUp, scale);
+  }
+}
+
 void SigBkgPlotter::PrintAll(bool saveEff)
 {
   if (m_normalizeHistos != m_histsAlreadyNormalized) {
@@ -145,6 +232,8 @@ void SigBkgPlotter::PrintAll(bool saveEff)
   for (const auto& t : m_h2s)
     DrawSigBkg(t);
   for (const auto& t : m_effh1s)
+    DrawEff(t, saveEff);
+  for (const auto& t : m_purityh1s)
     DrawEff(t, saveEff);
 }
 
@@ -311,9 +400,13 @@ void SigBkgPlotter::DrawEff(TH1* sig, TH1* mc, bool save)
 
   if (save) {
     TString name = sig->GetName();
-    eff->Write(name.ReplaceAll("_effSig_", "_eff_"));
+    TString newname = name.ReplaceAll("_effSig_", "_eff_");
+    newname = newname.ReplaceAll("_puritySig_", "_purity_");
+    eff->Write(newname);
     name = mc->GetName();
-    mc->Write(name.ReplaceAll("_effMC_", "_MC_"));
+    newname = name.ReplaceAll("_effMC_", "_MC_");
+    newname = newname.ReplaceAll("_purityAll_", "_All_");
+    mc->Write(newname);
   }
 }
 

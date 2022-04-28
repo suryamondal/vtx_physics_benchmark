@@ -188,6 +188,7 @@ class SigBkgPlotter {
   std::vector<TRRes2D> m_h2s; /**< 1D histograms go here. */
   std::vector<TRRes1D> m_effh1s; /**< 1D efficiency histograms go here. */
   std::vector<TRRes1D> m_purityh1s; /**< 1D purity histograms go here. */
+  std::vector<TH1D*> m_sigmah1; /**< 1D histograms go here. */
   TString m_namePrefix; /**< Prefix for the name of the histograms. */
   TString m_titlePrefix; /**< Prefix for the title of the histograms. */
   bool m_normalizeHistos; /**< Used by DrawSigBkg to decide wether to normalize histograms. */

@@ -36,8 +36,6 @@ import os
 import sys
 import re
 import basf2 as b2
-import udst
-import mdst
 import modularAnalysis as ma
 import flavorTagger as ft
 import vertex as vx
@@ -258,7 +256,6 @@ ma.matchMCTruth(list_name='B0:good', path=main)
 # Best-candidate selection (does not cut, only adds the rank variable)
 ma.rankByHighest("B0:good", "M", allowMultiRank=True, path=main)
 ma.rankByHighest("B0:good", "chiProb", allowMultiRank=True, path=main)
-ma.rankByHighest("B0:good", "mu_p", outputVariable="mu_p_rank", allowMultiRank=True, path=main)
 ma.rankByLowest("B0:good", "abs(Dst_dM)", allowMultiRank=True, outputVariable="Dst_dM_rank", path=main)
 ma.rankByLowest("B0:good", "abs(D0_dM)", allowMultiRank=True, outputVariable="D0_dM_rank", path=main)
 
@@ -349,7 +346,6 @@ ft_variables = []
 vm.addAlias('Kpi_MCAngle', 'daughter(0,daughter(0,mcDaughterAngle(0,1)))')
 vm.addAlias("B0_M_rank", "extraInfo(M_rank)")
 vm.addAlias("B0_chiProb_rank", "extraInfo(chiProb_rank)")
-vm.addAlias("mu_p_rank", "extraInfo(mu_p_rank)")
 vm.addAlias("Dst_dM_rank", "extraInfo(Dst_dM_rank)")
 vm.addAlias("D0_dM_rank", "extraInfo(D0_dM_rank)")
 
@@ -415,11 +411,6 @@ varsFS = ["isCloneTrack", "mcE", "mcP", "mcPT", "mcPX", "mcPY", "mcPZ",
 varsFS += vc.track_hits
 if HAS_VTX: varsFS.append('nVTXHits')
 ma.variablesToNtuple('pi+:soft', varsFS, filename=args.output, treename='Tracks', path=main)
-
-# main.add_module('RootOutput', outputFileName=args.output)
-# mdst.add_mdst_output(main, mc=True, filename=args.output)
-# udst.add_udst_output(main,filename=args.output.replace(".root","_udst.root"),
-#                      particleLists=['B0:good','D*+:good','D0:merged'])
 
 # Process the events
 main.add_module('ProgressBar')

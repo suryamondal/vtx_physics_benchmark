@@ -527,6 +527,69 @@ void SigBkgPlotter::SigmaAndPrint(TString name, double N, int rebin, bool showLo
   if (rebin > 1) delete hc;
 }
 
+void SigBkgPlotter::SigmaAndWrite(TString name, TString yunit, double N, double scale, bool isDiv)
+{
+  TH2* h = nullptr;
+  name = m_namePrefix + "_sig_" + name;
+  for (auto& t : m_h2s) {
+    if (get<0>(t)->GetName() == name) {
+      h = get<0>(t).GetPtr();
+      break;
+    }
+  }
+  CHECKA(h, name);
+
+  TString name1 = name + TString::Format("_sigma%0.1f",N);
+
+  int nbinx = h->GetNbinsX();
+  double xmin = h->GetXaxis()->GetBinLowEdge(1);
+  double xmax = (h->GetXaxis()->GetBinLowEdge(nbinx) +
+		 h->GetXaxis()->GetBinWidth(1));
+  cout<<nbinx<<" "<<xmin<<" "<<xmax<<endl;
+  TH1D* hprof = new TH1D(name1,h->GetTitle(),nbinx,xmin,xmax);
+  hprof->GetXaxis()->SetTitle(h->GetXaxis()->GetTitle());
+  TString yname = TString::Format("#sigma%0.1f %s",N,yunit.Data());
+  if(isDiv) {yname = TString::Format("#frac{#sigma%0.1f}{x-value} %s",N,yunit.Data());}
+  hprof->GetYaxis()->SetTitle(yname);
+
+  for(int ijn=0;ijn<nbinx;ijn++) {
+    TH1D *h1 = (TH1D*)h->ProjectionY("",ijn+1,ijn+1);
+    // Find sigmaN interval
+    double samples = h1->GetEntries();
+    double remainder = (100.0 - N) / 200.0;
+    int binLow, binUp;
+    double accuLow, accuUp;
+    for (accuLow = 0.0, binLow = 0; binLow < h1->GetNbinsX() + 1; binLow++)
+      if ((accuLow += h1->GetBinContent(binLow)) / samples >= remainder)
+	break;
+    for (accuUp = 0.0, binUp = h1->GetNbinsX() + 1; binUp > binLow; binUp--)
+      if ((accuUp += h1->GetBinContent(binUp)) / samples >= remainder)
+	break;
+    // Interval -> from up edge of binLow to low edge of binUp
+    double xLow = h1->GetBinLowEdge(binLow + 1);
+    double xUp = h1->GetBinLowEdge(binUp);
+    double xWidth = (xUp - xLow) / 2.0;
+    // double xCenter = (xUp + xLow) / 2.0;
+    double xErr = h1->GetBinWidth(1);
+    if(isDiv) {
+      double bincntr = h1->GetXaxis()->GetBinCenter(ijn+1);
+      xWidth /= bincntr;
+      xErr   /= bincntr;
+    }
+    hprof->SetBinContent(ijn+1,xWidth*scale);
+    hprof->SetBinError(ijn+1,xErr*scale);
+  }
+  hprof->Write();
+  
+  m_c->cd();
+  hprof->SetLineColor(kBlack);
+  hprof->SetLineWidth(2);
+  hprof->Draw();
+
+  m_c.PrintPage(hprof->GetTitle());
+  delete hprof;
+}
+
 void SigBkgPlotter::PrintROC(TString name, bool keepLow, bool excludeOUF)
 {
   static double linePoints[2] = {0.0, 100.0};

@@ -293,6 +293,11 @@ void DoPlot(SigBkgPlotter& plt, bool isK3pi)
     plt.SigmaAndPrint(part + "_d0Pull_2", 68, 5);
     plt.SigmaAndPrint(part + "_z0Pull_2", 68, 5);
   }
+  for (const TString &part : FSParts) {
+    plt.SigmaAndWrite(part + "_mcPT_" + part + "_d0Residual_2", "[#mum]", 68, 1.e4, false);
+    plt.SigmaAndWrite(part + "_mcPT_" + part + "_z0Residual_2", "[#mum]", 68, 1.e4, false);
+    plt.SigmaAndWrite(part + "_mcPT_" + part + "_ptResidual_2", "[#times10^{3}]", 68, 1.e3, true);
+  }
 }
 
 void DoCandAna(tuple<TH2D*,UInt_t,UInt_t> noCuts, tuple<TH2D*,UInt_t,UInt_t> cuts,

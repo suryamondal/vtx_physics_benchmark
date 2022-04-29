@@ -131,6 +131,14 @@ class SigBkgPlotter {
    */
   void SigmaAndPrint(TString name, double N = 68.0, int rebin = 1, bool showLowHigh = false);
 
+  
+  /** Finds the *signal* histogram called name and finds the sigmaN of
+   * the distribution (the half-width that contains N% of the samples,
+   * with half of the remainder on each side).
+   * @param N The percentage of samples in the half-width (default 68%)
+   */
+  void SigmaAndWrite(TString name, TString yunit, double N = 68.0, double scale = 1., bool isDiv = false);
+
   /** Finds the signal and backgound histograms called name and produces
    * the ROC curve plot for a cut var < threshold (if keepLow is true)
    * or var > threshodl (if keepLow is false).
@@ -188,7 +196,6 @@ class SigBkgPlotter {
   std::vector<TRRes2D> m_h2s; /**< 1D histograms go here. */
   std::vector<TRRes1D> m_effh1s; /**< 1D efficiency histograms go here. */
   std::vector<TRRes1D> m_purityh1s; /**< 1D purity histograms go here. */
-  std::vector<TH1D*> m_sigmah1; /**< 1D histograms go here. */
   TString m_namePrefix; /**< Prefix for the name of the histograms. */
   TString m_titlePrefix; /**< Prefix for the title of the histograms. */
   bool m_normalizeHistos; /**< Used by DrawSigBkg to decide wether to normalize histograms. */

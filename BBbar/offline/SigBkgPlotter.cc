@@ -545,15 +545,17 @@ void SigBkgPlotter::SigmaAndWrite(TString name, TString yunit, double N, double 
   double xmin = h->GetXaxis()->GetBinLowEdge(1);
   double xmax = (h->GetXaxis()->GetBinLowEdge(nbinx) +
 		 h->GetXaxis()->GetBinWidth(1));
-  cout<<nbinx<<" "<<xmin<<" "<<xmax<<endl;
+  cout<<" "<<name<<" "<<nbinx<<" "<<xmin<<" "<<xmax<<endl;
   TH1D* hprof = new TH1D(name1,h->GetTitle(),nbinx,xmin,xmax);
   hprof->GetXaxis()->SetTitle(h->GetXaxis()->GetTitle());
-  TString yname = TString::Format("#sigma%0.1f %s",N,yunit.Data());
-  if(isDiv) {yname = TString::Format("#frac{#sigma%0.1f}{x-value} %s",N,yunit.Data());}
+  TString yname = TString::Format("#sigma_{%.0f} %s",N,yunit.Data());
+  if(isDiv) {yname = TString::Format("#sigma_{%.0f}/x-value %s",N,yunit.Data());}
   hprof->GetYaxis()->SetTitle(yname);
 
   for(int ijn=0;ijn<nbinx;ijn++) {
     TH1D *h1 = (TH1D*)h->ProjectionY("",ijn+1,ijn+1);
+    if(h1->GetSumOfWeights()<50) {continue;}
+    
     // Find sigmaN interval
     double samples = h1->GetEntries();
     double remainder = (100.0 - N) / 200.0;
@@ -572,9 +574,9 @@ void SigBkgPlotter::SigmaAndWrite(TString name, TString yunit, double N, double 
     // double xCenter = (xUp + xLow) / 2.0;
     double xErr = h1->GetBinWidth(1);
     if(isDiv) {
-      double bincntr = h1->GetXaxis()->GetBinCenter(ijn+1);
+      double bincntr = h->GetXaxis()->GetBinCenter(ijn+1);
       xWidth /= bincntr;
-      xErr   /= bincntr;
+      // xErr   /= bincntr;
     }
     hprof->SetBinContent(ijn+1,xWidth*scale);
     hprof->SetBinError(ijn+1,xErr*scale);

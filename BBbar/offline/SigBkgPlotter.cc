@@ -123,8 +123,8 @@ void SigBkgPlotter::EffH1D(
 SigBkgPlotter::TRRes1D SigBkgPlotter::PurityH1D(
   const char* variable, TString title, int nBins, double xLow, double xUp, double scale)
 {
-  TString nameSig = GetUniqueName(m_namePrefix + "_PuritySig_" + variable);
-  TString nameMC = GetUniqueName(m_namePrefix + "_PurityAll_" + variable);
+  TString nameSig = GetUniqueName(m_namePrefix + "_puritySig_" + variable);
+  TString nameMC = GetUniqueName(m_namePrefix + "_purityAll_" + variable);
   title = m_titlePrefix + " - " + title;
   TString titleSig = title, titleMC = title;
   if (title.CountChar(';') < 2) {
@@ -375,7 +375,11 @@ void SigBkgPlotter::DrawEff(TH1* sig, TH1* mc, bool save)
   eff->SetLineColor(kBlack);
   eff->SetLineWidth(2);
   eff->Draw();
-  eff->GetYaxis()->SetTitle("Signal efficiency");
+  TString name = sig->GetName();
+  TString titlename = "Signal efficiency";
+  if(name.Contains("_effSig_")) titlename = "Efficiency"; 
+  if(name.Contains("_puritySig_")) titlename = "Purity"; 
+  eff->GetYaxis()->SetTitle(titlename);
 
   TPaveText ouf(0.8, 0.58, 0.95, 0.91, "brNDC");
   const double ovfSig = sig->GetBinContent(sig->GetNbinsX() + 1);
@@ -399,7 +403,6 @@ void SigBkgPlotter::DrawEff(TH1* sig, TH1* mc, bool save)
   m_c->SetGrid(0, 0);
 
   if (save) {
-    TString name = sig->GetName();
     TString newname = name.ReplaceAll("_effSig_", "_eff_");
     newname = newname.ReplaceAll("_puritySig_", "_purity_");
     eff->Write(newname);
@@ -539,7 +542,13 @@ void SigBkgPlotter::SigmaAndWrite(TString name, TString yunit, double N, double 
   }
   CHECKA(h, name);
 
-  TString name1 = name + TString::Format("_sigma%0.1f",N);
+  TString name1 = name + TString::Format("_sigma%.0f",N);
+  TString name2 = name + TString::Format("_MC%.0f",N);
+
+  TH1D* hprofX = (TH1D*)h->ProjectionX(name2);
+  hprofX->SetTitle(h->GetTitle());
+  hprofX->GetXaxis()->SetTitle(h->GetXaxis()->GetTitle());
+  hprofX->Write();
 
   int nbinx = h->GetNbinsX();
   double xmin = h->GetXaxis()->GetBinLowEdge(1);
@@ -581,15 +590,16 @@ void SigBkgPlotter::SigmaAndWrite(TString name, TString yunit, double N, double 
     hprof->SetBinContent(ijn+1,xWidth*scale);
     hprof->SetBinError(ijn+1,xErr*scale);
   }
-  hprof->Write();
   
   m_c->cd();
   hprof->SetLineColor(kBlack);
   hprof->SetLineWidth(2);
   hprof->Draw();
 
+  hprof->Write();
+  
   m_c.PrintPage(hprof->GetTitle());
-  delete hprof;
+  delete hprof; delete hprofX;
 }
 
 void SigBkgPlotter::PrintROC(TString name, bool keepLow, bool excludeOUF)

@@ -106,10 +106,10 @@ if args.print_mc_particles and args.debug_gen:
 
 # reconstruct
 vtx_kwa = {'useVTX': True,
-           "vtx_bg_cut": None,
+           "vtx_bg_cut": 0.3,
            "vtx_ckf_mode": "VXDTF2_after",
            # "vtx_ckf_mode": "VXDTF2_before_with_second_ckf",
-           "use_vtx_to_cdc_ckf": True,
+           "use_vtx_to_cdc_ckf": False,
            "use_ckf_based_cdc_vtx_merger": False} if args.vtx else {}
 reco.add_reconstruction(main, **vtx_kwa)
 

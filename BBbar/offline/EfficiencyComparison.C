@@ -143,9 +143,10 @@ void EfficiencyComparison(TString outPDF, const vector<TString>& filesNames,
       btmPad.cd();
       TH1* hRatio = (TH1*)hists.at(0)->Clone(hists.at(0)->GetName() + TString("_ratio"));
       hRatio->Divide(hists.at(1));
-      hRatio->GetYaxis()->SetTitle(titles.at(0) + " / " + titles.at(1));
+      // hRatio->GetYaxis()->SetTitle(titles.at(0) + " / " + titles.at(1));
+      hRatio->GetYaxis()->SetTitle("");
       hRatio->SetTitle("");
-      // hRatio->SetMinimum(0); hRatio->SetMaximum(9.5);
+      hRatio->SetMinimum(0); hRatio->SetMaximum(4.5);
       hRatio->Draw();
       setFont(hRatio);
       hRatio->GetYaxis()->SetNdivisions(505);

@@ -1,7 +1,3 @@
-#ifndef SigBkgPlotter__HH
-#define SigBkgPlotter__HH
-
-#pragma once
 #include "PDFCanvas.hh"
 #include <TString.h>
 #include <ROOT/RDataFrame.hxx>
@@ -206,5 +202,3 @@ class SigBkgPlotter {
   std::map<std::string, std::vector<filterElement>> filterVector;
   // const int maxCount = 10;
 };
-
-#endif

@@ -1,6 +1,3 @@
-#ifndef Constant__HH
-#define Constant__HH
-
 #pragma once
 #include <TColor.h>
 #include <TString.h>
@@ -63,5 +60,3 @@ const std::initializer_list<TString> K3PiAllParticles {
   "B0", "Dst", "D0", "mu",  "K", "pi1", "pi2", "pi3", "pisoft"};
 const std::initializer_list<TString> K3PiAllParticlesSorted {
   "B0", "Dst", "D0", "mu",  "K", "piH", "piL", "pi3", "pisoft"};
-
-#endif

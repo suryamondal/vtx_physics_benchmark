@@ -1,3 +1,4 @@
+#pragma once
 #include "PDFCanvas.hh"
 #include <TString.h>
 #include <ROOT/RDataFrame.hxx>

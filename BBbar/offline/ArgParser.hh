@@ -42,4 +42,3 @@ class ArgParser {
   std::vector<TString> m_positionalArgs;
   std::vector<TString> m_flags;
 };
-

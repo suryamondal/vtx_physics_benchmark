@@ -1,6 +1,3 @@
-#ifndef ArgParser__HH
-#define ArgParser__HH
-
 /** There certainly are libraries that do this in internet, but I am
  * offline, so I am writing this on my own.
  */
@@ -45,5 +42,3 @@ class ArgParser {
   std::vector<TString> m_positionalArgs;
   std::vector<TString> m_flags;
 };
-
-#endif

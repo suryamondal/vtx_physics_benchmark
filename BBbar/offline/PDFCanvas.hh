@@ -1,6 +1,3 @@
-#ifndef PDFCanvas__HH
-#define PDFCanvas__HH
-
 #pragma once
 #include <TString.h>
 // Forward declarations
@@ -41,5 +38,3 @@ class PDFCanvas {
   TString m_pdfName;
   TCanvas* m_c;
 };
-
-#endif

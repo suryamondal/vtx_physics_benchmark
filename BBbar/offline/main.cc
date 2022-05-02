@@ -68,6 +68,10 @@ SigBkgPlotter::DefineDF defineVariables(RDataFrame& df, bool isK3pi)
     {"d0Pull",     "z0Pull"},
     {"d0Residual", "z0Residual"},
     "$a * $b"); // Residuals from pulls, not straightforward but works
+  ddf = defineVarsForParticles(ddf, FSParts,
+    {"mcPT",       "mcP",        "mcTheta",       "mcPhi"},
+    {"pt",         "p",          "theta",         "phi"},
+    {"ptResidual", "pResidual",  "thetaResidual", "phiResidual"});
   ddf = ddf.Define("B0_M_rank_percent", "(B0_M_rank - 1) * 100 / (__ncandidates__ == 1 ? 1 : __ncandidates__ - 1)")
            .Define("B0_chiProb_rank_percent", "(B0_chiProb_rank - 1) * 100 / (__ncandidates__ == 1 ? 1 : __ncandidates__ - 1)")
            .Define("Dst_dM_rank_percent", "(Dst_dM_rank - 1) * 100 / (__ncandidates__ == 1 ? 1 : __ncandidates__ - 1)")
@@ -100,14 +104,44 @@ SigBkgPlotter::DefineDF defineVariables(RDataFrame& df, bool isK3pi)
       {"d0Pull",     "z0Pull"},
       {"d0Residual", "z0Residual"},
       "$a * $b"); // Residuals from pulls, not straightforward but works
+    ddf = defineVarsForParticles(ddf, {"piH", "piL"},
+      {"mcPT",       "mcP",        "mcTheta",       "mcPhi"},
+      {"pt",         "p",          "theta",         "phi"},
+      {"ptResidual", "pResidual",  "thetaResidual", "phiResidual"});
   }
 
-  return ddf.Alias("Dst_M_preFit", "Dst_extraInfo_M_preFit")
-            .Alias("D0_M_preFit", "D0_extraInfo_M_preFit")
-            .Alias("B0_M_preFit", "B0_extraInfo_M_preFit")
-            .Define("massDiffPreFit", "Dst_M_preFit-D0_M_preFit")
+  return ddf.Define("massDiffPreFit", "Dst_M_preFit-D0_M_preFit")
             .Define("massDiff", "Dst_M-D0_M");
+  
 }
+
+/** Define expression variables for MC. */
+SigBkgPlotter::DefineDF defineMCVariables(RDataFrame& df, bool isK3pi)
+{
+  auto ddf = df.Define("testColumn","2+3");
+
+  // Define variables for piH and piL, which are pi1 and pi2 sorted by pT
+  if (isK3pi) {
+    for (const auto& sCol : df.GetColumnNames()) {
+      TString col = sCol;
+      if (!col.BeginsWith("pi1_")) continue;
+      col = col(4, col.Length() - 4);
+      TString newName, newExpr;
+      newName.Form("piH_%s", col.Data());
+      newExpr.Form("pi1_mcPT < pi2_mcPT ? pi2_%s : pi1_%s", col.Data(), col.Data());
+      // cout << newName << " = " << newExpr << endl;
+      ddf = ddf.Define(newName.Data(), newExpr.Data());
+      newName.Form("piL_%s", col.Data());
+      newExpr.Form("pi1_mcPT < pi2_mcPT ? pi1_%s : pi2_%s", col.Data(), col.Data());
+      // cout << newName << " = " << newExpr << endl;
+      ddf = ddf.Define(newName.Data(), newExpr.Data());
+    }
+  }
+
+  return ddf;
+  
+}
+
 
 SigBkgPlotter::FilterDF applyOfflineCuts(SigBkgPlotter::DefineDF& df, bool isK3pi)
 {
@@ -168,11 +202,35 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   plt.Histo1D({"pisoft"}, "d0Residual", "d_{0$p} residual;MC - meas [#mum]", 500, -2500, 2500, 1e4, true);
   plt.Histo1D(FSHParts, "z0Residual", "z_{0$p} residual;MC - meas [#mum]", 500, -250, 250, 1e4, true);
   plt.Histo1D({"pisoft"}, "z0Residual", "z_{0$p} residual;MC - meas [#mum]", 500, -5000, 5000, 1e4, true);
+  // fit parameters : 2D
+  plt.Histo2D(FSHParts,   "mcPT",    "d0Residual", "d_{0,$p} residual;p_{T,$p} [GeV/c];MC - meas", 25, 0., 2.5,  300, -0.06, 0.06);
+  plt.Histo2D({"pisoft"}, "mcPT",    "d0Residual", "d_{0,$p} residual;p_{T,$p} [GeV/c];MC - meas", 25, 0., 0.25, 500, -1., 1.);
+  plt.Histo2D(FSHParts,   "mcPT",    "z0Residual", "z_{0,$p} residual;p_{T,$p} [GeV/c];MC - meas", 25, 0., 2.5,  300, -0.06, 0.06);
+  plt.Histo2D({"pisoft"}, "mcPT",    "z0Residual", "z_{0,$p} residual;p_{T,$p} [GeV/c];MC - meas", 25, 0., 0.25, 500, -1., 1.);
   // Pulls
   plt.Histo1D(FSParts, "d0Pull", "d_{0$p} pull;(MC - meas) / #sigma_{meas}", 100, -10, 10);
   plt.Histo1D(FSParts, "z0Pull", "z_{0$p} pull;(MC - meas) / #sigma_{meas}", 100, -10, 10);
   plt.Histo1D(FSParts, "d0Pull", "d_{0$p} pull;(MC - meas) / #sigma_{meas}", 500, -10, 10, 1, true);
   plt.Histo1D(FSParts, "z0Pull", "z_{0$p} pull;(MC - meas) / #sigma_{meas}", 500, -10, 10, 1, true);
+
+  // fit parameters
+  plt.Histo1D(FSHParts,   "ptResidual", "p_{T,$p} residual;MC - meas [MeV]", 100, -0.025, 0.025);
+  plt.Histo1D({"pisoft"}, "ptResidual", "p_{T,$p} residual;MC - meas [MeV]", 100, -0.025, 0.025);
+  plt.Histo1D(FSHParts,   "pResidual", "p_{$p} residual;MC - meas [MeV]",   100, -0.025, 0.025);
+  plt.Histo1D({"pisoft"}, "pResidual", "p_{$p} residual;MC - meas [MeV]",   100, -0.025, 0.025);
+  plt.Histo1D(FSHParts,   "thetaResidual", "theta_{$p} residual;MC - meas", 100, -0.005, 0.005);
+  plt.Histo1D({"pisoft"}, "thetaResidual", "theta_{$p} residual;MC - meas", 100, -0.01, 0.01);
+  plt.Histo1D(FSHParts,   "phiResidual", "phi_{$p} residual;MC - meas",     100, -0.005, 0.005);
+  plt.Histo1D({"pisoft"}, "phiResidual", "phi_{$p} residual;MC - meas",     100, -0.01, 0.01);
+  // fit parameters : 2D
+  plt.Histo2D(FSHParts,   "mcPT",    "ptResidual",    "p_{T,$p} residual;p_{T,$p} [GeV/c];MC - meas", 25, 0., 2.5, 100, -0.02, 0.02);
+  plt.Histo2D({"pisoft"}, "mcPT",    "ptResidual",    "p_{T,$p} residual;p_{T,$p} [GeV/c];MC - meas", 25, 0., 0.25, 100, -0.02, 0.02);
+  plt.Histo2D(FSHParts,   "mcP",     "pResidual",     "p_{$p} residual;p_{$p} [GeV/c];MC - meas",   25, 0., 2.5, 100, -0.02, 0.02);
+  plt.Histo2D({"pisoft"}, "mcP",     "pResidual",     "p_{$p} residual;p_{$p} [GeV/c];MC - meas",   25, 0., 0.25, 100, -0.02, 0.02);
+  plt.Histo2D(FSHParts,   "mcTheta", "thetaResidual", "theta_{$p} residual;theta_{$p};MC - meas", 25, 0., TMath::Pi(), 100, -0.0025, 0.0025);
+  plt.Histo2D({"pisoft"}, "mcTheta", "thetaResidual", "theta_{$p} residual;theta_{$p};MC - meas", 25, 0., TMath::Pi(), 100, -0.01, 0.01);
+  plt.Histo2D(FSHParts,   "mcPhi",   "phiResidual",   "phi_{$p} residual;phi_{$p};MC - meas",     25, -TMath::Pi(), TMath::Pi(), 100, -0.0025, 0.0025);
+  plt.Histo2D({"pisoft"}, "mcPhi",   "phiResidual",   "phi_{$p} residual;phi_{$p};MC - meas",     25, -TMath::Pi(), TMath::Pi(), 100, -0.01, 0.01);
 
   // ==== Efficiency
   // Best-candidates selection/ranking
@@ -189,6 +247,7 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   // pT
   plt.EffH1D({"B0"}, "mcPT", "Efficiency vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 0.7);
   plt.EffH1D({"Dst", "D0"}, "mcPT", "Efficiency vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 2.6);
+  plt.EffH1D(FSHParts, "mcPT", "Efficiency vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 2.5);
   plt.EffH1D({"pisoft"}, "mcPT", "Efficiency vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 0.25);
   // pz
   plt.EffH1D({"B0"}, "mcPZ", "Efficiency vs true p_{Z,$p};True p_{Z,$p} [GeV/c]", 20, 1, 2);
@@ -200,6 +259,12 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
   plt.EffH1D(CompParts, "mcPhi", "Efficiency vs true #phi_{$p};True #phi_{$p} [#circ]", 20, -180, 180, 180 / M_PI);
   if (!isK3pi)
     plt.EffH1D("Kpi_MCAngle", "Eff. vs true K-to-#pi angle;True angle between K and #pi [#circ]", 20, 40, 180, 180 / M_PI);
+
+  // ==== Efficiency
+  // plt.PurityH1D({"Dst", "D0"}, "pt", "Purity vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 2.6);
+  plt.PurityH1D(FSHParts, "pt", "Purity vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 2.5);
+  plt.PurityH1D({"pisoft"}, "pt", "Purity vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 0.25);
+  
 }
 
 void DoPlot(SigBkgPlotter& plt, bool isK3pi)
@@ -227,6 +292,11 @@ void DoPlot(SigBkgPlotter& plt, bool isK3pi)
   for (const TString &part : FSParts) {
     plt.SigmaAndPrint(part + "_d0Pull_2", 68, 5);
     plt.SigmaAndPrint(part + "_z0Pull_2", 68, 5);
+  }
+  for (const TString &part : FSParts) {
+    plt.SigmaAndWrite(part + "_mcPT_" + part + "_d0Residual", "[#mum]", 68, 1.e4, false);
+    plt.SigmaAndWrite(part + "_mcPT_" + part + "_z0Residual", "[#mum]", 68, 1.e4, false);
+    plt.SigmaAndWrite(part + "_mcPT_" + part + "_ptResidual", "[#times10^{3}]", 68, 1.e3, true);
   }
 }
 
@@ -264,6 +334,8 @@ void DoCandAna(tuple<TH2D*,UInt_t,UInt_t> noCuts, tuple<TH2D*,UInt_t,UInt_t> cut
   cout << fs << endl;
   fs.Form("  Efficiency |%9.4g%%|%9.4g%%|          |%9.4g%%|", 100.0 * ns / nMC, 100.0 * nsc / nMC, 100.0 * nsb / nMC);
   cout << fs << endl;
+  fs.Form("    Purity   |%9.4g%%|%9.4g%%|          |%9.4g%%|", 100.0 * ns / nt, 100.0 * nsc / ntc, 100.0 * nsb / ntb);
+  cout << fs << endl;
 }
 
 int main(int argc, char* argv[])
@@ -295,18 +367,21 @@ int main(int argc, char* argv[])
   auto dfBCKpi = dfCutKpi.Filter("B0_M_rank == 1", "Best Candidate");
   auto dfBCK3pi = dfCutK3pi.Filter("B0_M_rank == 1", "Best Candidate");
 
+  auto dfDefMCKpi = defineMCVariables(dfMCKpi, false);
+  auto dfDefMCK3pi = defineMCVariables(dfMCK3pi, true);
+
   gStyle->SetOptStat(0); // TODO If more style lines appear, make a function
   PDFCanvas canvas(outFileName + ".pdf", "c"); // Default size is fine (I wrote it!)
   PDFCanvas canvasCuts(outFileNameCuts + ".pdf", "cc");
   PDFCanvas canvasBC(outFileNameBC + ".pdf", "ccb");
   PDFCanvas canvasCand(outFileName + "_candidates.pdf", "ccc");
 
-  SigBkgPlotter plotterKpi(dfDefKpi, dfMCKpi, SignalCondition, canvas, "Kpi", "K#pi");
-  SigBkgPlotter plotterK3pi(dfDefK3pi, dfMCK3pi, SignalCondition, canvas, "K3pi", "K3#pi");
-  SigBkgPlotter plotterKpiCuts(dfCutKpi, dfMCKpi, SignalCondition, canvasCuts, "KpiCuts", "K#pi");
-  SigBkgPlotter plotterK3piCuts(dfCutK3pi, dfMCK3pi, SignalCondition, canvasCuts, "K3piCuts", "K3#pi");
-  SigBkgPlotter plotterKpiBC(dfBCKpi, dfMCKpi, SignalCondition, canvasBC, "KpiBC", "K#pi");
-  SigBkgPlotter plotterK3piBC(dfBCK3pi, dfMCK3pi, SignalCondition, canvasBC, "K3piBC", "K3#pi");
+  SigBkgPlotter plotterKpi(dfDefKpi, dfDefMCKpi, SignalCondition, canvas, "Kpi", "K#pi");
+  SigBkgPlotter plotterK3pi(dfDefK3pi, dfDefMCK3pi, SignalCondition, canvas, "K3pi", "K3#pi");
+  SigBkgPlotter plotterKpiCuts(dfCutKpi, dfDefMCKpi, SignalCondition, canvasCuts, "KpiCuts", "K#pi");
+  SigBkgPlotter plotterK3piCuts(dfCutK3pi, dfDefMCK3pi, SignalCondition, canvasCuts, "K3piCuts", "K3#pi");
+  SigBkgPlotter plotterKpiBC(dfBCKpi, dfDefMCKpi, SignalCondition, canvasBC, "KpiBC", "K#pi");
+  SigBkgPlotter plotterK3piBC(dfBCK3pi, dfDefMCK3pi, SignalCondition, canvasBC, "K3piBC", "K3#pi");
 
   bookHistos(plotterKpi, false);
   bookHistos(plotterK3pi, true);
@@ -337,12 +412,12 @@ int main(int argc, char* argv[])
     *nMCKpi + *nMCK3pi, canvasCand, "");
 
   // Factors determined empirically, use 1 (or comment lines) for auto
-  plotterKpi.SetBkgDownScaleFactor(10);
-  plotterKpiCuts.SetBkgDownScaleFactor(10);
-  plotterKpiBC.SetBkgDownScaleFactor(10);
-  plotterK3pi.SetBkgDownScaleFactor(50);
-  plotterK3piCuts.SetBkgDownScaleFactor(50);
-  plotterK3piBC.SetBkgDownScaleFactor(50);
+  plotterKpi.SetBkgDownScaleFactor(1);
+  plotterKpiCuts.SetBkgDownScaleFactor(1);
+  plotterKpiBC.SetBkgDownScaleFactor(1);
+  plotterK3pi.SetBkgDownScaleFactor(1);
+  plotterK3piCuts.SetBkgDownScaleFactor(1);
+  plotterK3piBC.SetBkgDownScaleFactor(1);
 
   TFile outRootFile(outFileName + "_efficiency.root", "recreate");
 

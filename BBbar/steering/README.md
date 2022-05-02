@@ -11,7 +11,7 @@ simulated with the `upgrade` branch. Also the analysis must be run with the
 same version of basf2.
 
 For the current detector layout (VXD=PXD+SVD), use `master` (or
-`release-05-02-06`).
+`release-06-00-03`).
 ```
 cd /path/to/local/basf2_master
 b2setup

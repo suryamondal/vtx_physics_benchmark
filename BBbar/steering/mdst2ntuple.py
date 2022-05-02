@@ -1,15 +1,16 @@
- #!/usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Reconstructs D*+ -> [D0 -> K- pi+ (pi+ pi-)] pi+ from mDST."""
 
 ################################################################
 # This functions perform the reconstruction of the
 # following decay chains (and c.c. decay chain):
 #
-# D*+ -> D0 pi+
-#        |
-#        +-> K- pi+
-#        +-> K- pi+ pi+ pi-
+# anti-B0 -> D*+ mu- anti-nu_mu
+#            |
+#            +-> D0 pi+
+#                |
+#                +-> K- pi+
+#                +-> K- pi+ pi+ pi-
 #
 # USAGE:
 # > basf2 mdst2ntuple.py -- -i INPUT -o OUTPUT [--addTopoAna] \
@@ -36,6 +37,7 @@ import sys
 import re
 import basf2 as b2
 import modularAnalysis as ma
+import flavorTagger as ft
 import vertex as vx
 import variables.collections as vc
 import variables.utils as vu
@@ -50,38 +52,70 @@ try:  # Dummy import to check basf2 version
 except ImportError:
     HAS_VTX = False
 
+b2.set_log_level(b2.LogLevel.DEBUG)
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--addTopoAna', action="store_true",
+                    help='add TopoAna/MCGen variables for MC')
+parser.add_argument('--printVars', action="store_true",
+                    help='Just print variables and exit.')
+parser.add_argument("-c", "--cuts", choices=["loose", "normal", "tight"],
+                    default="tight", help="Set of cuts to be used.")
+parser.add_argument("-i", '--input', nargs='+',
+                    help='mDST input file(s)')
+parser.add_argument("-o", '--output', default='test.root',
+                    help='ROOT output file, default test.root')
+args = parser.parse_args()
+b2.B2INFO(f"Steering file args = {args}")
+
 CUTS = {
     "loose": {  # These are intended for intial study of cuts only
         "pisoft": "",
         "pi": "",
         "K": "",
         "mu": "",
-        "D0": "abs(dM) < 0.45",
-        "D*": "[abs(dM) < 0.4] and [massDifference(0) < 0.2]",
+        "D0": "abs(dM)<0.45",
+        "D*": "[abs(dM)<0.4] and [massDifference(0)<0.2]",
         "B0": "",
-        "fit": "[daughter(0, useCMSFrame(p)) < 3]"
+        "candidateLimit": 1000,
+        "chargeViolation": False,
+        "ipConstraint": True,
+        "conf": -1.0,
+        "fit": "[daughter(0, useCMSFrame(p))<3]"
     },
     "normal": {
-        "pisoft": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",  # VXD=PXD+SVD+VTX
-        "pi": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
-        "K": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
-        "mu": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
-        "D0": "abs(dM) < 0.45",  # M_D0 = 1.8648 GeV, M_D* = 2.0103, diff = 0.1455
-        "D*": "[abs(dM) < 0.4] and [massDifference(0) < 0.2]",
+        "pisoft": "[dr<2] and [abs(dz)<2] and [nVXDHits>0] and [ndf>0]",  # VXD=PXD+SVD+VTX
+        "pi": "[dr<2] and [abs(dz)<2] and [nVXDHits>0] and [ndf>0]",
+        "K": "[dr<2] and [abs(dz)<2] and [nVXDHits>0] and [ndf>0]",
+        "mu": "[dr<2] and [abs(dz)<2] and [nVXDHits>0] and [ndf>0]",
+        "D0": "abs(dM)<0.45",  # M_D0 = 1.8648 GeV, M_D* = 2.0103, diff = 0.1455
+        "D*": "[abs(dM)<0.45] and [massDifference(0)<0.2]",
         "B0": "",  # Missing neutrino
-        "fit": "[daughter(0, useCMSFrame(p)) < 2.5]"
+        "candidateLimit": 1000,
+        "chargeViolation": False,
+        "ipConstraint": True,
+        "conf": 0.001,
+        "fit": "[Dst_p_CMS<2.5]"
     },
     "tight": {  # These are mostly identical to those of the offline analysis
-        "pisoft": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
-        "pi": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
-        "K": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
-        "mu": "[dr < 2] and [abs(dz) < 2] and [nVXDHits > 0]",
-        "D0": "abs(dM) < 0.1",
-        "D*": "[abs(dM) < 0.1] and [massDifference(0) < 0.151]",
+        "pisoft": "[dr<2] and [abs(dz)<2] and [nVXDHits>0] and [ndf>0]",
+        "pi": "[dr<2] and [abs(dz)<2] and [nVXDHits>0] and [ndf>0]",
+        "K": "[dr<2] and [abs(dz)<2] and [nVXDHits>0] and [ndf>0]",
+        "mu": "[dr<2] and [abs(dz)<2] and [nVXDHits>0] and [ndf>0]",
+        "D0": "abs(dM)<0.1",
+        "D*": "[abs(dM)<0.1] and [useCMSFrame(p)<2.5] and [massDifference(0)<0.151]",
         "B0": "",  # Missing neutrino
-        "fit": "[daughter(0, useCMSFrame(p)) < 2.5]"
+        "candidateLimit": 1000,
+        "chargeViolation": False,
+        "ipConstraint": True,
+        "conf": 0.001,
+        "fit": "[Dst_p_CMS<2.5] and [abs(D0_dM)<0.1] and [abs(Dst_dM)<0.1] and [formula(Dst_M-D0_M)<0.151]"
     }
 }
+
+cuts = CUTS[args.cuts]
+print(cuts)
+
 
 # Regex to select vars that start with (particle_) gen or mc
 RE_MC_VARS = re.compile(r'(?:[A-Za-z0-9]+_)?(?:[Gg][Ee][Nn]|[Mm][Cc])')
@@ -105,7 +139,7 @@ class Particle:
 
     def __lt__(self, other):
         return self.pdg < other.pdg
-
+        
     def __eq__(self, other):
         return self.pdg == other.pdg and self.daughters == other.daughters
 
@@ -162,24 +196,6 @@ def check_globaltags(base_tags, user_tags, metadata):
         b2.B2FATAL("Incorrect version of basf2 for these GTs.", **kwa_ver)
     return tags  # Standard behaviour
 
-
-parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('--addTopoAna', action="store_true",
-                    help='add TopoAna/MCGen variables for MC')
-parser.add_argument('--printVars', action="store_true",
-                    help='Just print variables and exit.')
-parser.add_argument('--noIpConstraint', action="store_true",
-                    help="Don't use IP constraint when fitting the decay tree.")
-parser.add_argument("-c", "--cuts", choices=["loose", "normal", "tight"],
-                    default="tight", help="Set of cuts to be used.")
-parser.add_argument("-i", '--input', nargs='+',
-                    help='mDST input file(s)')
-parser.add_argument("-o", '--output', default='test.root',
-                    help='ROOT output file, default test.root')
-args = parser.parse_args()
-b2.B2INFO(f"Steering file args = {args}")
-cuts = CUTS[args.cuts]
-
 # Set basf2 to check the input files' globaltags and the version used
 b2.conditions.set_globaltag_callback(check_globaltags)
 
@@ -196,37 +212,57 @@ ma.fillParticleList('K+:myTrk', cuts["K"], path=main)
 ma.fillParticleList('mu+:myTrk', cuts["mu"], path=main)
 
 # D0 reconstruction
-ma.reconstructDecay('D0:Kpi -> pi+:myTrk K-:myTrk',
-                    cut=cuts["D0"], dmID=0, path=main)
-ma.reconstructDecay('D0:K3pi -> pi+:myTrk K-:myTrk pi+:myTrk pi-:myTrk',
-                    cut=cuts["D0"], dmID=1, path=main)
+ma.reconstructDecay('D0:Kpi -> K-:myTrk pi+:myTrk ',
+                    cut=cuts["D0"], dmID=0, allowChargeViolation=cuts["chargeViolation"],
+                    path=main)
+ma.reconstructDecay('D0:K3pi -> K-:myTrk pi+:myTrk pi+:myTrk pi-:myTrk',
+                    cut=cuts["D0"], dmID=1, allowChargeViolation=cuts["chargeViolation"],
+                    path=main)
 ma.copyLists('D0:merged', ['D0:Kpi', 'D0:K3pi'], True, path=main)
 ma.variablesToExtraInfo("D0:merged", variables={'M': 'M_preFit'}, path=main)
+
+# vx.treeFit(list_name='D0:merged', conf_level=cuts["conf"],
+#            # ipConstraint=cuts["ipConstraint"], 
+#            updateAllDaughters=True, path=main)
 
 # D* reconstruction
 ma.reconstructDecay('D*+:good -> D0:merged pi+:soft', cut=cuts["D*"], path=main)
 ma.variablesToExtraInfo("D*+:good", variables={'M': 'M_preFit'}, path=main)
 
+# vx.treeFit(list_name='D*+:good', conf_level=cuts["conf"],
+#            ipConstraint=cuts["ipConstraint"], 
+#            updateAllDaughters=True, path=main)
+
 # B0 reconstruction
-ma.reconstructDecay('B0:good -> D*-:good mu+:myTrk ?nu', cut=cuts["B0"], path=main)
+ma.reconstructDecay('B0:good -> D*-:good mu+:myTrk ?nu', cut=cuts["B0"],
+                    candidate_limit=cuts["candidateLimit"],
+                    path=main)
 ma.variablesToExtraInfo("B0:good", variables={"M": "M_preFit"}, path=main)
 
 # Tree fitting and final ajustments
-conf_level_cut = -1.0 if args.cuts == "loose" else 0.001
-vx.treeFit(list_name='B0:good', conf_level=conf_level_cut,
-           ipConstraint=(not args.noIpConstraint), updateAllDaughters=True, path=main)
+vx.treeFit(list_name='B0:good', conf_level=cuts["conf"],
+           ipConstraint=cuts["ipConstraint"], updateAllDaughters=True, path=main)
+
 ma.applyCuts('B0:good', cuts["fit"], path=main)
+
 ma.matchMCTruth(list_name='B0:good', path=main)
+
+# # build the rest of the event
+# ma.buildRestOfEvent("B0:good", fillWithMostLikely=True, path=main)
+
+# # call flavor tagging
+# ft.flavorTagger(["B0:good"], path=main)
 
 # Best-candidate selection (does not cut, only adds the rank variable)
 ma.rankByHighest("B0:good", "M", allowMultiRank=True, path=main)
 ma.rankByHighest("B0:good", "chiProb", allowMultiRank=True, path=main)
-ma.rankByLowest("B0:good", "daughter(0,abs(dM))", allowMultiRank=True, outputVariable="Dst_dM_rank", path=main)
-ma.rankByLowest("B0:good", "daughter(0,daughter(0,abs(dM)))", allowMultiRank=True, outputVariable="D0_dM_rank", path=main)
+ma.rankByLowest("B0:good", "abs(Dst_dM)", allowMultiRank=True, outputVariable="Dst_dM_rank", path=main)
+ma.rankByLowest("B0:good", "abs(D0_dM)", allowMultiRank=True, outputVariable="D0_dM_rank", path=main)
 
 # Variables of the event
 eventWiseVariables = ['IPX', 'IPY', 'IPZ', 'genIPX', 'genIPY', 'genIPZ',
                       'nTracks', 'beamE', 'beamPx', 'beamPy', 'beamPz']
+eventWiseVariables += ['nMCParticles']
 for i, a in enumerate('XYZ'): # IPCovXX -> IPCov(0,0), etc
     for j, b in enumerate('XYZ'[i:]):
         vm.addAlias(f'IPCov{a}{b}', f'IPCov({i},{j})')
@@ -235,63 +271,76 @@ if args.addTopoAna:  # TopoAna variables
     eventWiseVariables += mc_gen_topo(200)
 
 # Variables of all the particles
-commonVariables = vc.kinematics + vc.mc_variables
-commonVariables += ['pErr', 'ptErr', 'pxErr', 'pyErr', 'pzErr', 'isSignal',
-                    'isSignalAcceptMissingGamma', 'isPrimarySignal',
-                    'isSignalAcceptMissingNeutrino',
-                    'theta', 'thetaErr', 'mcTheta', 'phi', 'phiErr', 'mcPhi']
+commonVariables = vc.kinematics
+commonVariables += vc.mc_kinematics
+cmskinematics = []
+for v in commonVariables:
+    vm.addAlias(f'{v}_CMS', f'useCMSFrame({v})')
+    cmskinematics.append(f'{v}_CMS')
+commonVariables += cmskinematics
+commonVariables += vc.mc_truth
+commonVariables += ['pErr', 'ptErr', 'pxErr', 'pyErr', 'pzErr']
+commonVariables += vc.mc_variables + ['isSignalAcceptMissingGamma', 'isPrimarySignal',
+                                      'isSignalAcceptMissingNeutrino',
+                                      'theta', 'thetaErr', 'mcTheta', 'phi', 'phiErr', 'mcPhi',
+                                      'mdstIndex', 'particleSource', 'uniqueParticleIdentifier']
 
 # Variables of the final-state particles (K, pi, mu)
-tracksVariables = vc.track + vc.track_hits
-if HAS_VTX: tracksVariables.append('nVTXHits')
-tracksVariables += ['pionID', 'kaonID', 'protonID', 'muonID', 'electronID',
-                    'charge', 'omegaErr', 'phi0Err', 'z0Err', 'd0Err', 'tanLambdaErr',
-                    'omegaPull', 'phi0Pull', 'z0Pull', 'd0Pull', 'tanLambdaPull']
+tracksVariables = vc.pid + ['particleID'] + vc.track + ['nCDCHits', 'nVXDHits']
+tracksVariables += ['nVTXHits'] if HAS_VTX else  ['nPXDHits', 'nSVDHits']
 tracksVariables += ['firstVTXLayer'] if HAS_VTX else ['firstPXDLayer', 'firstSVDLayer']
+tracksVariables += ['trackNECLClusters', 'nMatchedKLMClusters', 'klmClusterLayers']
+tracksVariables += ['charge', 'omega', 'phi0', 'z0', 'd0',
+                    'omegaPull', 'phi0Pull', 'z0Pull', 'd0Pull', 'tanLambdaPull']
+tracksVariables += ['omegaErr', 'phi0Err', 'z0Err', 'd0Err', 'tanLambdaErr', 'chi2']
 
 # Variables of the composite particles (D0, D*, B0)
-compositeVariables = vc.vertex + ['M', 'ErrM']
-compositeVariables += ['mcProductionVertexX', 'mcProductionVertexY',
-                       'mcProductionVertexZ', 'extraInfo(M_preFit)']
-# Flight variables for the D0 only
-flightVariables = vc.flight_info + vc.mc_flight_info
+compositeVariables = vc.vertex + vc.inv_mass + ['M_preFit', 'dM']
+compositeVariables += vc.mc_vertex
+
+flightVariables = vc.flight_info
+flightVariables += vc.mc_flight_info
+
+decaymodeVariable = ['decayModeID']
 
 # Create aliases for the two decay modes
 varsKpi = vu.create_aliases_for_selected(
-    commonVariables, '^B0 -> [^D*- -> [^anti-D0 -> ^pi- ^K+] ^pi-] ^mu+',
-    ['B0', 'Dst', 'D0', 'pi', 'K', 'pisoft', 'mu'])
+    commonVariables, '^B0 -> [^D*- -> [^anti-D0 -> ^K+ ^pi-] ^pi-] ^mu+',
+    ['B0', 'Dst', 'D0', 'K', 'pi', 'pisoft', 'mu'])
 varsKpi += vu.create_aliases_for_selected(
-    tracksVariables, 'B0 -> [D*- -> [anti-D0 -> ^pi- ^K+] ^pi-] ^mu+',
-    ['pi', 'K', 'pisoft', 'mu'])
+    tracksVariables, 'B0 -> [D*- -> [anti-D0 -> ^K+ ^pi-] ^pi-] ^mu+',
+    ['K', 'pi', 'pisoft', 'mu'])
 varsKpi += vu.create_aliases_for_selected(
-    compositeVariables, '^B0 -> [^D*- -> [^anti-D0 -> pi- K+] pi-] mu+',
+    compositeVariables, '^B0 -> [^D*- -> [^anti-D0 -> K+ pi-] pi-] mu+',
     ['B0', 'Dst', 'D0'])
 varsKpi += vu.create_aliases_for_selected(
-    flightVariables, 'B0 -> [D*- -> [^anti-D0 -> pi- K+] pi-] mu+',
+    flightVariables, '^B0 -> [^D*- -> [^anti-D0 -> K+ pi-] pi-] mu+',
+    ['B0', 'Dst', 'D0'])
+varsKpi += vu.create_aliases_for_selected(
+    decaymodeVariable, 'B0 -> [D*- -> [^anti-D0 -> K+ pi-] pi-] mu+',
     ['D0'])
 
 varsK3pi = vu.create_aliases_for_selected(
-    commonVariables, '^B0 -> [^D*- -> [^anti-D0 -> ^pi- ^K+ ^pi- ^pi+] ^pi-] ^mu+',
-    ['B0', 'Dst', 'D0', 'pi1', 'K', 'pi2', 'pi3', 'pisoft', 'mu'])
+    commonVariables, '^B0 -> [^D*- -> [^anti-D0 -> ^K+ ^pi- ^pi- ^pi+] ^pi-] ^mu+',
+    ['B0', 'Dst', 'D0', 'K', 'pi1', 'pi2', 'pi3', 'pisoft', 'mu'])
 varsK3pi += vu.create_aliases_for_selected(
-    tracksVariables, 'B0 -> [D*- -> [anti-D0 -> ^pi- ^K+ ^pi- ^pi+] ^pi-] ^mu+',
-    ['pi1', 'K', 'pi2', 'pi3', 'pisoft', 'mu'])
+    tracksVariables, 'B0 -> [D*- -> [anti-D0 -> ^K+ ^pi- ^pi- ^pi+] ^pi-] ^mu+',
+    ['K', 'pi1', 'pi2', 'pi3', 'pisoft', 'mu'])
 varsK3pi += vu.create_aliases_for_selected(
-    compositeVariables, '^B0 -> [^D*- -> [^anti-D0 -> pi- K+ pi- pi+] pi-] mu+',
+    compositeVariables, '^B0 -> [^D*- -> [^anti-D0 -> K+ pi- pi- pi+] pi-] mu+',
     ['B0', 'Dst', 'D0'])
 varsK3pi += vu.create_aliases_for_selected(
-    flightVariables, 'B0 -> [D*- -> [^anti-D0 -> pi- K+ pi- pi+] pi-] mu+',
+    flightVariables, '^B0 -> [^D*- -> [^anti-D0 -> K+ pi- pi- pi+] pi-] mu+',
+    ['B0', 'Dst', 'D0'])
+varsK3pi += vu.create_aliases_for_selected(
+    decaymodeVariable, 'B0 -> [D*- -> [^anti-D0 -> K+ pi- pi- pi+] pi-] mu+',
     ['D0'])
 
-# CMS variables of the composites
-cms_variables = []
-for v in ['px', 'py', 'pz', 'p']:
-    vm.addAlias(f'B0_{v}_CMS', f'useCMSFrame({v})')
-    cms_variables.append(f'B0_{v}_CMS')
-    vm.addAlias(f'Dst_{v}_CMS', f'daughter(0,useCMSFrame({v}))')
-    cms_variables.append(f'Dst_{v}_CMS')
-    vm.addAlias(f'D0_{v}_CMS', f'daughter(0,daughter(0,useCMSFrame({v})))')
-    cms_variables.append(f'D0_{v}_CMS')
+# FT variables of the composites
+ft_variables = []
+# for v in ft.flavor_tagging:
+#     vm.addAlias(f'B0_{v}', f'{v}')
+#     ft_variables.append(f'B0_{v}')
 
 # Angle between pi and K
 vm.addAlias('Kpi_MCAngle', 'daughter(0,daughter(0,mcDaughterAngle(0,1)))')
@@ -300,9 +349,17 @@ vm.addAlias("B0_chiProb_rank", "extraInfo(chiProb_rank)")
 vm.addAlias("Dst_dM_rank", "extraInfo(Dst_dM_rank)")
 vm.addAlias("D0_dM_rank", "extraInfo(D0_dM_rank)")
 
+vm.addAlias('M_preFit', 'extraInfo(M_preFit)')
+vm.addAlias('decayModeID', 'extraInfo(decayModeID)')
+
+rankVariables = ["B0_M_rank", "B0_chiProb_rank", "Dst_dM_rank", "D0_dM_rank",
+                 "mu_p_rank"]
+
+customVariables = []
+
 # Final output variables
-varsKpi += cms_variables + eventWiseVariables + ['Kpi_MCAngle', "B0_M_rank", "B0_chiProb_rank", "Dst_dM_rank", "D0_dM_rank"]
-varsK3pi += cms_variables + eventWiseVariables + ["B0_M_rank", "B0_chiProb_rank", "Dst_dM_rank", "D0_dM_rank"]
+varsKpi  += eventWiseVariables + ft_variables + rankVariables + customVariables + ['Kpi_MCAngle']
+varsK3pi += eventWiseVariables + ft_variables + rankVariables + customVariables
 varsKpi.sort()  # I want to be able to find what I need quickly
 varsK3pi.sort()
 if args.printVars:
@@ -310,11 +367,12 @@ if args.printVars:
     for x in varsKpi: print(x)
     print(" =============== K3pi ===============")
     for x in varsK3pi: print(x)
+    vm.printAliases()
     sys.exit()
 
 # Create one ntuple per channel in the same output file
-ma.cutAndCopyList('B0:Kpi', 'B0:good', 'daughter(0,daughter(0,extraInfo(decayModeID)))==0', path=main)
-ma.cutAndCopyList('B0:K3pi', 'B0:good', 'daughter(0,daughter(0,extraInfo(decayModeID)))==1', path=main)
+ma.cutAndCopyList('B0:Kpi',  'B0:good', 'D0_decayModeID==0', path=main)
+ma.cutAndCopyList('B0:K3pi', 'B0:good', 'D0_decayModeID==1', path=main)
 
 ma.variablesToNtuple('B0:Kpi', varsKpi, filename=args.output, treename='Kpi', path=main)
 ma.variablesToNtuple('B0:K3pi', varsK3pi, filename=args.output, treename='K3pi', path=main)
@@ -348,7 +406,8 @@ ma.variablesToNtuple('B0:MCK3pi', varsMCK3pi, filename=args.output, treename='MC
 
 # FS-particles lists for tracks study
 varsFS = ["isCloneTrack", "mcE", "mcP", "mcPT", "mcPX", "mcPY", "mcPZ",
-          "mcPDG", "isSignal", "isSignalAcceptWrongFSPs", "nTracks"]
+          "mcPDG", "isSignal", "isSignalAcceptWrongFSPs", "nTracks",
+          'mdstIndex', 'particleSource', 'uniqueParticleIdentifier']
 varsFS += vc.track_hits
 if HAS_VTX: varsFS.append('nVTXHits')
 ma.variablesToNtuple('pi+:soft', varsFS, filename=args.output, treename='Tracks', path=main)

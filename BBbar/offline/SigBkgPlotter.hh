@@ -16,6 +16,7 @@ class SigBkgPlotter {
   typedef std::tuple<RRes1D,RRes1D> TRRes1D;
   typedef ROOT::RDF::RResultPtr<TH2D> RRes2D;
   typedef std::tuple<RRes2D,RRes2D> TRRes2D;
+  typedef std::tuple<int, int, int, double> filterElement;
 
   SigBkgPlotter() = delete;
   SigBkgPlotter(const SigBkgPlotter&) = delete;
@@ -26,10 +27,11 @@ class SigBkgPlotter {
   /** Constructor for a SigBkgPlotter that takes data from df, uses sigCond to
    * tell signal from background and prints plots to c.
    */
-  SigBkgPlotter(DefineDF& df, ROOT::RDataFrame& mcdf, TString sigCond, PDFCanvas& c,
+  SigBkgPlotter(DefineDF& df, DefineDF& mcdf, TString sigCond, PDFCanvas& c,
                 TString namePrefix = "undefined", TString titlePrefix = "Undefined",
                 bool normalizeHistos = false, bool logScale = false)
-  : m_sig(df.Filter((const char*)sigCond, "Signal")),
+  : m_all(df.Filter("true", "AllCandidates")),
+    m_sig(df.Filter((const char*)sigCond, "Signal")),
     m_bkg(df.Filter((const char*)("!(" + sigCond + ")"), "Background")),
     m_mc(mcdf), m_c(c), m_namePrefix(namePrefix), m_titlePrefix(titlePrefix),
     m_normalizeHistos(normalizeHistos), m_logScale(logScale) {}
@@ -37,10 +39,11 @@ class SigBkgPlotter {
   /** Constructor for a SigBkgPlotter that takes data from df, uses sigCond to
    * tell signal from background and prints plots to c.
    */
-  SigBkgPlotter(FilterDF& df, ROOT::RDataFrame& mcdf, TString sigCond, PDFCanvas& c,
+  SigBkgPlotter(FilterDF& df, DefineDF& mcdf, TString sigCond, PDFCanvas& c,
                 TString namePrefix = "undefined", TString titlePrefix = "Undefined",
                 bool normalizeHistos = false, bool logScale = false)
-  : m_sig(df.Filter((const char*)sigCond, "Signal")),
+  : m_all(df.Filter("true", "AllCandidates")),
+    m_sig(df.Filter((const char*)sigCond, "Signal")),
     m_bkg(df.Filter((const char*)("!(" + sigCond + ")"), "Background")),
     m_mc(mcdf), m_c(c), m_namePrefix(namePrefix), m_titlePrefix(titlePrefix),
     m_normalizeHistos(normalizeHistos), m_logScale(logScale) {}
@@ -52,7 +55,7 @@ class SigBkgPlotter {
    */
   TRRes1D Histo1D(const char* variable, TString title,
                   int nBins, double xLow, double xUp, double scale = 1.0,
-                  bool sigOnly = false);
+		  bool sigOnly = false);
 
   /** Makes a tuple {sig,bkg} of histograms of the given variable for
    * each of the given particles. In title, $p is replaced with the
@@ -60,7 +63,7 @@ class SigBkgPlotter {
    */
   void Histo1D(std::initializer_list<TString> particles, const char *variable,
                TString title, int nBins, double xLow, double xUp, double scale = 1.0,
-    bool sigOnly = false);
+	       bool sigOnly = false);
 
   /** Makes a tuple {sig,bkg} of 2D histograms of the given variables.
    * The tuple is returned and saved to the interal list of plots.
@@ -93,6 +96,21 @@ class SigBkgPlotter {
   void EffH1D(std::initializer_list<TString> particles, const char* variable,
               TString title, int nBins, double xLow, double xUp, double scale = 1.0);
 
+  /** Makes a tuple {sig,mc} of histograms of the given variable.
+   * The tuple is returned and saved in the internal list of plots.
+   * PrintAll() will plot the ratio trk/total (the purity).
+   * @param scale Multiplies variable by this number before filling
+   */
+  TRRes1D PurityH1D(const char* variable, TString title,
+                 int nBins, double xLow, double xUp, double scale = 1.0);
+
+  /** Same as EffHisto1D(const char*, ...), but repeated for each of the
+   * given particles. In title, $p is replaced with the
+   * "title" of the particle (see ParticlesTitles in Constants.hh).
+   */
+  void PurityH1D(std::initializer_list<TString> particles, const char* variable,
+              TString title, int nBins, double xLow, double xUp, double scale = 1.0);
+
   /** Finds the *signal* histogram called name and fits it with
    * func, then prints it to PDF.
    *
@@ -109,6 +127,14 @@ class SigBkgPlotter {
    * @param showLowHigh Show the % of samples to the left & right
    */
   void SigmaAndPrint(TString name, double N = 68.0, int rebin = 1, bool showLowHigh = false);
+
+  
+  /** Finds the *signal* histogram called name and finds the sigmaN of
+   * the distribution (the half-width that contains N% of the samples,
+   * with half of the remainder on each side).
+   * @param N The percentage of samples in the half-width (default 68%)
+   */
+  void SigmaAndWrite(TString name, TString yunit, double N = 68.0, double scale = 1., bool isDiv = false);
 
   /** Finds the signal and backgound histograms called name and produces
    * the ROC curve plot for a cut var < threshold (if keepLow is true)
@@ -158,17 +184,22 @@ class SigBkgPlotter {
   inline void DrawEff(RRes1D sig, RRes1D mc, bool save = false) { DrawEff(sig.GetPtr(), mc.GetPtr(), save); }
   inline void DrawEff(TRRes1D tuple, bool save = false) { DrawEff(std::get<0>(tuple), std::get<1>(tuple), save); }
 
+  FilterDF m_all; /**< All dataframe. */
   FilterDF m_sig; /**< Signal dataframe. */
   FilterDF m_bkg; /**< Background dataframe. */
-  ROOT::RDataFrame& m_mc; /**< MC dataframe. */
+  DefineDF m_mc; /**< MC dataframe. */
   PDFCanvas& m_c; /**< The output canvas. */
   std::vector<TRRes1D> m_h1s; /**< 1D histograms go here. */
   std::vector<TRRes2D> m_h2s; /**< 1D histograms go here. */
   std::vector<TRRes1D> m_effh1s; /**< 1D efficiency histograms go here. */
+  std::vector<TRRes1D> m_purityh1s; /**< 1D purity histograms go here. */
   TString m_namePrefix; /**< Prefix for the name of the histograms. */
   TString m_titlePrefix; /**< Prefix for the title of the histograms. */
   bool m_normalizeHistos; /**< Used by DrawSigBkg to decide wether to normalize histograms. */
   bool m_logScale; /**< Histograms y (or z) axis with log scale. */
   int m_bkgDownScale = 1; /**< Down-scaling factor for bkg (for visibility of sig). */
   bool m_histsAlreadyNormalized = false;
+
+  std::map<std::string, std::vector<filterElement>> filterVector;
+  // const int maxCount = 10;
 };

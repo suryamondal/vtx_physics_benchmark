@@ -23,7 +23,7 @@ SigBkgPlotter::TRRes1D SigBkgPlotter::Histo1D(
     for (int i = title.CountChar(';'); i < 2; i++) title += ";";
     title += "Candidates / bin";
   }
-
+  
   TRRes1D res;
   if (scale == 1.0) {
     res = make_tuple(
@@ -120,6 +120,93 @@ void SigBkgPlotter::EffH1D(
   }
 }
 
+SigBkgPlotter::TRRes1D SigBkgPlotter::PurityH1D(
+  const char* variable, TString title, int nBins, double xLow, double xUp, double scale)
+{
+  TString nameSig = GetUniqueName(m_namePrefix + "_puritySig_" + variable);
+  TString nameMC = GetUniqueName(m_namePrefix + "_purityAll_" + variable);
+  title = m_titlePrefix + " - " + title;
+  TString titleSig = title, titleMC = title;
+  if (title.CountChar(';') < 2) {
+    for (int i = title.CountChar(';'); i < 2; i++) { titleSig += ";"; titleMC += ";"; }
+    titleSig += "Candidates / bin"; titleMC += "MC particles / bin";
+  }
+
+  TString varName, varFilter;
+  std::string somestr = variable;
+  std::string::size_type scorepos = somestr.find('_');
+  if (scorepos != std::string::npos) {
+    varName = somestr.substr(0, scorepos);
+  }
+  varFilter = varName + "_mdstIndex";
+  // std::cout<<variable<<" "<<varName<<" "<<varFilter<<endl;
+  
+  auto filterOut =
+    [&filterVector = filterVector, varName, nameSig] (int exp, int run, int evt, double indx)
+    {
+      filterElement element = std::make_tuple(exp, run, evt, indx);
+
+      TString isK3pi = nameSig.Contains("K3pi") ? "_K3pi" : "_Kpi";
+      isK3pi = varName + isK3pi;
+      auto isVarPresent = filterVector.find(isK3pi.Data());
+      if(isVarPresent == filterVector.end()) {
+	filterVector[isK3pi.Data()] = {element};
+	filterVector[isK3pi.Data()].reserve(10000000);
+	return true;
+      }
+      
+      int tsz = isVarPresent->second.size();
+      int passORinsertORpush = -1;
+      
+      for(int jk=tsz-1;jk>=0;jk--) {
+	if (isVarPresent->second.at(jk) == element) {passORinsertORpush = -1; break;}
+	else if (isVarPresent->second.at(jk) < element) {passORinsertORpush = jk + 1; break;}
+	passORinsertORpush = jk;
+      } // for(int jk=tsz-1;jk>=0;jk--) {
+      
+      if(passORinsertORpush<0) {
+	return false;
+      } else if(passORinsertORpush<tsz) {
+	// std::cout<<" "<<nameSig<<" varName "<<isK3pi<<endl;
+      	// std::cout<<" "<<std::get<1>(element)<<" "<<std::get<2>(element)<<" "<<std::get<3>(element)<<" "<<std::endl;
+	// cout<<"\t"<<tsz<<" "<<passORinsertORpush<<endl;
+	// cout<<"\t\tinsert"<<endl;
+	isVarPresent->second.insert(isVarPresent->second.begin()+passORinsertORpush,element);
+      } else {
+	// std::cout<<" "<<nameSig<<" varName "<<(varName+isK3pi)<<endl;
+	// cout<<" "<<std::get<1>(element)<<" "<<std::get<2>(element)<<" "<<std::get<3>(element)<<" "<<endl;
+	// cout<<"\t"<<tsz<<" "<<passORinsertORpush<<endl;
+	// cout<<"\t\tpush"<<endl;
+	isVarPresent->second.push_back(element);
+      }
+      return true;
+    };
+  
+  TString expr = TString::Format("%s", variable);
+  if (scale != 1.0) {
+    expr = TString::Format("%s*%.18lg", variable, scale);
+  }
+  TRRes1D res = make_tuple(
+    m_sig.Define("h1dtmp", expr.Data()).Histo1D({nameSig, titleSig, nBins, xLow, xUp}, "h1dtmp"),
+    m_all.Define("h1dtmp", expr.Data())
+    .Filter(filterOut,{"__experiment__","__run__","__event__",varFilter.Data()})
+    .Histo1D({nameMC, titleMC, nBins, xLow, xUp}, "h1dtmp"));
+
+  m_purityh1s.push_back(res);
+  return res;
+}
+
+void SigBkgPlotter::PurityH1D(
+  std::initializer_list<TString> particles, const char *variable,
+  TString title, int nBins, double xLow, double xUp, double scale)
+{
+  for (const TString& p : particles) {
+    TString t = title; // Replacement happens in-place :(
+    TString v = p + "_" + variable;
+    PurityH1D(v, t.ReplaceAll("$p", ParticlesTitles.at(p)), nBins, xLow, xUp, scale);
+  }
+}
+
 void SigBkgPlotter::PrintAll(bool saveEff)
 {
   if (m_normalizeHistos != m_histsAlreadyNormalized) {
@@ -146,11 +233,18 @@ void SigBkgPlotter::PrintAll(bool saveEff)
     DrawSigBkg(t);
   for (const auto& t : m_effh1s)
     DrawEff(t, saveEff);
+  for (const auto& t : m_purityh1s)
+    DrawEff(t, saveEff);
 }
 
 void SigBkgPlotter::DrawSigBkg(TH1 *sig, TH1 *bkg)
 {
   CHECK(sig);
+  {
+    TString name = sig->GetName();
+    if(name.Contains("Residual")) {
+      sig->Write();}
+  }
   if (!bkg) return;
   if (sig->GetDimension() == 2) {
     TString sigTitle = sig->GetTitle(), bkgTitle = bkg->GetTitle();
@@ -281,7 +375,11 @@ void SigBkgPlotter::DrawEff(TH1* sig, TH1* mc, bool save)
   eff->SetLineColor(kBlack);
   eff->SetLineWidth(2);
   eff->Draw();
-  eff->GetYaxis()->SetTitle("Signal efficiency");
+  TString name = sig->GetName();
+  TString titlename = "Signal efficiency";
+  if(name.Contains("_effSig_")) titlename = "Efficiency"; 
+  if(name.Contains("_puritySig_")) titlename = "Purity"; 
+  eff->GetYaxis()->SetTitle(titlename);
 
   TPaveText ouf(0.8, 0.58, 0.95, 0.91, "brNDC");
   const double ovfSig = sig->GetBinContent(sig->GetNbinsX() + 1);
@@ -305,10 +403,13 @@ void SigBkgPlotter::DrawEff(TH1* sig, TH1* mc, bool save)
   m_c->SetGrid(0, 0);
 
   if (save) {
-    TString name = sig->GetName();
-    eff->Write(name.ReplaceAll("_effSig_", "_eff_"));
+    TString newname = name.ReplaceAll("_effSig_", "_eff_");
+    newname = newname.ReplaceAll("_puritySig_", "_purity_");
+    eff->Write(newname);
     name = mc->GetName();
-    mc->Write(name.ReplaceAll("_effMC_", "_MC_"));
+    newname = name.ReplaceAll("_effMC_", "_MC_");
+    newname = newname.ReplaceAll("_purityAll_", "_All_");
+    mc->Write(newname);
   }
 }
 
@@ -427,6 +528,78 @@ void SigBkgPlotter::SigmaAndPrint(TString name, double N, int rebin, bool showLo
   if (m_logScale) m_c->SetLogy();
   m_c.PrintPage(h->GetTitle());
   if (rebin > 1) delete hc;
+}
+
+void SigBkgPlotter::SigmaAndWrite(TString name, TString yunit, double N, double scale, bool isDiv)
+{
+  TH2* h = nullptr;
+  name = m_namePrefix + "_sig_" + name;
+  for (auto& t : m_h2s) {
+    if (get<0>(t)->GetName() == name) {
+      h = get<0>(t).GetPtr();
+      break;
+    }
+  }
+  CHECKA(h, name);
+
+  TString name1 = name + TString::Format("_sigma%.0f",N);
+  TString name2 = name + TString::Format("_MC%.0f",N);
+
+  TH1D* hprofX = (TH1D*)h->ProjectionX(name2);
+  hprofX->SetTitle(h->GetTitle());
+  hprofX->GetXaxis()->SetTitle(h->GetXaxis()->GetTitle());
+  hprofX->Write();
+
+  int nbinx = h->GetNbinsX();
+  double xmin = h->GetXaxis()->GetBinLowEdge(1);
+  double xmax = (h->GetXaxis()->GetBinLowEdge(nbinx) +
+		 h->GetXaxis()->GetBinWidth(1));
+  cout<<" "<<name<<" "<<nbinx<<" "<<xmin<<" "<<xmax<<endl;
+  TH1D* hprof = new TH1D(name1,h->GetTitle(),nbinx,xmin,xmax);
+  hprof->GetXaxis()->SetTitle(h->GetXaxis()->GetTitle());
+  TString yname = TString::Format("#sigma_{%.0f} %s",N,yunit.Data());
+  if(isDiv) {yname = TString::Format("#sigma_{%.0f}/x-value %s",N,yunit.Data());}
+  hprof->GetYaxis()->SetTitle(yname);
+
+  for(int ijn=0;ijn<nbinx;ijn++) {
+    TH1D *h1 = (TH1D*)h->ProjectionY("",ijn+1,ijn+1);
+    if(h1->GetSumOfWeights()<50) {continue;}
+    
+    // Find sigmaN interval
+    double samples = h1->GetEntries();
+    double remainder = (100.0 - N) / 200.0;
+    int binLow, binUp;
+    double accuLow, accuUp;
+    for (accuLow = 0.0, binLow = 0; binLow < h1->GetNbinsX() + 1; binLow++)
+      if ((accuLow += h1->GetBinContent(binLow)) / samples >= remainder)
+	break;
+    for (accuUp = 0.0, binUp = h1->GetNbinsX() + 1; binUp > binLow; binUp--)
+      if ((accuUp += h1->GetBinContent(binUp)) / samples >= remainder)
+	break;
+    // Interval -> from up edge of binLow to low edge of binUp
+    double xLow = h1->GetBinLowEdge(binLow + 1);
+    double xUp = h1->GetBinLowEdge(binUp);
+    double xWidth = (xUp - xLow) / 2.0;
+    // double xCenter = (xUp + xLow) / 2.0;
+    double xErr = h1->GetBinWidth(1);
+    if(isDiv) {
+      double bincntr = h->GetXaxis()->GetBinCenter(ijn+1);
+      xWidth /= bincntr;
+      // xErr   /= bincntr;
+    }
+    hprof->SetBinContent(ijn+1,xWidth*scale);
+    hprof->SetBinError(ijn+1,xErr*scale);
+  }
+  
+  m_c->cd();
+  hprof->SetLineColor(kBlack);
+  hprof->SetLineWidth(2);
+  hprof->Draw();
+
+  hprof->Write();
+  
+  m_c.PrintPage(hprof->GetTitle());
+  delete hprof; delete hprofX;
 }
 
 void SigBkgPlotter::PrintROC(TString name, bool keepLow, bool excludeOUF)

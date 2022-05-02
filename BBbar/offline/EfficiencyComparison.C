@@ -77,7 +77,7 @@ void EfficiencyComparison(TString outPDF, const vector<TString>& filesNames,
   }
 
   // Loop over (known) directories
-  for (const TString& dirName : {"KpiBC", "K3piBC"}) {
+  for (const TString& dirName : {"KpiCuts", "K3piCuts"}) {
     vector<TDirectory*> dirs;
     for (const auto& f : files) {
       TDirectory* dir = f->GetDirectory(dirName);
@@ -87,7 +87,10 @@ void EfficiencyComparison(TString outPDF, const vector<TString>& filesNames,
 
     // Loop over hist names
     for (const auto& hName : Ls(dirs.front())) {
-      if (!hName.Contains("_eff_")) continue;
+      if (!hName.Contains("_eff_") &&
+	  !hName.Contains("_purity_") &&
+	  !hName.Contains("_sigma")
+	  ) continue;
       vector<TH1*> hists;
       for (const auto& d : dirs) {
         TH1* h = d->Get<TH1>(hName);
@@ -96,25 +99,38 @@ void EfficiencyComparison(TString outPDF, const vector<TString>& filesNames,
       }
 
       TString hNameMC = hName;
-      TH1 *hMC = dirs.front()->Get<TH1>(hNameMC.ReplaceAll("_eff_", "_MC_"));
+      hNameMC = hNameMC.ReplaceAll("_eff_", "_MC_");
+      hNameMC = hNameMC.ReplaceAll("_purity_", "_All_");
+      hNameMC = hNameMC.ReplaceAll("_sigma", "_MC");
+      cout<<hNameMC<<endl;
+      TH1 *hMC = dirs.front()->Get<TH1>(hNameMC);
       CHECK(hMC);
+
+      double getMaximum = 0.; 
+      for (int i = 0; i < hists.size(); i++) {
+	double ttmp = hists[i]->GetMaximum();
+	if(getMaximum<ttmp) {getMaximum = ttmp;}
+      }
 
       // Print
       topPad.cd();
-
+      
       hMC->SetLineWidth(0);
       hMC->SetFillColorAlpha(MyBlue, 0.4);
       hMC->SetFillStyle(1001);
-      hMC->Scale(0.9 / hMC->GetBinContent(hMC->GetMaximumBin()));
-      hMC->SetMinimum(0.0001); hMC->SetMaximum(1);
+      hMC->Scale(getMaximum * 0.9 / hMC->GetBinContent(hMC->GetMaximumBin()));
+      hMC->SetMinimum(0.0001); hMC->SetMaximum(getMaximum*1.1);
       hMC->Draw("hist");
       setFont(hMC);
-      hMC->GetYaxis()->SetTitle("Efficiency");
-
+      
       TLegend leg(0.86, 0.91 - 0.06 * (hists.size() + 1), 0.98, 0.91);
       leg.AddEntry(hMC, "MC", "F");
-
+      
       for (int i = 0; i < hists.size(); i++) {
+	if(!i) {
+	  TString titlename = hists[i]->GetYaxis()->GetTitle();
+	  hMC->GetYaxis()->SetTitle(titlename);
+	}
         hists[i]->SetLineColor(Palette[i%NPalette]);
         // hists[i]->SetLineWidth(i == 0 ? 2 : 1);
         hists[i]->SetMarkerColor(Palette[i%NPalette]);
@@ -127,9 +143,10 @@ void EfficiencyComparison(TString outPDF, const vector<TString>& filesNames,
       btmPad.cd();
       TH1* hRatio = (TH1*)hists.at(0)->Clone(hists.at(0)->GetName() + TString("_ratio"));
       hRatio->Divide(hists.at(1));
-      hRatio->GetYaxis()->SetTitle(titles.at(0) + " / " + titles.at(1));
+      // hRatio->GetYaxis()->SetTitle(titles.at(0) + " / " + titles.at(1));
+      hRatio->GetYaxis()->SetTitle("");
       hRatio->SetTitle("");
-      hRatio->SetMinimum(0); hRatio->SetMaximum(9.5);
+      hRatio->SetMinimum(0); hRatio->SetMaximum(4.5);
       hRatio->Draw();
       setFont(hRatio);
       hRatio->GetYaxis()->SetNdivisions(505);

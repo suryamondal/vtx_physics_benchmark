@@ -101,7 +101,7 @@ class SigBkgPlotter {
 
   /** Makes a tuple {sig,mc} of histograms of the given variable.
    * The tuple is returned and saved in the internal list of plots.
-   * PrintAll() will plot the ratio trk/mc (the purity).
+   * PrintAll() will plot the ratio trk/total (the purity).
    * @param scale Multiplies variable by this number before filling
    */
   TRRes1D PurityH1D(const char* variable, TString title,

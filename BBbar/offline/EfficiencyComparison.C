@@ -123,7 +123,7 @@ void EfficiencyComparison(TString outPDF, const vector<TString>& filesNames,
       hMC->Draw("hist");
       setFont(hMC);
       
-      TLegend leg(0.70, 0.85 - 0.06 * (hists.size() + 1), 0.93, 0.85);
+      TLegend leg(0.65, 0.85 - 0.06 * (hists.size() + 1), 0.93, 0.85);
       leg.AddEntry(hMC, "MC", "F");
 
       int icol = 0;

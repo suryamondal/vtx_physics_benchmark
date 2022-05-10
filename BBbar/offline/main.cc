@@ -261,9 +261,9 @@ void bookHistos(SigBkgPlotter& plt, bool isK3pi)
     plt.EffH1D("Kpi_MCAngle", "Eff. vs true K-to-#pi angle;True angle between K and #pi [#circ]", 20, 40, 180, 180 / M_PI);
 
   // ==== Efficiency
-  // plt.PurityH1D({"Dst", "D0"}, "pt", "Purity vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 2.6);
-  plt.PurityH1D(FSHParts, "pt", "Purity vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 2.5);
-  plt.PurityH1D({"pisoft"}, "pt", "Purity vs true p_{T,$p};True p_{T,$p} [GeV/c]", 20, 0, 0.25);
+  // plt.PurityH1D({"Dst", "D0"}, "pt", "Purity vs p_{T,$p};p_{T,$p} [GeV/c]", 20, 0, 2.6);
+  plt.PurityH1D(FSHParts, "pt", "Purity vs p_{T,$p};p_{T,$p} [GeV/c]", 20, 0, 2.5);
+  plt.PurityH1D({"pisoft"}, "pt", "Purity vs p_{T,$p};p_{T,$p} [GeV/c]", 20, 0, 0.25);
   
 }
 

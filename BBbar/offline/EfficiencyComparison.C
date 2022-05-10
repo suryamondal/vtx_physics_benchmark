@@ -123,17 +123,19 @@ void EfficiencyComparison(TString outPDF, const vector<TString>& filesNames,
       hMC->Draw("hist");
       setFont(hMC);
       
-      TLegend leg(0.86, 0.91 - 0.06 * (hists.size() + 1), 0.98, 0.91);
+      TLegend leg(0.65, 0.85 - 0.06 * (hists.size() + 1), 0.93, 0.85);
       leg.AddEntry(hMC, "MC", "F");
-      
+
+      int icol = 0;
       for (int i = 0; i < hists.size(); i++) {
+	icol ++; if(icol == 5) icol++;
 	if(!i) {
 	  TString titlename = hists[i]->GetYaxis()->GetTitle();
 	  hMC->GetYaxis()->SetTitle(titlename);
 	}
-        hists[i]->SetLineColor(Palette[i%NPalette]);
+        hists[i]->SetLineColor(icol);
         // hists[i]->SetLineWidth(i == 0 ? 2 : 1);
-        hists[i]->SetMarkerColor(Palette[i%NPalette]);
+        hists[i]->SetMarkerColor(icol);
         leg.AddEntry(hists[i], titles.at(i), "LE");
         hists[i]->Draw("same");
       }
@@ -144,9 +146,9 @@ void EfficiencyComparison(TString outPDF, const vector<TString>& filesNames,
       TH1* hRatio = (TH1*)hists.at(0)->Clone(hists.at(0)->GetName() + TString("_ratio"));
       hRatio->Divide(hists.at(1));
       // hRatio->GetYaxis()->SetTitle(titles.at(0) + " / " + titles.at(1));
-      hRatio->GetYaxis()->SetTitle("");
+      hRatio->GetYaxis()->SetTitle("black / red");
       hRatio->SetTitle("");
-      hRatio->SetMinimum(0); hRatio->SetMaximum(4.5);
+      // hRatio->SetMinimum(0); hRatio->SetMaximum(3.5);
       hRatio->Draw();
       setFont(hRatio);
       hRatio->GetYaxis()->SetNdivisions(505);
